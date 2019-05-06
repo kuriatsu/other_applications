@@ -1,0 +1,101 @@
+% 　輪講資料
+%   20xx年xx月xx日
+%
+\documentclass[12pt, platex,dvipdfmx]{jsarticle}
+\usepackage[top=10truemm,bottom=10truemm,left=10truemm,right=20truemm]{geometry}
+%\usepackage{jonkou}
+
+%-----------------
+%     Preamble
+%-----------------
+% for Graphic
+%\usepackage{graphicx}
+\usepackage[dvipdfmx]{graphicx}
+%\usepackage[dviout]{graphicx}
+
+% if you make PDF with dvipdfm, uncommment below statement
+%\usepackage[dvipdfm,bookmarks=true,bookmarksnumbered=true,bookmarkstype=toc,colorlinks,linkcolor=blue]{hyperref}
+
+\usepackage{enumerate}
+\usepackage{url}
+
+%\usepackage{bm}
+\usepackage{amsmath}
+\usepackage{pifont}
+\usepackage{tabularx}
+
+
+% 白抜き文字設定
+\usepackage{amssymb}
+
+% 表　複数行に渡るコラム
+\usepackage{multirow}
+
+% ゼミ用資料なら有効にしておく
+%\IsZemi
+% 草稿なら有効にしておく
+%\IsDraft
+
+% 数式の演算子のサイズ
+% \SetSymbolFont{largesymbols}{normal}{O{\mathbb M}X}{lcmex}{m}{n}
+
+% 章の開始番号
+
+\begin{document}
+\baselineskip = 10mm
+%\chapter{繰り返し試行}
+% \section{多変量ガウス}
+
+互いに特立した確率変数$X_1,X_2,\hdots,X_n$は,平均$\mu$分散$\sigma^2$のi.i.d.である$f_x(x)$に従う.
+ここで$\overline{X}=\frac{X_1+X_2+\cdots+X_n}{n}$とおくと,各変数は独立なので以下の式が成り立つ.
+\begin{eqnarray*}
+\left\{
+\begin{array}{l}
+    \mathbb{E}[\overline{X}]=\frac{1}{n}\{ \mathbb{E}[X_1]+\mathbb{E}[X_2]+\cdots+\mathbb{E}[X_n]\} \\ \\
+    \mathbb{V}[\overline{X}]=\frac{1}{n^2}\{ \mathbb{E}[X_1]+\mathbb{E}[X_2]+\cdots+\mathbb{E}[X_n]\}
+\end{array} \right.
+\end{eqnarray*}
+ここで$X_i(i=1,2,\hdots,n)$のモーメント母関数は
+\begin{eqnarray*}
+    {\mathbb M}_x(\theta)=\mathbb{E}[e^{\theta X_i}]=\int_{-\infty}^{\infty}e^{\theta X_i}f_X(x_i)dx_i
+\end{eqnarray*}
+$\overline{X}$のモーメント母関数は
+\begin{eqnarray*}
+    {\mathbb M}_{\overline{X}}(\theta)&=&\mathbb{E}[e^{\theta \overline{X}}] \\
+    &=&\int_{-\infty}^{\infty}\int_{-\infty}^{\infty} {\cdots \int_{-\infty}^{\infty} e^{\theta \overline{X}} f_{\overline{X}}(x_1,x_2,\hdots,x_n)dx_1 dx_2\cdots dx_n }\\
+    &=&\int_{-\infty}^{\infty}\int_{-\infty}^{\infty} \cdots \int_{-\infty}^{\infty} e^{\frac{\theta}{n} x_1} \cdot e^{\frac{\theta}{n} x_2} \cdot \cdots \cdot e^{\frac{\theta}{n} x_n} \cdot f_X(x_1) \cdot f_X(x_1) \cdot \cdots \cdot f_X(x_n) dx_1dx_2\cdots dx_n \\
+    &=&\int_{-\infty}^{\infty} e^{\frac{\theta}{n} x_1}f_X(x_1)dx_1 \cdot \int_{-\infty}^{\infty} e^{\frac{\theta}{n} x_2}f_X(x_2)dx_2 \cdot \cdots \cdot \int_{-\infty}^{\infty} e^{\frac{\theta}{n} x_n}f_X(x_n)dx_n \\
+    &=&{\mathbb M}_x\left(\frac{\theta}{n}\right) \cdot {\mathbb M}_x\left(\frac{\theta}{n}\right) \cdot \cdots \cdot {\mathbb M}_x\left(\frac{\theta}{n}\right) \\
+    &=&\left\{{\mathbb M}_x\left(\frac{\theta}{n}\right)\right\}^n
+\end{eqnarray*}
+ここで,$Z=\frac{\overline{X}-\mu}{\frac{\sigma}{\sqrt{n}}}=\frac{\sqrt{n}}{\sigma}\overline{X}-\frac{\sqrt{n}}{\sigma}\mu$とおいて,$Z$の確率密度$f_Z(z)$を求める.
+$\overline{x}=\frac{\sigma}{\sqrt{n}} z+\mu, \overline{x}: -\infty \to \infty$ の時,$ z: -\infty \to \infty$,また$\frac{d\overline{x}}{dz}=\frac{\sigma}{\sqrt{n}}$より,
+\begin{eqnarray*}
+    \int_{-\infty}^{\infty} f_Z(z)dz&=&\int_{-\infty}^{\infty}f_{\overline{X}}\left(\frac{\sigma}{\sqrt{n}}z+\mu \right) \cdot \frac{ d \overline{x} }{dz} dz \\
+    &\therefore&f_Z(z)=\frac{\sigma}{\sqrt{n}}f_{\overline{X}}\left(\frac{\sigma}{\sqrt{n}}z+\mu\right)=\frac{\sigma}{\sqrt{n}}f_{\overline{X}}(\overline{x})
+\end{eqnarray*}
+$z$のモーメント母関数は
+\begin{eqnarray*}
+    {\mathbb M}_Z(\theta)&=&\mathbb{E}[e^{\theta Z}]=\int^{\infty}_{-\infty}e^{\theta Z}f_Z(z)dz \\
+    &=&\int^{\infty}_{-\infty}e^{\frac{\sqrt{n}\theta}{\sigma}\overline{x}} \cdot e^{-\frac{\sqrt{n}\theta}{\sigma}\mu} \cdot \frac{\sigma}{\sqrt{n}} \cdot f_{\overline{X}}(\overline{x})\frac{dz}{d \overline{x}} \cdot d \overline{x} \\
+    &=&e^{-\frac{\sqrt{n}\theta}{\sigma}\mu} \int^{\infty}_{-\infty}e^{\frac{\sqrt{n}\theta}{\sigma}\overline{x}} \cdot f_{\overline{X}}(\overline{x}) d\overline{x} \\
+    &=&e^{-\frac{\sqrt{n}\theta}{\sigma}\mu}  {\mathbb M}_{\overline{X}} \left(\frac{\sqrt{n}}{\sigma}\theta\right) \\
+    &=&e^{-\frac{\sqrt{n}\theta}{\sigma}\mu}  \left\{ {\mathbb M}_X \left(\frac{\sqrt{n}}{n\sigma}\theta\right) \right\}^n \\
+    \therefore {\mathbb M}_Z(\theta)&=&e^{-\frac{\sqrt{n}}{\sigma}\mu \theta} \left\{ {\mathbb M}_X \left(\frac{\theta}{\sqrt{n}\sigma}\right) \right\}^n \\
+    \log {\mathbb M}_Z(\theta)&=&\log \left[ e^{-\frac{\sqrt{n}}{\sigma}\mu \theta} \left\{ {\mathbb M}_X \left(\frac{\theta}{\sqrt{n}\sigma}\right) \right\}^n \right] \\
+    &=&-\frac{\sqrt{n}}{\sigma}\mu \theta + n\log {\mathbb M}_X \left(\frac{\theta}{\sqrt{n}\sigma}\right) \\
+    &=&-\frac{\sqrt{n}}{\sigma}\mu \theta + n\log \left\{1+\frac{\theta}{\sqrt{n}\sigma}\mathbb{E}[X]+\frac{\theta^2}{2n\sigma^2}\mathbb{E}[X^2]+\frac{\theta^3}{6n\sqrt{n}\sigma^3}\mathbb{E}[X^3]+\cdots \right\} \\
+    &=&-\frac{\sqrt{n}}{\sigma}\mu \theta + n\left\{\left(\frac{\theta}{\sqrt{n}\sigma}\mathbb{E}[X]+\frac{\theta^2}{2n\sigma^2}\mathbb{E}[X^2]+\cdots \right) \\
+    &-& \frac{1}{2}\left\{\left(\frac{\theta}{\sqrt{n}\sigma}\mathbb{E}[X]+\frac{\theta^2}{2n\sigma^2}\mathbb{E}[X^2]+\cdots \right)^2 \\
+    &+& \frac{1}{3}\left\{\left(\frac{\theta}{\sqrt{n}\sigma}\mathbb{E}[X]+\frac{\theta^2}{2n\sigma^2}\mathbb{E}[X^2]+\cdots \right)^3 - \cdots \right\}
+\end{eqnarray*}
+よって,
+\begin{eqnarray*}
+    \log {\mathbb M}_Z(\theta)&=&-\frac{\sqrt{n}}{\sigma}\mu\theta+n\left\{ \frac{\theta}{\sqrt{n}\sigma}\mathbb{E}[X]+\frac{\theta^2}{2n\sigma^2}\mathbb{E}[X^2]-\frac{1}{2}\cdot \frac{\theta}{n\sigma^2}\mathbb{E}[X]^2+\cdots \right\} \\
+    &=&-\frac{\sqrt{n}}{\sigma}\mu\theta+\frac{\sqrt{n}}{\sigma}\theta\mathbb{E}[X]+\frac{\theta^2}{2\sigma^2}\mathbb{E}[X^2]-\frac{\theta^2}{2\sigma^2}\mathbb{E}[X]^2+\cdots \\
+    \therefore \log {\mathbb M}_Z(\theta) &\to& -\frac{\sqrt{n}}{\sigma}\mu\theta + \frac{\sqrt{n}}{\sigma}\mu\theta + \frac{\theta^2}{2\sigma^2}(\sigma^2+\mu^2)-\frac{\theta^2}{2\sigma^2}\mu^2=\frac{\theta^2}{2} (n \to \infty)
+\end{eqnarray*}
+以上より,$(n \to \infty)$の時,
+$\;\log {\mathbb M}_Z(\theta) \to \frac{\theta^2}{2}\;$,$\;{\mathbb M}_Z (\theta) \to e^{\frac{\theta^2}{2}}\;$ \\
+よって,$Z=\frac{\overline{X}-\mu}{\frac{\sigma}{\sqrt{n}}}}$は標準正規分布$N(0,1)$に従う.
+\end{document}
