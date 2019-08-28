@@ -47,6 +47,7 @@ def makeGraph(list_data, ax, arg_num):
         range_flag = 0
         start_itr = 0
         end_itr = 0
+        flag = 0
 
         for itr, data in enumerate(array_data[:, intervention_num]):
             if data != None:
@@ -61,8 +62,11 @@ def makeGraph(list_data, ax, arg_num):
                     y = np.array([0, 0, 1.0, 1.0])
 
                     label = "Intervention " + intervention_name[intervention_num-4] + str(arg_num)
-                    ax.fill(x, y, label=label, color=color_palette[arg_num-1], alpha = 0.5)
-
+                    if flag == 0:
+                        ax.fill(x, y, label=label, color=color_palette[arg_num-1], alpha = 0.5)
+                        flag = 1
+                    else:
+                        ax.fill(x, y, color=color_palette[arg_num-1], alpha = 0.5)
 
 
     pedestrian_data = array_data[np.argmin(array_data[:, 3])]
