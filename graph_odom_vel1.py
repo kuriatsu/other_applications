@@ -121,6 +121,7 @@ def cutData(aligned_data):
                 closest_data_list.append(findValueFromArray(close_data_list, 3, 'min', 1.0))
 
 
+
     range_frag = 0
     for data in aligned_data:
         if closest_data_list[round][1] - 10.0 < data[1] < closest_data_list[round][1] + 10.0:

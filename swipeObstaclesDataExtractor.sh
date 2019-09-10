@@ -15,3 +15,5 @@ rostopic echo -b $1 -p /shifted_info > shift.csv
 echo "shift info is extracted"
 rostopic echo -b $1 -p /joy > joy.csv
 echo "joy is extracted"
+rostopic echo -b $1 -p /detected_obstacles > obstacle.csv
+echo "obstacle is extracted"
