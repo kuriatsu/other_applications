@@ -113,8 +113,8 @@ root: ${fs_used /}/${fs_size /}
 home: ${fs_used /home}/${fs_size /home}
       ${fs_bar 6 /home}
       ${diskiograph /dev/nvme0n1p3}
-SSD: ${fs_used /media/kuriatsu/SamsungKURI}/${fs_size /media/kuriatsu/SamsungKURI}
-      ${fs_bar 6 /media/kuriatsu/SamsungKURI}
+SSD: ${fs_used /media/kuriatsu/SamsungKURI1}/${fs_size /media/kuriatsu/SamsungKURI1}
+      ${fs_bar 6 /media/kuriatsu/SamsungKURI1}
       ${diskiograph /dev/sda1} 
 $hr 
 Networking:
