@@ -4,6 +4,7 @@ xhost local:mad-carla
 
 docker run -it --runtime=nvidia \
 -e DISPLAY=$DISPLAY \
+--device /dev/snd \
 -p 2000-2002:2000-2002 \
 -u mad-carla \
 -v /tmp/.X11-unix/:/tmp/.X11-unix/ \
