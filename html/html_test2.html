@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+
+    <style type="text/css">
+    .input-range[type="range"] {
+        -webkit-appearance: none;
+        /* appearance: none; */
+        background-color: #c7c7c7;
+        height: 2px;
+        width: 95%;
+
+        &:focus,
+        &:active {
+            outline: none;
+        }
+
+        /* &::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            cursor: pointer;
+            position: relative;
+            border: none;
+            width: 12px;
+            height: 12px;
+            display: block;
+            background-color: #262626;
+            border-radius: 50%;
+            -webkit-border-radius: 50%;
+        } */
+    }
+    </style>
+</head>
+
+<body>
+    <div align="center">
+    <h1>[1段階目]評価項目の絶対評価</h1>
+    <p>今回の実験で課されたタスクに関する以下の6つの評価項目と1つの全体評価に対し，適当な値を入力してください．</p>
+    <p>直感的で構いません．自身の運転経験を基準に評価してもらっても構いません．</p>
+    <table>
+        <tr>
+            <td width="400" align="center"><h2>知的・知覚的要求</h2></td>
+            <td rowspan="3">どの程度の知的・知覚的活動(考える，決める，計算する，見るなど)を必要としましたか．(タスクの難しさ)</td>
+        </tr>
+        <tr>
+            <td><div style="text-align: right"><div style="float: left">&emsp;小</div><div>大&emsp;</div></div></td>
+            <!-- <td></td> -->
+            <!-- <td><nobr><p style="text-align:left;">少</p><p style="text-align:right;">大</p></nobr></td> -->
+        </tr>の
+        <tr>
+            <td align="center"><p><input id="slidar_1" type="range" class="input-range" min="0" max="10" step="0.5"></p></td>
+            <!-- <td></td> -->
+        </tr>
+
+        <tr>
+            <td align="center"><h2>身体的要求</h2></td>
+            <td rowspan="3">どの程度の身体的活動(操作するなど)を必要としましたか(ロボットの後ろに付いて歩くことは考えない)．</td>
+        </tr>
+        <tr>
+            <!-- <td></td> -->
+            <td><div style="text-align: right"><div style="float: left">&emsp;小</div><div>大&emsp;</div></div></td>
+            <!-- <td><nobr><p style="text-align:left;">少</p><p style="text-align:right;">大</p></nobr></td> -->
+        </tr>
+        <tr>
+            <!-- <td></td> -->
+            <td align="center"><p><input id="slidar_2" type="range" class="input-range" min="0" max="10" step="0.5"></p></td>
+        </tr>
+        <tr>
+            <td align="center"><h2>時間的切迫感</h2></td>
+            <td rowspan="3">操作のペースやタスクが発生する頻度のために感じる時間的切迫感はどの程度でしたか．(タスクの忙しさ)</td>
+        </tr>
+        <tr>
+            <!-- <td></td> -->
+            <td><div style="text-align: right"><div style="float: left">&emsp;小</div><div>大&emsp;</div></div></td>
+            <!-- <td><nobr><p style="text-align:left;">少</p><p style="text-align:right;">大</p></nobr></td> -->
+        </tr>
+        <tr>
+            <!-- <td></td> -->
+            <td align="center"><p><input id="slidar_3" type="range" class="input-range" min="0" max="10" step="0.5"></p></td>
+        </tr>
+        <tr>
+            <td align="center"><h2>作業成績</h2></td>
+            <td rowspan="3">設定されたタスクの目標をどの程度達成できましたか．目標の達成に関して自分の作業成績にどの程度満足していますか.</td>
+        </tr>
+        <tr>
+            <!-- <td></td> -->
+            <td><div style="text-align: right"><div style="float: left">&emsp;小</div><div>大&emsp;</div></div></td>
+            <!-- <td><nobr><p style="text-align:left;">少</p><p style="text-align:right;">大</p></nobr></td> -->
+        </tr>
+        <tr>
+            <!-- <td></td> -->
+            <td align="center"><p><input id="slidar_4" type="range" class="input-range" min="0" max="10" step="0.5"></p></td>
+        </tr>
+        <tr>
+            <td align="center"><h2>努力</h2></td>
+            <td rowspan="3">作業成績のレベルを達成・維持するために，精神的・身体的にどの程度一生懸命に作業しましたか．</td>
+        </tr>
+        <tr>
+            <!-- <td></td> -->
+            <td><div style="text-align: right"><div style="float: left">&emsp;小</div><div>大&emsp;</div></div></td>
+            <!-- <td><nobr><p style="text-align:left;">少</p><p style="text-align:right;">大</p></nobr></td> -->
+        </tr>
+        <tr>
+            <!-- <td></td> -->
+            <td align="center"><p><input id="slidar_5" type="range" class="input-range" min="0" max="10" step="0.5"></p></td>
+        </tr>
+        <tr>
+            <td align="center"><h2>いらだち</h2></td>
+            <td rowspan="3">作業中にいらいら，ストレスなどをどの程度感じましたか．</td>
+        </tr>
+        <tr>
+            <!-- <td></td> -->
+            <td><div style="text-align: right"><div style="float: left">&emsp;小</div><div>大&emsp;</div></div></td>
+            <!-- <td><nobr><p style="text-align:left;">少</p><p style="text-align:right;">大</p></nobr></td> -->
+        </tr>
+        <tr>
+            <!-- <td></td> -->
+            <td align="center"><p><input id="slidar_6" type="range" class="input-range" min="0" max="10" step="0.5"></p></td>
+        </tr>
+        <tr>
+            <td align="center"><h2>全体的な負荷</h2></td>
+            <td rowspan="3">様々な負荷要因，負荷原因，部分部分の課題内容を総合すると，全体としてどの程度の作業負担を感じましたか．</td>
+        </tr>
+        <tr>
+            <!-- <td></td> -->
+            <td><div style="text-align: right"><div style="float: left">&emsp;小</div><div>大&emsp;</div></div></td>
+            <!-- <td><nobr><p style="text-align:left;">少</p><p style="text-align:right;">大</p></nobr></td> -->
+        </tr>
+        <tr>
+            <!-- <td></td> -->
+            <td align="center"><p><input id="slidar_7" type="range" class="input-range" min="0" max="10" step="0.5"></p></td>
+        </tr>
+
+        <!-- <output id="output_7">5</output> -->
+    </table>
+    <div>
+        <input type="button" value="Next" onclick="nextPage()"/><br />
+    </div>
+</div>
+
+    <script language="javascript" type="text/javascript">
+
+    var indiv_result = [50, 50, 50, 50, 50, 50, 50];
+    var name = decodeURIComponent(location.search.split('=')[1]);
+    // var slidar_1 = document.getElementById("slidar_1");
+    // var slidar_2 = document.getElementById("slidar_2");
+    // var slidar_3 = document.getElementById("slidar_3");
+    // var slidar_4 = document.getElementById("slidar_4");
+    // var slidar_5 = document.getElementById("slidar_5");
+    // var slidar_6 = document.getElementById("slidar_6");
+    // var slidar_7 = document.getElementById("slidar_7");
+
+    slidar_1.oninput = function slide(){
+        indiv_result[1] = this.value;
+        // document.getElementById("output_1").value = q_1;
+    }
+    slidar_2.oninput = function slide(){
+        indiv_result[2] = this.value;
+        // document.getElementById("output_2").value = q_2;
+    }
+    slidar_3.oninput = function slide(){
+        indiv_result[3] = this.value;
+        // document.getElementById("output_3").value = q_3;
+    }
+    slidar_4.oninput = function slide(){
+        indiv_result[4] = this.value;
+        // document.getElementById("output_4").value = q_4;
+    }
+    slidar_5.oninput = function slide(){
+        indiv_result[5] = this.value;
+        // document.getElementById("output_5").value = q_5;
+    }
+    slidar_6.oninput = function slide(){
+        indiv_result[6] = this.value;
+        // document.getElementById("output_6").value = q_6;
+    }
+    slidar_7.oninput = function slide(){
+        indiv_result[7] = this.value;
+        // document.getElementById("output_7").value = q_7;
+    }
+
+    function nextPage() {
+        // target = document.getElementById("output");
+        //target.innerHTML = "Penguin";
+        location.href='html_test2_5.html?result=' + encodeURIComponent(name) + '=' + encodeURIComponent(indiv_result);
+        // target.style.color="blue"
+        //target.style.background-color="yellow"
+    }
+
+
+    </script>
+</body>
+</html>

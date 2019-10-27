@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=GoogleDriveBackup
+Exec=bash -c "bash /opt/googlebackup/googlebackup.sh /home/kuriatsu/GoogleDrive"
+Icon=/home/kuriatsu/.local/icons/googlebackup.png
+Type=Application
+Terminal=false
+Categories=Cloud
+MimeType=text/plain

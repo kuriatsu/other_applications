@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=GoogleDrive
+Exec=bash -c "google-drive-ocamlfuse /home/kuriatsu/GoogleDrive"
+Icon=/home/kuriatsu/.local/icons/googledrive.png
+Type=Application
+Terminal=false
+Categories=Cloud
+MimeType=text/plain
