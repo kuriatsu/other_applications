@@ -7,26 +7,26 @@ setting_table = {
     {
         name='fs_used_perc',
         arg='/',
-        bg_color=0x3b3b3b,
-        bg_alpha=0.4,
+        bg_color=0x012a2b,
+        bg_alpha=0.1,
 --        fg_colour=0x165cc4,
         fg_color=0xc35822,
         fg_alpha=0.4,
-        start_x=185, start_y=670,
+        start_x=185, start_y=523,
         length = 170,
-        thickness=8
+        thickness=5
     },
     {
         name='fs_used_perc',
         arg='/home',
-        bg_color=0x3b3b3b,
-        bg_alpha=0.4,
+        bg_color=0x012a2b,
+        bg_alpha=0.1,
 --        fg_colour=0x165cc4,
         fg_color=0xc35822,
         fg_alpha=0.4,
-        start_x=185, start_y=737,
+        start_x=185, start_y=562,
         length=170,
-        thickness=8
+        thickness=5
     },
 }
 
