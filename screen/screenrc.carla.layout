@@ -1,0 +1,26 @@
+source ~/.screenrc
+
+screen 0 bash /home/kuriatsu/.local/share/screen/exec_carla_docker.sh
+screen 1 bash /home/kuriatsu/.local/share/screen/exec_carla_docker.sh
+screen 2 bash /home/kuriatsu/.local/share/screen/exec_carla_docker.sh
+screen 3 bash /home/kuriatsu/.local/share/screen/exec_carla_docker.sh
+screen 4 bash /home/kuriatsu/.local/share/screen/exec_carla_docker.sh
+screen 5 bash /home/kuriatsu/.local/share/screen/exec_carla_docker.sh
+split -v
+resize -h -l 30%
+split
+split
+split
+split
+select 0
+focus down
+select 1
+focus down
+select 2
+focus down
+select 3
+focus down
+select 4
+focus right
+select 5
+focus left

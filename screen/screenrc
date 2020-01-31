@@ -1,0 +1,32 @@
+defencoding utf8
+encoding utf8 utf8
+
+startup_message off
+vbell off
+
+escape ^Jj
+
+defscrollback 10000
+termcapinfo xterm* ti@:te@
+
+defbce on
+
+term xterm-256color
+
+hardstatus alwayslastline "%{= cd} %-w%{= wk} %n %t* %{-}%+w"
+
+shell $SHELL
+
+# switch focus to other region
+bind w focus up
+bind s focus down
+bind a focus left
+bind d focus right
+
+# continuous switch focus to othe region
+bind ^W eval 'focus up' 'command -c cfocus'
+bind ^S eval 'focus down' 'command -c cfocus'
+bind -c cfocus ^W eval 'focus up' 'command -c cfocus'
+bind -c cfocus ^S eval 'focus down' 'command -c cfocus'
+bind -c cfocus ^A eval 'focus left' 'command -c cfocus'
+bind -c cfocus ^D eval 'focus right' 'command -c cfocus'
