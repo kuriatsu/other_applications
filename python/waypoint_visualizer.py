@@ -5,6 +5,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import csv
 import sys
+import matplotlib.animation as animation
+import argparse
 
 def getData(filename, *col):
     """read csv file
@@ -60,48 +62,70 @@ def makeGraph(data_list, label_list):
     plt.show()
 
 
-def getAverageWaypoint(data_list):
-    """find closest points from each list based on arbitaly list calcurate average and deviateion from waypoints
+def makeAnimeGraph(data_list):
+    """write graph
     ~args~
-    data_list : all data of waypoint [[driver1], [driver2], ...]
+    data_list : list of all points
+    label_list : list of label name for legend
+    """
+
+    # data_array = np.array(data_list)
+    ## plot colors#
+    # color_palette = ['coral', 'coral', 'coral', 'coral', 'coral', 'coral', 'coral', 'midnightblue', 'midnightblue', 'midnightblue', 'indigo']
+    color_palette = ['coral', 'olivedrab', 'turquoise', 'royalblue', 'fuchsia', 'gray', 'midnightblue', 'gold', 'lime', 'orchid', 'indigo']
+
+    fig = plt.figure()
+
+    for i in range(1, len(data_list[0]), 10):
+        data = np.array(data_list[0][0:i])
+        print(i)
+        print("number:{}, x={}, y={}".format(i, data_list[0][i][0], data_list[0][i][1]))
+        im = plt.scatter(data[:, 0], data[:, 1], marker='.', alpha=0.2)
+        plt.xlabel("x", fontsize=20)
+        plt.ylabel("y", fontsize=20)
+        plt.xlim(-47350, -47150)
+        plt.ylim(57500, 57700)
+        plt.pause(0.01)
+        plt.clf()
+
+    # plt.show()
+
+
+
+def getAverageWaypoint(data_list):
+    """Search closest waypoints from other drivers around a target point of first driver of data_list. Then calcurate average point.
+    ~args~
+    data_list : all data of waypoint [driver1 [point]...], [driver2 [point]...], ...]
     ~return~
     average_waypoints : list of average waypoint
     """
 
-    last_index_list = [0] * len(data_list) # list of index in each driver's waypoint as the start index of searching closest point
+    last_index_list    = [0] * len(data_list) # list of index in each driver's waypoint as the start index of searching closest point
     average_waypoints  = [] # list for average waypoint
 
     # search closest waypoint around a target point of one driver from other drivers
     for i, driver_0_point in enumerate(data_list[0]):
-
         closest_point_list  = [driver_0_point] # list of the found points of each drivers
 
         # search from each drivers
         for driver_id in range(1, len(data_list)):
-
             max_dist      = 2.0 # maximam distance from target point to searching point
             closest_point = np.array([0.0, 0.0]) # found point
 
-            # search closest point. start from a point which extracted at last roop to 50 points forward
+            # search closest point. start from a point which extracted at last loop to 50 points forward
             for j, point in enumerate(data_list[driver_id][last_index_list[driver_id]:last_index_list[driver_id]+50]):
-
                 dist = np.sqrt((driver_0_point[0] - point[0]) ** 2 + (driver_0_point[1] - point[1]) ** 2)
 
                 if dist < max_dist:
-
-                    # update values
-                    max_dist      = dist
-                    last_index_list[driver_id] += j
-                    # get point
-                    closest_point = point
+                    max_dist                   = dist  # update values for next loop
+                    last_index_list[driver_id] += j    # update values for next loop
+                    closest_point              = point # get point
 
             # if something is found, add to the list of closest points
             if(closest_point[0] != 0.0):
-
                 closest_point_list.append(closest_point)
 
-        # calcurate an average point from points
-        average_waypoints.append(calcAverageOfPoints(closest_point_list))
+        average_waypoints.append(calcAverageOfPoints(closest_point_list)) # calcurate an average point from points
 
     return average_waypoints
 
@@ -140,11 +164,10 @@ def csvOut(filename, out_waypoint_list):
     filename : name of the output file
     out_waypoint_list : waypoint list for output
     """
-    # open file
-    file = open(filename, 'w')
+
+    file = open(filename, 'w') # open file
     writer = csv.writer(file, lineterminator='\n')
-    # add first row
-    writer.writerow(["x", "y", "z", "yaw", "velocity", "change_flag"])
+    writer.writerow(["x", "y", "z", "yaw", "velocity", "change_flag"]) # add first row
 
     # write data according to the format
     for out_waypoint in out_waypoint_list:
@@ -158,24 +181,58 @@ def csvOut(filename, out_waypoint_list):
 
 if __name__ == "__main__":
 
-    args = sys.argv
+    argparser = argparse.ArgumentParser( description = __doc__)
+    argparser.add_argument(
+        '-b','--base_waypoint',
+        metabar='/path/to/file.csv',
+        default=None,
+        help='Fundamental waypoint for calcurating average waypoint. Select most beautiful one.')
+    argparser.add_argument(
+        '-f', '--file',
+        metabar='/path/to/file1.csv /path/to/file2.csv ...',
+        default=None,
+        nargs='+',
+        required=true,
+        help='Waypoint files for calcurating average waypoint.')
+    argparser.add_argument(
+        '--only_average',
+        action='store_true',
+        help='Visualize only average waypoints.')
+    argparser.add_argument(
+        '--only_visualize',
+        action='store_true',
+        help='Do not calcurate average.')
+    argparser.add_argument(
+        '--animation',
+        action='store_true',
+        help='visualize first waypoint with animation.')
+
+    args = argparser.parse_args()
     data_list = []
+    legend_list = []
 
-    # add data to list from csv
-    for arg in args[1:]:
-        data_list.append(getData(arg, 0, 1, 3, 4))
+    if args.base_waypoint is not None:
+        data_list.append(getData(args.base_waypoint, 0, 1, 3, 4))
+        legend_list.append(args.base_waypoint)
 
-    # add calcurated average points to list
-    average_waypoint = getAverageWaypoint(data_list)
-    data_list.append(average_waypoint)
+    if args.file is not None:
+        for filename in args.file:
+            data_list.append(getData(filename, 0, 1, 3, 4))
+            legend_list.append(filename)
 
-    ## output only average waypoints ##
-    # data_list = getAverageWaypoint(data_list)
-    # data_array = np.array([getAverageWaypoint(data_list)])
+    if !args.only_visualize:
+        data_list.append(getAverageWaypoint(data_list))
+        legend_list.append('average')
+        # out data
+        csvOut("out.csv", average_waypoint)
 
-    # draw data
-    args.append("ave") # for index of the graph
-    makeGraph(data_list, args[1:])
+    if args.only_average:
+        data_list = data_list[-1]
+        legend_list = legend_list[-1]
 
-    # out data
-    csvOut("out.csv", average_waypoint)
+    if args.animation:
+        makeAnimeGraph(data_list[1])
+        sys.exit()
+
+
+    makeGraph(data_list, legend_list) # draw data
