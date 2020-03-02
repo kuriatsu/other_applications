@@ -13,20 +13,24 @@ defbce on
 
 term xterm-256color
 
-hardstatus alwayslastline "%{= cd} %-w%{= wk} %n %t* %{-}%+w"
-
+# hardstatus alwayslastline "%{= cd} %-w%{= wk} %n %t* %{-}%+w"
+hardstatus alwayslastline "%{= dd}%02c:%s %{= .y}%H %L=%{= .d}%-w%46>%{=r ..}%n %t%{= dd}%+w%-16=%{= .y}[%l]"
 shell $SHELL
 
 # switch focus to other region
-bind w focus up
-bind s focus down
-bind a focus left
-bind d focus right
+# bind w focus up
+# bind s focus down
+# bind a focus left
+# bind d focus right
+bindkey ^[[1;3A focus up
+bindkey ^[[1;3B focus down
+bindkey ^[[1;3D focus left
+bindkey ^[[1;3C focus right
 
 # continuous switch focus to othe region
-bind ^W eval 'focus up' 'command -c cfocus'
-bind ^S eval 'focus down' 'command -c cfocus'
-bind -c cfocus ^W eval 'focus up' 'command -c cfocus'
-bind -c cfocus ^S eval 'focus down' 'command -c cfocus'
-bind -c cfocus ^A eval 'focus left' 'command -c cfocus'
-bind -c cfocus ^D eval 'focus right' 'command -c cfocus'
+#bind ^W eval 'focus up' 'command -c cfocus'
+#bind ^S eval 'focus down' 'command -c cfocus'
+#bind -c cfocus ^W eval 'focus up' 'command -c cfocus'
+#bind -c cfocus ^S eval 'focus down' 'command -c cfocus'
+#bind -c cfocus ^A eval 'focus left' 'command -c cfocus'
+#bind -c cfocus ^D eval 'focus right' 'command -c cfocus'
