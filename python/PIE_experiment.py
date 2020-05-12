@@ -19,6 +19,7 @@ class PieDataVisualize(object):
         self.video_fps = None
         self.attrib_tree = None
         self.pie_data = {}
+        self.display_obj = [[0]]
 
     def getVideo(self, video_file):
         try:
@@ -85,34 +86,105 @@ class PieDataVisualize(object):
         del tree
         del self.attrib_tree
 
+
+    def manageDisplayObjects(self, frame_num, is_checked):
+        display_obj = []
+        min_index = None
+        min_time = 20000
+
+        # print('update start : ', frame_num)
+        for obj_id in self.pie_data[frame_num]:
+            if self.pie_data[frame_num][obj_id]['label'] == 'pedestrian':
+                obj_info = self.pie_data[frame_num][obj_id]
+                flag = 0
+
+                for obj in self.display_obj:
+                    # if already displayed, keep information
+                    if obj[0] == obj_id:
+                        # if checked and find important object, add checked flag and unimportantize
+                        if obj[1] and is_checked:
+                            obj[2] = True
+                            obj[1] = False
+                        # add
+                        display_obj.append(obj)
+                        flag = 1
+                        continue
+
+                # if the obj is new
+                if flag == 0:
+                    display_obj.append([obj_id, False, False, False]) # id, is_critical, is_checked, is_passed
+
+                # if the obj is passed one
+                if int(obj_info['critical_point']) < int(frame_num):
+                    display_obj[-1][1] = False
+                    display_obj[-1][2] = False
+
+                # if the obj should be considered and unchecked, find the next important obj
+                elif int(obj_info['critical_point']) < min_time and not display_obj[-1][2]:
+                    min_index = len(display_obj) - 1
+                    min_time = int(obj_info['critical_point'])
+
+        # if the important obj is found, add the flag
+        if min_index is not None:
+            display_obj[min_index][1] = True
+
+        # reflesh member container
+        self.display_obj = display_obj
+
+
     def drawRect(self, image, frame_num):
-        if frame_num in self.pie_data:
-            for obj in self.pie_data[frame_num].values():
-                if obj.get('label') == 'pedestrian':
-                    image = cv2.rectangle(image,
-                                          (int(float(obj.get('xtl'))), int(float(obj.get('ytl')))),
-                                          (int(float(obj.get('xbr'))), int(float(obj.get('ybr')))),
-                                          (0, 255, 0),
-                                          3)
+
+        get_important_obj = False
+
+        for obj in self.display_obj:
+            if obj[1]: # if important --- red
+                color = (0, 0, 255)
+
+            elif obj[2]: # if checked --- green
+                color = (255, 0, 0)
+
+            else: # else --- blue
+                color = (0, 255, 0)
+
+            obj_info = self.pie_data[str(frame_num)][obj[0]]
+            # print(obj_info, color)
+            image = cv2.rectangle(image,
+                                  (int(float(obj_info['xtl'])), int(float(obj_info['ytl']))),
+                                  (int(float(obj_info['xbr'])), int(float(obj_info['ybr']))),
+                                  color,
+                                  1)
 
 
     def loop(self):
         print('start_loop')
         frame_num = 0
         sleep_time = self.video_rate
+        is_checked = False
+
         while(self.video.isOpened()):
 
             start = time.time()
+
             ret, frame = self.video.read()
-            self.drawRect(frame, str(frame_num))
+
+            if str(frame_num) in self.pie_data:
+                self.manageDisplayObjects(str(frame_num), is_checked)
+                self.drawRect(frame, frame_num)
+
             cv2.imshow('frame', frame)
-            frame_num += 1
 
             sleep_time = max(int((1 / self.video_rate - (time.time() - start)) * 1000), 1)
-            # sleep and wait quit key
-            if cv2.waitKey(sleep_time) & 0xFF == ord('q'):
-                break
 
+            is_checked = False
+            # sleep and wait quit key
+            key = cv2.waitKey(sleep_time) & 0xFF
+            if key is not 255 : print(key)
+            if key == ord('q'):
+                break
+            if key == 13:
+                is_checked = True
+
+            frame_num += 1
 
     def __del__(self):
         print('delete instance...')
@@ -142,7 +214,7 @@ def main():
     pie_data_visualize.getAttrib(args.attrib)
     pie_data_visualize.getAnno(args.anno)
     pie_data_visualize.getAttrib(args.attrib)
-    print(pie_data_visualize.pie_data.get('1133'))
+    # print(pie_data_visualize.pie_data.get('1133'))
     pie_data_visualize.loop()
 
 if __name__ == '__main__':
