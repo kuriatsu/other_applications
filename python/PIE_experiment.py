@@ -15,16 +15,33 @@ import xml.etree.ElementTree as ET
 class PieDataVisualize(object):
 
     def __init__(self, args):
+        self.window_name = 'frame'
         self.video = None
-        self.video_fps = None
+        self.video_rate = None
         self.attrib_tree = None
         self.pie_data = {}
-        self.display_obj = [[0]]
+        self.frame = None
+        self.displayed_obj = [[0]]
+        self.focused_obj_id = None
+        self.icon = None
+        self.icon_roi = None
+        self.icon_fg = None
 
-    def getVideo(self, video_file):
+
+    def prepareIcon(self):
+        img = cv2.imread('/home/kuriatsu/share/cross_small.png')
+        self.icon_roi = img.shape[:2]
+        img2grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        ret, mask = cv2.threshold(img2grey, 10, 255, cv2.THRESH_BINARY)
+        # ret, mask = cv2.threshold(img2grey, 200, 255, cv2.THRESH_BINARY_INV)
+        self.mask_inv = cv2.bitwise_not(mask)
+        self.icon_fg = cv2.bitwise_and(img, img, mask=mask)
+
+
+    def getVideo(self, video_file, rate_offset):
         try:
             self.video = cv2.VideoCapture(video_file)
-            self.video_rate = int(self.video.get(cv2.CAP_PROP_FPS))+5
+            self.video_rate = int(self.video.get(cv2.CAP_PROP_FPS) + rate_offset)
         except:
             print('cannot open video')
             exit(0)
@@ -87,67 +104,130 @@ class PieDataVisualize(object):
         del self.attrib_tree
 
 
-    def manageDisplayObjects(self, frame_num, is_checked):
-        display_obj = []
-        min_index = None
-        min_time = 20000
-
-        # print('update start : ', frame_num)
-        for obj_id in self.pie_data[frame_num]:
-            if self.pie_data[frame_num][obj_id]['label'] == 'pedestrian':
-                obj_info = self.pie_data[frame_num][obj_id]
-                flag = 0
-
-                for obj in self.display_obj:
-                    # if already displayed, keep information
-                    if obj[0] == obj_id:
-                        # if checked and find important object, add checked flag and unimportantize
-                        if obj[1] and is_checked:
-                            obj[2] = True
-                            obj[1] = False
-                        # add
-                        display_obj.append(obj)
-                        flag = 1
-                        continue
-
-                # if the obj is new
-                if flag == 0:
-                    display_obj.append([obj_id, False, False, False]) # id, is_critical, is_checked, is_passed
-
-                # if the obj is passed one
-                if int(obj_info['critical_point']) < int(frame_num):
-                    display_obj[-1][1] = False
-                    display_obj[-1][2] = False
-
-                # if the obj should be considered and unchecked, find the next important obj
-                elif int(obj_info['critical_point']) < min_time and not display_obj[-1][2]:
-                    min_index = len(display_obj) - 1
-                    min_time = int(obj_info['critical_point'])
-
-        # if the important obj is found, add the flag
-        if min_index is not None:
-            display_obj[min_index][1] = True
-
-        # reflesh member container
-        self.display_obj = display_obj
+    def prepareEventHandler(self):
+        """add mouse click callback to the window
+        """
+        cv2.namedWindow(self.window_name)
+        cv2.setMouseCallback(self.window_name, self.touchCallback)
 
 
-    def drawRect(self, image, frame_num):
+    def touchCallback(self, event, x, y, flags, param):
+        """if mouce clicked, check position and judge weather the position is on the rectange or not
+        """
+        # if the event handler is leftButtonDown and current frame contains objects
+        if event == cv2.EVENT_LBUTTONDOWN and self.frame in self.pie_data:
 
-        get_important_obj = False
+            for obj_id, obj_info in self.pie_data[self.frame].items():
 
-        for obj in self.display_obj:
-            if obj[1]: # if important --- red
+                # if the clicked position is on the rectangle of one of the objects
+                if int(float(obj_info['xtl'])) < x < int(float(obj_info['xbr'])) and int(float(obj_info['ytl'])) < y < int(float(obj_info['ybr'])):
+
+                    # if the clicked position is on the focuced object
+                    if self.displayed_obj[obj_id]['is_forcused']:
+
+                        # update "is_forcused" in self.dislpayed_obj
+                        self.updateFocusedObject(obj_id)
+                        return
+
+
+    def pushCallback(self):
+        """callback of enter key push, target is focused object
+        """
+        for obj_id, obj_info in self.displayed_obj.items():
+            if obj_info['is_forcused']:
+                self.updateFocusedObject(obj_id)
+                return
+
+
+    def updateFocusedObject(self, checked_obj_id=None):
+        """find focused object from self.displayed_obj
+        """
+        min_obj_id = None # initial variable for searching new imporant objects
+        min_time = 20000 # initial variable for searching new imporant objects
+
+        # is this method called by callback, checked_obj_id has target object id which is checked and should be unfocused
+        if checked_obj_id is not None:
+            self.displayed_obj[checked_obj_id]['is_checked'] = True
+            self.displayed_obj[checked_obj_id]['is_forcused'] = False
+
+        # find new focused object
+        for obj_id, obj_info in self.displayed_obj.items():
+            # search the new forcused obj
+            if not obj_info['is_checked'] and not obj_info['is_passed'] and int(self.pie_data[self.frame][obj_id]['critical_point']) < min_time:
+                min_obj_id = obj_id
+                min_time = int(self.pie_data[self.frame][obj_id]['critical_point'])
+
+        # if the new forcused obj is found, add the flag
+        if min_obj_id is not None:
+            self.displayed_obj[min_obj_id]['is_forcused'] = True
+
+
+    def refleshDisplayObjects(self):
+        """magage displaying object
+        is_checked ; flag wether the subject check obj and input some action or not
+        """
+        display_obj = {} # new container
+        is_forcused_obj_exist = False # flag
+
+        for obj_id, obj_info in self.pie_data[self.frame].items():
+
+            if obj_info['label'] != 'pedestrian': continue
+
+            # if the obj was already displayed
+            if obj_id in self.displayed_obj:
+
+                display_obj[obj_id] = self.displayed_obj[obj_id]
+                display_obj[obj_id]['is_passed'] = int(obj_info['critical_point']) < int(self.frame)
+
+                # if the object was forcused
+                if self.displayed_obj[obj_id]['is_forcused']:
+                    is_forcused_obj_exist = True
+
+            # if the obj is new
+            else:
+                display_obj[obj_id] = {'is_forcused':False, 'is_checked':False, 'is_passed':False}
+
+        # reflesh displaying object container
+        self.displayed_obj = display_obj
+
+        # if the forcused object is not checked, don't search new forcused obj
+        if not is_forcused_obj_exist:
+            self.updateFocusedObject()
+
+
+    def renderInfo(self, image):
+        """add information to the image
+
+        """
+        # loop for each object in the frame from PIE dataset
+        for obj_id, displayed_obj_info in self.displayed_obj.items():
+
+            obj_info = self.pie_data[self.frame][obj_id]
+
+            if displayed_obj_info['is_forcused']: # if forcused --- red
                 color = (0, 0, 255)
+                self.drawIcon(image, obj_info)
 
-            elif obj[2]: # if checked --- green
-                color = (255, 0, 0)
+                cv2.putText(
+                    image,
+                    'Cross?',
+                    (int(float(obj_info['xtl'])), int(float(obj_info['ytl'])) - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA
+                    )
 
-            else: # else --- blue
+            elif displayed_obj_info['is_checked']: # if checked --- green
                 color = (0, 255, 0)
 
-            obj_info = self.pie_data[str(frame_num)][obj[0]]
-            # print(obj_info, color)
+            else: # else --- blue
+                color = (255, 0, 0)
+
+            # cv2.putText(
+            #     image,
+            #     '{:.01f}%'.format(float(obj_info['intention_prob']) * 100),
+            #     (int(float(obj_info['xtl'])), int(float(obj_info['ytl'])) - 10),
+            #     cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA
+            #     )
+
             image = cv2.rectangle(image,
                                   (int(float(obj_info['xtl'])), int(float(obj_info['ytl']))),
                                   (int(float(obj_info['xbr'])), int(float(obj_info['ybr']))),
@@ -155,36 +235,63 @@ class PieDataVisualize(object):
                                   1)
 
 
+    def drawIcon(self, image, obj_info):
+        """draw icon to emphasize the target objects
+        image : image
+        obj_info : PIE dataset info of the object in the frame
+        """
+
+        icon_offset_y = 30.0
+        icon_offset_x = int((self.icon_roi[1] - (float(obj_info['xbr']) - float(obj_info['xtl']))) * 0.5)
+
+        # position of the icon
+        icon_ytl = int(float(obj_info['ytl']) - self.icon_roi[0] - icon_offset_y)
+        icon_xtl = int(float(obj_info['xtl']) - icon_offset_x)
+        icon_ybr = int(float(obj_info['ytl']) - icon_offset_y)
+        icon_xbr = int(float(obj_info['xtl']) + self.icon_roi[1] - icon_offset_x)
+
+        # put icon on image
+        try:
+            roi = image[icon_ytl:icon_ybr, icon_xtl:icon_xbr] # get roi from image
+            image_bg = cv2.bitwise_and(roi, roi, mask=self.mask_inv) # remove color from area for icon by filter
+            buf = cv2.add(self.icon_fg, image_bg) # put icon of roi
+            image[icon_ytl:icon_ybr, icon_xtl:icon_xbr] = buf # replace image region to roi
+
+        except:
+            print('icon is out of range y:{}-{}, x:{}-{}'.format(icon_ytl, icon_ybr, icon_xtl, icon_xbr))
+
+
     def loop(self):
         print('start_loop')
-        frame_num = 0
+
         sleep_time = self.video_rate
-        is_checked = False
+        frame = 0
 
         while(self.video.isOpened()):
 
             start = time.time()
+            self.frame = str(frame)
+            ret, image = self.video.read()
 
-            ret, frame = self.video.read()
+            if self.frame in self.pie_data:
+                self.refleshDisplayObjects() # udpate self.displayed_obj
+                self.renderInfo(image) # add info to the image
 
-            if str(frame_num) in self.pie_data:
-                self.manageDisplayObjects(str(frame_num), is_checked)
-                self.drawRect(frame, frame_num)
+            cv2.imshow(self.window_name, image) # render
 
-            cv2.imshow('frame', frame)
+            #  calc sleep time to keep frame rate to be same with video rate
+            sleep_time = max(int((1000 / (self.video_rate) - (time.time() - start))), 1)
 
-            sleep_time = max(int((1 / self.video_rate - (time.time() - start)) * 1000), 1)
-
-            is_checked = False
             # sleep and wait quit key
             key = cv2.waitKey(sleep_time) & 0xFF
             if key is not 255 : print(key)
             if key == ord('q'):
                 break
             if key == 13:
-                is_checked = True
+                self.pushCallback()
 
-            frame_num += 1
+            frame += 1
+
 
     def __del__(self):
         print('delete instance...')
@@ -206,14 +313,19 @@ def main():
         '--attrib',
         metavar='ATTRIB',
         default='/media/ssd/PIE_data/annotations_attributes/set01/video_0001_attributes.xml')
+    argparser.add_argument(
+        '--rate_offset',
+        metavar='OFFSET',
+        default=11)
 
     args = argparser.parse_args()
 
     pie_data_visualize = PieDataVisualize(args)
-    pie_data_visualize.getVideo(args.video)
+    pie_data_visualize.getVideo(args.video, args.rate_offset)
     pie_data_visualize.getAttrib(args.attrib)
     pie_data_visualize.getAnno(args.anno)
-    pie_data_visualize.getAttrib(args.attrib)
+    pie_data_visualize.prepareIcon()
+    pie_data_visualize.prepareEventHandler()
     # print(pie_data_visualize.pie_data.get('1133'))
     pie_data_visualize.loop()
 
