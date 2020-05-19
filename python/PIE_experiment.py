@@ -17,58 +17,89 @@ import xml.etree.ElementTree as ET
 class PieDataVisualize(object):
 
     def __init__(self, args):
-        self.window_name = 'frame'
-        self.video = None
-        self.modified_video_rate = None
-        self.image_res = args.res
-        self.image_scale = args.image_scale
-        self.image_offset = None
-        self.attrib_tree = None
+        # static object
         self.pie_data = {}
-        self.frame = None
-        self.displayed_obj = [[0]]
-        self.focused_obj_id = None
-        self.icon = None
-        self.icon_roi = None
-        self.icon_fg = None
+        self.attrib_tree = None
+
+        self.icon_dict = {
+            'walker_cross_to_left':
+                {
+                'path':args.icon_path + 'walker_cross_to_left.png'
+                },
+            'walker_cross_to_right':
+                {
+                'path':args.icon_path + 'walker_cross_to_right.png'
+                },
+            'tf_red':
+                {
+                'path':args.icon_path + 'tf_red.png'
+                },
+            'tf_green':
+                {
+                'path':args.icon_path + 'tf_green.png'
+                }
+            }
+
+        # static variables calcurated in this class
+        self.image_res = args.res
+        self.modified_video_rate = None
+        self.image_crop_rate = args.image_crop_rate
+        self.window_name = 'frame'
+        self.obj_spawn_frame_min = None
+        self.obj_spawn_frame_max = None
+
+        # log
         self.log_file = args.log
         self.log = []
-        self.display_time = args.display_time
+
+        # dynamic object
+        self.video = None
+        self.current_frame_num = None
+        self.target_obj_dict = [[0]]
 
 
     def __enter__(self):
         return self
 
+
     def prepareIcon(self):
-        img = cv2.imread('/home/kuriatsu/share/cross_small.png')
-        self.icon_roi = img.shape[:2]
-        img2grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        ret, mask = cv2.threshold(img2grey, 10, 255, cv2.THRESH_BINARY)
-        # ret, mask = cv2.threshold(img2grey, 200, 255, cv2.THRESH_BINARY_INV)
-        self.mask_inv = cv2.bitwise_not(mask)
-        self.icon_fg = cv2.bitwise_and(img, img, mask=mask)
+
+        for icon_info in self.icon_dict.values():
+            img = cv2.imread(icon_info.get('path'))
+            icon_info['roi'] = img.shape[:2]
+            img2grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            ret, mask = cv2.threshold(img2grey, 10, 255, cv2.THRESH_BINARY)
+            # ret, mask = cv2.threshold(img2grey, 200, 255, cv2.THRESH_BINARY_INV)
+            icon_info['mask_inv'] = cv2.bitwise_not(mask)
+            icon_info['icon_fg'] = cv2.bitwise_and(img, img, mask=mask)
 
 
-    def getVideo(self, video_file, rate_offset, image_offset_y):
+    def getVideo(self, args):
 
         try:
-            self.video = cv2.VideoCapture(video_file)
-            video_rate = int(self.video.get(cv2.CAP_PROP_FPS))
-            self.display_time = self.display_time * video_rate
-            print(video_rate)
-            self.modified_video_rate = video_rate + rate_offset
-            offset_yt = self.image_res[0] * ((1.0 - self.image_scale) * 0.5 + image_offset_y)
-            offset_xl = self.image_res[1] * (1.0 - self.image_scale) * 0.5
-
-            self.image_offset = [int(offset_yt),
-                                 int(offset_yt + self.image_res[0] * self.image_scale),
-                                 int(offset_xl),
-                                 int(offset_xl + self.image_res[1] * self.image_scale)
-                                 ]
+            self.video = cv2.VideoCapture(args.video)
 
         except:
             print('cannot open video')
             exit(0)
+
+        # get video rate and change variable unit from time to frame num
+        video_rate = int(self.video.get(cv2.CAP_PROP_FPS))
+        self.obj_spawn_frame_max = args.obj_spawn_time_max * video_rate
+        self.obj_spawn_frame_min = args.obj_spawn_time_min * video_rate
+        print(video_rate)
+
+        # adjust video rate to keep genuine broadcast rate
+        self.modified_video_rate = video_rate + args.rate_offset
+
+        # calc image crop region crop -> expaned to original frame geometry
+        offset_yt = self.image_res[0] * ((1.0 - self.image_crop_rate) * 0.5 + args.image_crop_offset_y)
+        offset_xl = self.image_res[1] * (1.0 - self.image_crop_rate) * 0.5
+        self.image_offset = [int(offset_yt),
+                             int(offset_yt + self.image_res[0] * self.image_crop_rate),
+                             int(offset_xl),
+                             int(offset_xl + self.image_res[1] * self.image_crop_rate)
+                             ]
 
 
     def getAttrib(self, attrib_file):
@@ -102,10 +133,10 @@ class PieDataVisualize(object):
 
                 # get basic information
                 anno_info['label'] = track.attrib.get('label')
-                anno_info['xbr'] = int((float(anno_itr.attrib.get('xbr')) - self.image_offset[2]) * (1 / self.image_scale))
-                anno_info['xtl'] = int((float(anno_itr.attrib.get('xtl')) - self.image_offset[2]) * (1 / self.image_scale))
-                anno_info['ybr'] = int((float(anno_itr.attrib.get('ybr')) - self.image_offset[0]) * (1 / self.image_scale))
-                anno_info['ytl'] = int((float(anno_itr.attrib.get('ytl')) - self.image_offset[0]) * (1 / self.image_scale))
+                anno_info['xbr'] = int((float(anno_itr.attrib.get('xbr')) - self.image_offset[2]) * (1 / self.image_crop_rate))
+                anno_info['xtl'] = int((float(anno_itr.attrib.get('xtl')) - self.image_offset[2]) * (1 / self.image_crop_rate))
+                anno_info['ybr'] = int((float(anno_itr.attrib.get('ybr')) - self.image_offset[0]) * (1 / self.image_crop_rate))
+                anno_info['ytl'] = int((float(anno_itr.attrib.get('ytl')) - self.image_offset[0]) * (1 / self.image_crop_rate))
                 # print(anno_info)
 
                 # if object is pedestrian, get additional information
@@ -117,14 +148,17 @@ class PieDataVisualize(object):
                             anno_info['crossing_point'] = attrib_itr.attrib.get('crossing_point')
                             anno_info['exp_start_point'] = attrib_itr.attrib.get('exp_start_point')
 
+                            # if the pedestrian framed out, save the frame num and apply it to the already added data in self.pie_data[]
                             if 'frameout_point' in attrib_itr.attrib:
                                 anno_info['frameout_point'] = attrib_itr.attrib.get('frameout_point')
 
                             else:
+                                # if the pedestrian framed out now, save framenum and apply it to all obj with same id
                                 if(anno_info['xbr'] > self.image_res[1] or anno_info['xtl'] < 0):
                                     anno_info['frameout_point'] = anno_itr.attrib.get('frame')
                                     attrib_itr.attrib['frameout_point'] = anno_itr.attrib.get('frame')
 
+                                    # scan the already added object in self.pie_data[]
                                     for frame_obj in self.pie_data.values():
                                         for obj_id, obj_info in frame_obj.items():
                                             if obj_id == anno_id:
@@ -153,59 +187,61 @@ class PieDataVisualize(object):
         """if mouce clicked, check position and judge weather the position is on the rectange or not
         """
         # if the event handler is leftButtonDown and current frame contains objects
-        if event == cv2.EVENT_LBUTTONDOWN and self.frame in self.pie_data:
+        if event == cv2.EVENT_LBUTTONDOWN and self.current_frame_num in self.pie_data:
 
-            for obj_id, obj_info in self.pie_data[self.frame].items():
+            for obj_id, obj_info in self.pie_data[self.current_frame_num].items():
 
                 # if the clicked position is on the rectangle of one of the objects
                 if int(float(obj_info['xtl'])) < x < int(float(obj_info['xbr'])) and int(float(obj_info['ytl'])) < y < int(float(obj_info['ybr'])):
 
                     # if the clicked position is on the focuced object
-                    if self.displayed_obj[obj_id]['is_forcused']:
+                    if self.target_obj_dict[obj_id]['is_forcused']:
 
                         # update "is_forcused" in self.dislpayed_obj
                         self.updateFocusedObject(obj_id)
-                        self.log[-1].append([self.frame, time.time()])
+                        self.log[-1].append([self.current_frame_num, time.time()])
                         return
 
 
     def pushCallback(self):
         """callback of enter key push, target is focused object
         """
-        for obj_id, obj_info in self.displayed_obj.items():
+        for obj_id, obj_info in self.target_obj_dict.items():
             if obj_info['is_forcused']:
                 self.updateFocusedObject(obj_id)
-                self.log[-1].append([self.frame, time.time()])
+                self.log[-1].append([self.current_frame_num, time.time()])
                 return
 
 
-    def refleshDisplayObjects(self):
+    def refleshTargetObjDict(self):
         """magage displaying object
         is_checked ; flag wether the subject check obj and input some action or not
         """
-        display_obj = {} # new container
+        new_target_obj = {} # new container
         is_forcused_obj_exist = False # flag
 
-        for obj_id, obj_info in self.pie_data[self.frame].items():
+        for obj_id, obj_info in self.pie_data[self.current_frame_num].items():
 
             if obj_info['label'] != 'pedestrian': continue
 
             # if the obj was already displayed
-            if obj_id in self.displayed_obj:
+            if obj_id in self.target_obj_dict:
 
-                display_obj[obj_id] = self.displayed_obj[obj_id]
-                display_obj[obj_id]['is_passed'] = (int(obj_info['frameout_point']) - int(self.frame)) < self.display_time
+                new_target_obj[obj_id] = self.target_obj_dict[obj_id]
+                new_target_obj[obj_id]['is_spawn_range'] = self.obj_spawn_frame_min < (int(obj_info['frameout_point']) - int(self.current_frame_num)) < self.obj_spawn_frame_max
                 # if the object was forcused
-                if self.displayed_obj[obj_id]['is_forcused']:
+                if self.target_obj_dict[obj_id]['is_forcused']:
                     is_forcused_obj_exist = True
 
             # if the obj is new
             else:
-                display_obj[obj_id] = {'is_forcused':False, 'is_checked':False, 'is_passed':(int(obj_info['frameout_point']) - int(self.frame) < self.display_time)}
-                print('{} < {}'.format(int(obj_info['frameout_point'])- int(self.frame), self.display_time))
+                new_target_obj[obj_id] = {'is_forcused':False,
+                                          'is_checked':False,
+                                          'is_spawn_range':self.obj_spawn_frame_min < (int(obj_info['frameout_point']) - int(self.current_frame_num)) < self.obj_spawn_frame_max}
+                # print('{} < {}'.format(int(obj_info['frameout_point'])- int(self.current_frame_num), self.display_time))
 
         # reflesh displaying object container
-        self.displayed_obj = display_obj
+        self.target_obj_dict = new_target_obj
 
         # if the forcused object is not checked, don't search new forcused obj
         if not is_forcused_obj_exist:
@@ -213,27 +249,28 @@ class PieDataVisualize(object):
 
 
     def updateFocusedObject(self, checked_obj_id=None):
-        """find focused object from self.displayed_obj
+        """find focused object from self.target_obj_dict
         """
         min_obj_id = None # initial variable for searching new imporant objects
         min_time = 20000 # initial variable for searching new imporant objects
 
         # is this method called by callback, checked_obj_id has target object id which is checked and should be unfocused
         if checked_obj_id is not None:
-            self.displayed_obj[checked_obj_id]['is_checked'] = True
-            self.displayed_obj[checked_obj_id]['is_forcused'] = False
+            self.target_obj_dict[checked_obj_id]['is_checked'] = True
+            self.target_obj_dict[checked_obj_id]['is_forcused'] = False
 
         # find new focused object
-        for obj_id, obj_info in self.displayed_obj.items():
+        for obj_id, obj_info in self.target_obj_dict.items():
             # search the new forcused obj
-            if not obj_info['is_checked'] and not obj_info['is_passed'] and int(self.pie_data[self.frame][obj_id]['frameout_point']) < min_time:
-                print(obj_info['is_passed'])
+            if not obj_info['is_checked'] and obj_info['is_spawn_range']:
+            # if not obj_info['is_checked'] and obj_info['is_spawn_range'] and int(self.pie_data[self.current_frame_num][obj_id]['frameout_point']) < min_time:
+                # print(obj_info['is_spawn_range'])
                 min_obj_id = obj_id
-                min_time = int(self.pie_data[self.frame][obj_id]['frameout_point'])
+                min_time = int(self.pie_data[self.current_frame_num][obj_id]['frameout_point'])
 
         # if the new forcused obj is found, add the flag
         if min_obj_id is not None:
-            self.displayed_obj[min_obj_id]['is_forcused'] = True
+            self.target_obj_dict[min_obj_id]['is_forcused'] = True
 
 
     def renderInfo(self, image):
@@ -241,13 +278,13 @@ class PieDataVisualize(object):
 
         """
         # loop for each object in the frame from PIE dataset
-        for obj_id, displayed_obj_info in self.displayed_obj.items():
+        for obj_id, displayed_obj_info in self.target_obj_dict.items():
 
-            obj_info = self.pie_data[self.frame][obj_id]
+            obj_info = self.pie_data[self.current_frame_num][obj_id]
 
             if displayed_obj_info['is_forcused']: # if forcused --- red
                 color = (0, 0, 255)
-                # if self.frame == obj_info['frameout_point']:
+                # if self.current_frame_num == obj_info['frameout_point']:
                 #     print('frame_out')
                 #     color = (255, 0, 255)
                 #     print(obj_info)
@@ -260,28 +297,32 @@ class PieDataVisualize(object):
                 #     cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA
                 #     )
 
-                # print((float(obj_info['frameout_point']) - float(self.frame)) * 5 / self.display_time)
-                # print(displayed_obj_info['is_passed'])
-                # cv2.putText(
-                #     image,
-                #     '{:.01f}%'.format(float(obj_info['intention_prob']) * 100),
-                #     (int(float(obj_info['xtl'])), int(float(obj_info['ytl'])) - 10),
-                #     cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA
-                #     )
+                # print((float(obj_info['frameout_point']) - float(self.current_frame_num)) * 5 / self.display_time)
+                # print(displayed_obj_info['is_spawn_range'])
+                cv2.putText(
+                    image,
+                    '{:.01f}%'.format(float(obj_info['intention_prob']) * 100),
+                    (int(float(obj_info['xtl'])), int(float(obj_info['ytl'])) - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA
+                    )
 
+                image = cv2.rectangle(image,
+                (int(float(obj_info['xtl'])), int(float(obj_info['ytl']))),
+                (int(float(obj_info['xbr'])), int(float(obj_info['ybr']))),
+                color,
+                1)
 
+                # try:
+                #     scale = 50.0 / (float(obj_info['xbr']) - float(obj_info['xtl']))
+                #     pedestrian_image = cv2.resize(image[int(float(obj_info['ytl'])):int(float(obj_info['ybr'])), int(float(obj_info['xtl'])):int(float(obj_info['xbr']))], dsize=None, fx=scale, fy=scale)
+                #     print('pedestrian rendered, y:', pedestrian_image.shape[0], pedestrian_image.shape[1])
+                #     # image[500:500+pedestrian_image.shape[0], 500:500+pedestrian_image.shape[1]] = pedestrian_image
+                #     image[int(float(obj_info['ytl'])) - pedestrian_image.shape[0]:int(float(obj_info['ytl'])), int(float(obj_info['xbr']) - pedestrian_image.shape[1]*0.5):int(float(obj_info['xbr']) + pedestrian_image.shape[1]*0.5)] = pedestrian_image
+                #
+                # except:
+                #     print('pedestrian render is out of image')
 
-                try:
-                    scale = 50.0 / (float(obj_info['xbr']) - float(obj_info['xtl']))
-                    pedestrian_image = cv2.resize(image[int(float(obj_info['ytl'])):int(float(obj_info['ybr'])), int(float(obj_info['xtl'])):int(float(obj_info['xbr']))], dsize=None, fx=scale, fy=scale)
-                    print('pedestrian rendered, y:', pedestrian_image.shape[0], pedestrian_image.shape[1])
-                    # image[500:500+pedestrian_image.shape[0], 500:500+pedestrian_image.shape[1]] = pedestrian_image
-                    image[int(float(obj_info['ytl'])) - pedestrian_image.shape[0]:int(float(obj_info['ytl'])), int(float(obj_info['xbr']) - pedestrian_image.shape[1]*0.5):int(float(obj_info['xbr']) + pedestrian_image.shape[1]*0.5)] = pedestrian_image
-
-                except:
-                    print('pedestrian render is out of image')
-
-                self.log.append([self.frame,
+                self.log.append([self.current_frame_num,
                                  time.time(),
                                  obj_id,
                                  obj_info['intention_prob'],
@@ -293,18 +334,18 @@ class PieDataVisualize(object):
             elif displayed_obj_info['is_checked']: # if checked --- green
                 color = (0, 255, 0)
 
-            elif displayed_obj_info['is_passed']: # passed --- blue
+            elif displayed_obj_info['is_spawn_range']: # passed --- blue
                 color = (255, 0, 0)
 
             else:
                 color = (0,0,0)
 
 
-            image = cv2.rectangle(image,
-            (int(float(obj_info['xtl'])), int(float(obj_info['ytl']))),
-            (int(float(obj_info['xbr'])), int(float(obj_info['ybr']))),
-            color,
-            1)
+            # image = cv2.rectangle(image,
+            # (int(float(obj_info['xtl'])), int(float(obj_info['ytl']))),
+            # (int(float(obj_info['xbr'])), int(float(obj_info['ybr']))),
+            # color,
+            # 1)
 
     def drawIcon(self, image, obj_info):
         """draw icon to emphasize the target objects
@@ -342,21 +383,18 @@ class PieDataVisualize(object):
         while(self.video.isOpened()):
 
             start = time.time()
-            self.frame = str(frame)
+            self.current_frame_num = str(frame)
             ret, image = self.video.read()
 
-            scale = 1.0 / self.image_scale
-
-            # image = image[offset_yt:offset_yb, offset_xl:offset_xr]
-            # print(offset_xr, offset_xl, offset_yt, offset_yb)
-            # print(image.shape)
-            image = cv2.resize(image[self.image_offset[0]:self.image_offset[1], self.image_offset[2]:self.image_offset[3]], dsize=None, fx=scale, fy=scale)
-
-            if self.frame in self.pie_data:
-                self.refleshDisplayObjects() # udpate self.displayed_obj
-                self.renderInfo(image) # add info to the image
 
             # preprocess image . crop + resize
+            scale = 1.0 / self.image_crop_rate
+            image = cv2.resize(image[self.image_offset[0]:self.image_offset[1], self.image_offset[2]:self.image_offset[3]], dsize=None, fx=scale, fy=scale)
+
+            if self.current_frame_num in self.pie_data:
+                self.refleshTargetObjDict() # udpate self.target_obj_dict
+                self.renderInfo(image) # add info to the image
+
             cv2.imshow(self.window_name, image) # render
 
             #  calc sleep time to keep frame rate to be same with video rate
@@ -412,11 +450,11 @@ def main():
         metavar='LOG',
         default='/home/kuriatsu/share/{}_intervene_time.csv'.format(datetime.date.today()))
     argparser.add_argument(
-        '--image_scale',
+        '--image_crop_rate',
         metavar='SCALE',
         default=0.6)
     argparser.add_argument(
-        '--image_offset_y',
+        '--image_crop_offset_y',
         metavar='OFFSET',
         default=0.2)
     argparser.add_argument(
@@ -425,14 +463,21 @@ def main():
         type=parser_res,
         default='1080x1900')
     argparser.add_argument(
-        '--display_time',
-        metavar='TIME',
-        default=3)
-
+        '--obj_spawn_time_min',
+        metavar='MIN_TIME',
+        default=2)
+    argparser.add_argument(
+        '--obj_spawn_time_max',
+        metavar='MAX_TIME',
+        default=46)
+    argparser.add_argument(
+        '--icon_path',
+        metavar='/path/to/icon/files',
+        default='/home/kuriatsu/share/')
     args = argparser.parse_args()
 
     with PieDataVisualize(args) as pie_data_visualize:
-        pie_data_visualize.getVideo(args.video, args.rate_offset, args.image_offset_y)
+        pie_data_visualize.getVideo(args)
         pie_data_visualize.getAttrib(args.attrib)
         pie_data_visualize.getAnno(args.anno)
         pie_data_visualize.prepareIcon()
