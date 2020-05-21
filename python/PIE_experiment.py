@@ -55,7 +55,8 @@ class PieDataVisualize(object):
         # dynamic object
         self.video = None
         self.current_frame_num = None
-        self.target_obj_dict = [[0]]
+        self.target_obj_dict = {}
+        # self.target_obj_dict = [[0]]
 
 
     def __enter__(self):
@@ -186,30 +187,34 @@ class PieDataVisualize(object):
     def touchCallback(self, event, x, y, flags, param):
         """if mouce clicked, check position and judge weather the position is on the rectange or not
         """
+        if self.target_obj_dict is None: return
+
         # if the event handler is leftButtonDown and current frame contains objects
         if event == cv2.EVENT_LBUTTONDOWN and self.current_frame_num in self.pie_data:
 
             for obj_id, obj_info in self.pie_data[self.current_frame_num].items():
 
                 # if the clicked position is on the rectangle of one of the objects
-                if int(float(obj_info['xtl'])) < x < int(float(obj_info['xbr'])) and int(float(obj_info['ytl'])) < y < int(float(obj_info['ybr'])):
+                if obj_info['xtl'] < x < obj_info['xbr'] and obj_info['ytl'] < y < obj_info['ybr']:
 
                     # if the clicked position is on the focuced object
                     if self.target_obj_dict[obj_id]['is_forcused']:
 
                         # update "is_forcused" in self.dislpayed_obj
                         self.updateFocusedObject(obj_id)
-                        self.log[-1].append([self.current_frame_num, time.time()])
+                        self.log[-1] += ['touched' ,self.current_frame_num, time.time()]
                         return
 
 
     def pushCallback(self):
         """callback of enter key push, target is focused object
         """
+        if self.target_obj_dict is None: return
+
         for obj_id, obj_info in self.target_obj_dict.items():
             if obj_info['is_forcused']:
                 self.updateFocusedObject(obj_id)
-                self.log[-1].append([self.current_frame_num, time.time()])
+                self.log[-1] += ['pushed', self.current_frame_num, time.time()]
                 return
 
 
@@ -282,54 +287,48 @@ class PieDataVisualize(object):
 
             obj_info = self.pie_data[self.current_frame_num][obj_id]
 
-            if displayed_obj_info['is_forcused']: # if forcused --- red
+            if displayed_obj_info['is_forcused'] and self.current_frame_num < obj_info['frameout_point']: # if forcused --- red
+
                 color = (0, 0, 255)
-                # if self.current_frame_num == obj_info['frameout_point']:
-                #     print('frame_out')
-                #     color = (255, 0, 255)
-                #     print(obj_info)
+
                 self.drawIcon(image, obj_info)
 
                 # cv2.putText(
-                #     image,
                 #     'Cross?',
+                #     # '{:.01f}%'.format(float(obj_info['intention_prob']) * 100),
+                #     image,
                 #     (int(float(obj_info['xtl'])), int(float(obj_info['ytl'])) - 10),
                 #     cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA
                 #     )
 
-                # print((float(obj_info['frameout_point']) - float(self.current_frame_num)) * 5 / self.display_time)
-                # print(displayed_obj_info['is_spawn_range'])
-                cv2.putText(
-                    image,
-                    '{:.01f}%'.format(float(obj_info['intention_prob']) * 100),
-                    (int(float(obj_info['xtl'])), int(float(obj_info['ytl'])) - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA
-                    )
-
                 image = cv2.rectangle(image,
-                (int(float(obj_info['xtl'])), int(float(obj_info['ytl']))),
-                (int(float(obj_info['xbr'])), int(float(obj_info['ybr']))),
+                (obj_info['xtl'], obj_info['ytl']),
+                (obj_info['xbr'], obj_info['ybr']),
                 color,
                 1)
 
-                # try:
-                #     scale = 50.0 / (float(obj_info['xbr']) - float(obj_info['xtl']))
-                #     pedestrian_image = cv2.resize(image[int(float(obj_info['ytl'])):int(float(obj_info['ybr'])), int(float(obj_info['xtl'])):int(float(obj_info['xbr']))], dsize=None, fx=scale, fy=scale)
-                #     print('pedestrian rendered, y:', pedestrian_image.shape[0], pedestrian_image.shape[1])
-                #     # image[500:500+pedestrian_image.shape[0], 500:500+pedestrian_image.shape[1]] = pedestrian_image
-                #     image[int(float(obj_info['ytl'])) - pedestrian_image.shape[0]:int(float(obj_info['ytl'])), int(float(obj_info['xbr']) - pedestrian_image.shape[1]*0.5):int(float(obj_info['xbr']) + pedestrian_image.shape[1]*0.5)] = pedestrian_image
-                #
-                # except:
-                #     print('pedestrian render is out of image')
+                # magnifyObject(image, obj_info)
 
-                self.log.append([self.current_frame_num,
-                                 time.time(),
-                                 obj_id,
-                                 obj_info['intention_prob'],
-                                 obj_info['critical_point'],
-                                 obj_info['crossing_point'],
-                                 obj_info['exp_start_point'],
-                                 ])
+                if len(self.log) == 0:
+                    self.log.append([self.current_frame_num,
+                                     time.time(),
+                                     obj_id,
+                                     obj_info['intention_prob'],
+                                     obj_info['critical_point'],
+                                     obj_info['frameout_point'],
+                                     obj_info['exp_start_point']
+                                     ])
+
+                elif self.log[-1][2] != obj_id:
+                    print('obj_changed {}->{}'.format(self.log[-1][2], obj_id))
+                    self.log.append([self.current_frame_num,
+                                     time.time(),
+                                     obj_id,
+                                     obj_info['intention_prob'],
+                                     obj_info['critical_point'],
+                                     obj_info['frameout_point'],
+                                     obj_info['exp_start_point']
+                                     ])
 
             elif displayed_obj_info['is_checked']: # if checked --- green
                 color = (0, 255, 0)
@@ -341,32 +340,43 @@ class PieDataVisualize(object):
                 color = (0,0,0)
 
 
-            # image = cv2.rectangle(image,
-            # (int(float(obj_info['xtl'])), int(float(obj_info['ytl']))),
-            # (int(float(obj_info['xbr'])), int(float(obj_info['ybr']))),
-            # color,
-            # 1)
+    def magnifyObject(self, image, obj_info):
+
+        try:
+            scale = 50.0 / (float(obj_info['xbr']) - float(obj_info['xtl']))
+            pedestrian_image = cv2.resize(image[obj_info['ytl'] : obj_info['ybr'], obj_info['xtl'] : obj_info['xbr']], dsize=None, fx=scale, fy=scale)
+            print('pedestrian rendered, y:', pedestrian_image.shape[0], pedestrian_image.shape[1])
+            # image[500:500+pedestrian_image.shape[0], 500:500+pedestrian_image.shape[1]] = pedestrian_image
+            image[obj_info['ytl'] - pedestrian_image.shape[0] : obj_info['ytl'], obj_info['xbr'] - int(pedestrian_image.shape[1]*0.5) : obj_info['xbr'] + int(pedestrian_image.shape[1]*0.5)] = pedestrian_image
+
+        except:
+            print('pedestrian render is out of image')
+
 
     def drawIcon(self, image, obj_info):
         """draw icon to emphasize the target objects
         image : image
         obj_info : PIE dataset info of the object in the frame
         """
+        if obj_info['xbr'] < self.image_res[1] * 0.5:
+            icon_info = self.icon_dict['walker_cross_to_right']
+        else:
+            icon_info = self.icon_dict['walker_cross_to_left']
 
         icon_offset_y = 30.0
-        icon_offset_x = int((self.icon_roi[1] - (float(obj_info['xbr']) - float(obj_info['xtl']))) * 0.5)
+        icon_offset_x = int((icon_info['roi'][1] - (obj_info['xbr'] - obj_info['xtl'])) * 0.5)
 
         # position of the icon
-        icon_ytl = int(float(obj_info['ytl']) - self.icon_roi[0] - icon_offset_y)
-        icon_xtl = int(float(obj_info['xtl']) - icon_offset_x)
-        icon_ybr = int(float(obj_info['ytl']) - icon_offset_y)
-        icon_xbr = int(float(obj_info['xtl']) + self.icon_roi[1] - icon_offset_x)
+        icon_ytl = int(obj_info['ytl'] - icon_info['roi'][0] - icon_offset_y)
+        icon_xtl = int(obj_info['xtl'] - icon_offset_x)
+        icon_ybr = int(obj_info['ytl'] - icon_offset_y)
+        icon_xbr = int(obj_info['xtl'] + icon_info['roi'][1] - icon_offset_x)
 
         # put icon on image
         try:
             roi = image[icon_ytl:icon_ybr, icon_xtl:icon_xbr] # get roi from image
-            image_bg = cv2.bitwise_and(roi, roi, mask=self.mask_inv) # remove color from area for icon by filter
-            buf = cv2.add(self.icon_fg, image_bg) # put icon of roi
+            image_bg = cv2.bitwise_and(roi, roi, mask=icon_info['mask_inv']) # remove color from area for icon by filter
+            buf = cv2.add(icon_info['icon_fg'], image_bg) # put icon of roi
             image[icon_ytl:icon_ybr, icon_xtl:icon_xbr] = buf # replace image region to roi
 
         except:
@@ -421,7 +431,7 @@ class PieDataVisualize(object):
 
         with open(self.log_file, 'w') as f:
             writer = csv.writer(f)
-            writer.writerow(['display_frame', 'display_time', 'id', 'intention_prob', 'critical_point', 'crossing_point', 'exp_start_point'])
+            writer.writerow(['display_frame', 'display_time', 'id', 'intention_prob', 'critical_point', 'frameout_point', 'exp_start_point', 'intervene_type', 'intervene_frame', 'intervene_time'])
             writer.writerows(self.log)
 
 
@@ -432,15 +442,15 @@ def main():
     argparser.add_argument(
         '--video', '-v',
         metavar='VIDEO',
-        default='/media/ssd/PIE_data/PIE_clips/set01/video_0001.mp4')
+        default='/media/ssd/PIE_data/PIE_clips/set02/video_0001.mp4')
     argparser.add_argument(
         '--anno',
         metavar='ANNO',
-        default='/media/ssd/PIE_data/annotations/set01/video_0001_annt.xml')
+        default='/media/ssd/PIE_data/annotations/set02/video_0001_annt.xml')
     argparser.add_argument(
         '--attrib',
         metavar='ATTRIB',
-        default='/media/ssd/PIE_data/annotations_attributes/set01/video_0001_attributes.xml')
+        default='/media/ssd/PIE_data/annotations_attributes/set02/video_0001_attributes.xml')
     argparser.add_argument(
         '--rate_offset',
         metavar='OFFSET',
@@ -465,11 +475,11 @@ def main():
     argparser.add_argument(
         '--obj_spawn_time_min',
         metavar='MIN_TIME',
-        default=2)
+        default=1)
     argparser.add_argument(
         '--obj_spawn_time_max',
         metavar='MAX_TIME',
-        default=46)
+        default=4)
     argparser.add_argument(
         '--icon_path',
         metavar='/path/to/icon/files',
