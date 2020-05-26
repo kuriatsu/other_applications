@@ -123,14 +123,16 @@ class PieDataVisualize(object):
 
         for track in root.findall('track'):
 
+            frameout_point = None
+
             for anno_itr in track.iter('box'):
 
                 anno_info = {}
 
-                # get id
+                # get id and other info from child tree under <box>
                 for attribute in anno_itr.findall('attribute'):
-                    if attribute.attrib.get('name') == 'id':
-                        anno_id = attribute.text
+                    if attribute.attrib.get('name') in ['id', 'cross', 'type', 'state']:
+                        anno_info[attribute.attrib.get('name')] = attribute.text
 
                 # get basic information
                 anno_info['label'] = track.attrib.get('label')
@@ -138,38 +140,44 @@ class PieDataVisualize(object):
                 anno_info['xtl'] = int((float(anno_itr.attrib.get('xtl')) - self.image_offset[2]) * (1 / self.image_crop_rate))
                 anno_info['ybr'] = int((float(anno_itr.attrib.get('ybr')) - self.image_offset[0]) * (1 / self.image_crop_rate))
                 anno_info['ytl'] = int((float(anno_itr.attrib.get('ytl')) - self.image_offset[0]) * (1 / self.image_crop_rate))
-                # print(anno_info)
 
-                # if object is pedestrian, get additional information
+                # if the object frameded out, save the frame num and apply it to the already added data in self.pie_data[]
+                if frameout_point is None:
+
+                    # if the pedestrian framed out now, save framenum and apply it to all obj with same id
+                    if anno_info['xbr'] > self.image_res[1] or anno_info['xtl'] < 0 or anno_info['ybr'] > self.image_res[0] or anno_info['ytl'] < 0:
+                        frameout_point = anno_itr.attrib.get('frame')
+                        anno_info['frameout_point'] = frameout_point
+
+                        # scan the already added object in self.pie_data[]
+                        for frame_obj in self.pie_data.values():
+
+                            for obj_id, obj_info in frame_obj.items():
+
+                                if obj_id == anno_info['id']:
+                                    obj_info['frameout_point'] = frameout_point
+
+                    # if the framedout_point is not found, the framedout_point filled with final annotated frame
+                    else:
+                        anno_info['frameout_point'] = track.findall('box')[-1].attrib.get('frame')
+
+                else:
+                    anno_info['frameout_point'] = frameout_point
+
+                # if object is pedestrian, get additional information from attributes.xml
                 if anno_info['label'] == 'pedestrian':
                     for attrib_itr in self.attrib_tree.iter('pedestrian'):
-                        if attrib_itr.attrib.get('id') == anno_id:
+                        if attrib_itr.attrib.get('id') == anno_info['id']:
                             anno_info['intention_prob'] = attrib_itr.attrib.get('intention_prob')
                             anno_info['critical_point'] = attrib_itr.attrib.get('critical_point')
                             anno_info['crossing_point'] = attrib_itr.attrib.get('crossing_point')
                             anno_info['exp_start_point'] = attrib_itr.attrib.get('exp_start_point')
 
-                            # if the pedestrian framed out, save the frame num and apply it to the already added data in self.pie_data[]
-                            if 'frameout_point' in attrib_itr.attrib:
-                                anno_info['frameout_point'] = attrib_itr.attrib.get('frameout_point')
-
-                            else:
-                                # if the pedestrian framed out now, save framenum and apply it to all obj with same id
-                                if(anno_info['xbr'] > self.image_res[1] or anno_info['xtl'] < 0):
-                                    anno_info['frameout_point'] = anno_itr.attrib.get('frame')
-                                    attrib_itr.attrib['frameout_point'] = anno_itr.attrib.get('frame')
-
-                                    # scan the already added object in self.pie_data[]
-                                    for frame_obj in self.pie_data.values():
-                                        for obj_id, obj_info in frame_obj.items():
-                                            if obj_id == anno_id:
-                                                obj_info['frameout_point'] = anno_itr.attrib.get('frame')
-
                 # add to pie_data dictionary
                 if anno_itr.attrib.get('frame') not in self.pie_data:
                     self.pie_data[anno_itr.attrib.get('frame')] = {}
 
-                self.pie_data[anno_itr.attrib.get('frame')][anno_id] = anno_info
+                self.pie_data[anno_itr.attrib.get('frame')][anno_info['id']] = anno_info
 
         # delete objects to improve performance
         del root
@@ -206,7 +214,7 @@ class PieDataVisualize(object):
                         return
 
 
-    def pushCallback(self):
+    def pushCallback(self, key):
         """callback of enter key push, target is focused object
         """
         if self.target_obj_dict is None: return
@@ -214,7 +222,7 @@ class PieDataVisualize(object):
         for obj_id, obj_info in self.target_obj_dict.items():
             if obj_info['is_forcused']:
                 self.updateFocusedObject(obj_id)
-                self.log[-1] += ['pushed', self.current_frame_num, time.time()]
+                self.log[-1] += ['pushed', self.current_frame_num, time.time(), key]
                 return
 
 
@@ -227,13 +235,14 @@ class PieDataVisualize(object):
 
         for obj_id, obj_info in self.pie_data[self.current_frame_num].items():
 
-            if obj_info['label'] != 'pedestrian': continue
+            if obj_info['label'] not in  ['pedestrian', 'traffic_light']: continue
 
             # if the obj was already displayed
             if obj_id in self.target_obj_dict:
 
                 new_target_obj[obj_id] = self.target_obj_dict[obj_id]
                 new_target_obj[obj_id]['is_spawn_range'] = self.obj_spawn_frame_min < (int(obj_info['frameout_point']) - int(self.current_frame_num)) < self.obj_spawn_frame_max
+
                 # if the object was forcused
                 if self.target_obj_dict[obj_id]['is_forcused']:
                     is_forcused_obj_exist = True
@@ -243,7 +252,6 @@ class PieDataVisualize(object):
                 new_target_obj[obj_id] = {'is_forcused':False,
                                           'is_checked':False,
                                           'is_spawn_range':self.obj_spawn_frame_min < (int(obj_info['frameout_point']) - int(self.current_frame_num)) < self.obj_spawn_frame_max}
-                # print('{} < {}'.format(int(obj_info['frameout_point'])- int(self.current_frame_num), self.display_time))
 
         # reflesh displaying object container
         self.target_obj_dict = new_target_obj
@@ -269,7 +277,6 @@ class PieDataVisualize(object):
             # search the new forcused obj
             if not obj_info['is_checked'] and obj_info['is_spawn_range']:
             # if not obj_info['is_checked'] and obj_info['is_spawn_range'] and int(self.pie_data[self.current_frame_num][obj_id]['frameout_point']) < min_time:
-                # print(obj_info['is_spawn_range'])
                 min_obj_id = obj_id
                 min_time = int(self.pie_data[self.current_frame_num][obj_id]['frameout_point'])
 
@@ -313,10 +320,10 @@ class PieDataVisualize(object):
                     self.log.append([self.current_frame_num,
                                      time.time(),
                                      obj_id,
-                                     obj_info['intention_prob'],
-                                     obj_info['critical_point'],
+                                     # obj_info['intention_prob'],
+                                     # obj_info['critical_point'],
                                      obj_info['frameout_point'],
-                                     obj_info['exp_start_point']
+                                     # obj_info['exp_start_point']
                                      ])
 
                 elif self.log[-1][2] != obj_id:
@@ -324,10 +331,10 @@ class PieDataVisualize(object):
                     self.log.append([self.current_frame_num,
                                      time.time(),
                                      obj_id,
-                                     obj_info['intention_prob'],
-                                     obj_info['critical_point'],
+                                     # obj_info['intention_prob'],
+                                     # obj_info['critical_point'],
                                      obj_info['frameout_point'],
-                                     obj_info['exp_start_point']
+                                     # obj_info['exp_start_point']
                                      ])
 
             elif displayed_obj_info['is_checked']: # if checked --- green
@@ -415,8 +422,8 @@ class PieDataVisualize(object):
             if key is not 255 : print(key)
             if key == ord('q'):
                 break
-            if key == 13:
-                self.pushCallback()
+            if key == 13 or key == ord('y') or key == ord('n'):
+                self.pushCallback(key)
 
             frame += 1
 
