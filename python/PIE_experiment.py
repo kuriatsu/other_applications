@@ -12,6 +12,7 @@ import time
 import datetime
 import csv
 import xml.etree.ElementTree as ET
+import random
 
 
 class PieDataVisualize(object):
@@ -47,7 +48,8 @@ class PieDataVisualize(object):
         self.window_name = 'frame'
         self.obj_spawn_frame_min = None
         self.obj_spawn_frame_max = None
-
+        self.prob_thres_tr = args.prob_thres_tr
+        self.prob_thres_pedestrian = args.prob_thres_pedestrian
         # log
         self.log_file = args.log
         self.log = []
@@ -121,12 +123,12 @@ class PieDataVisualize(object):
             print('cannot open annotation file')
             exit(0)
 
-        for track in root.findall('track'):
 
+        for track in root.findall('track'):
             frameout_point = None
+            rand_prob = random.random()
 
             for anno_itr in track.iter('box'):
-
                 anno_info = {}
 
                 # get id and other info from child tree under <box>
@@ -151,9 +153,7 @@ class PieDataVisualize(object):
 
                         # scan the already added object in self.pie_data[]
                         for frame_obj in self.pie_data.values():
-
                             for obj_id, obj_info in frame_obj.items():
-
                                 if obj_id == anno_info['id']:
                                     obj_info['frameout_point'] = frameout_point
 
@@ -168,10 +168,13 @@ class PieDataVisualize(object):
                 if anno_info['label'] == 'pedestrian':
                     for attrib_itr in self.attrib_tree.iter('pedestrian'):
                         if attrib_itr.attrib.get('id') == anno_info['id']:
-                            anno_info['intention_prob'] = attrib_itr.attrib.get('intention_prob')
+                            anno_info['prob'] = float(attrib_itr.attrib.get('intention_prob'))
                             anno_info['critical_point'] = attrib_itr.attrib.get('critical_point')
                             anno_info['crossing_point'] = attrib_itr.attrib.get('crossing_point')
                             anno_info['exp_start_point'] = attrib_itr.attrib.get('exp_start_point')
+
+                if anno_info['label'] == 'traffic_light':
+                    anno_info['prob'] = rand_prob
 
                 # add to pie_data dictionary
                 if anno_itr.attrib.get('frame') not in self.pie_data:
@@ -199,15 +202,11 @@ class PieDataVisualize(object):
 
         # if the event handler is leftButtonDown and current frame contains objects
         if event == cv2.EVENT_LBUTTONDOWN and self.current_frame_num in self.pie_data:
-
             for obj_id, obj_info in self.pie_data[self.current_frame_num].items():
-
                 # if the clicked position is on the rectangle of one of the objects
                 if obj_info['xtl'] < x < obj_info['xbr'] and obj_info['ytl'] < y < obj_info['ybr']:
-
                     # if the clicked position is on the focuced object
                     if self.target_obj_dict[obj_id]['is_forcused']:
-
                         # update "is_forcused" in self.dislpayed_obj
                         self.updateFocusedObject(obj_id)
                         self.log[-1] += ['touched' ,self.current_frame_num, time.time()]
@@ -234,8 +233,11 @@ class PieDataVisualize(object):
         is_forcused_obj_exist = False # flag
 
         for obj_id, obj_info in self.pie_data[self.current_frame_num].items():
-
             if obj_info['label'] not in  ['pedestrian', 'traffic_light']: continue
+            if obj_info['label'] == 'pedestrian' and obj_info['prob'] > self.prob_thres_pedestrian: continue
+            if obj_info['label'] == 'traffic_light':
+                if obj_info['type'] != 'regular': continue
+                if obj_info['prob'] > self.prob_thres_pedestrian: continue
 
             # if the obj was already displayed
             if obj_id in self.target_obj_dict:
@@ -243,9 +245,16 @@ class PieDataVisualize(object):
                 new_target_obj[obj_id] = self.target_obj_dict[obj_id]
                 new_target_obj[obj_id]['is_spawn_range'] = self.obj_spawn_frame_min < (int(obj_info['frameout_point']) - int(self.current_frame_num)) < self.obj_spawn_frame_max
 
-                # if the object was forcused
-                if self.target_obj_dict[obj_id]['is_forcused']:
-                    is_forcused_obj_exist = True
+                # forcused obj shold be focused in next frame?
+                if new_target_obj[obj_id]['is_forcused']:
+                    if int(self.current_frame_num) < int(obj_info['frameout_point']):
+                        is_forcused_obj_exist = True
+
+                    # if frame outed, assume is as passing and focus is cleared and save to log
+                    else:
+                        new_target_obj[obj_id]['is_forcused'] = False
+                        self.log[-1] += ['passed' ,self.current_frame_num, time.time()]
+
 
             # if the obj is new
             else:
@@ -291,22 +300,19 @@ class PieDataVisualize(object):
         """
         # loop for each object in the frame from PIE dataset
         for obj_id, displayed_obj_info in self.target_obj_dict.items():
-
             obj_info = self.pie_data[self.current_frame_num][obj_id]
 
             if displayed_obj_info['is_forcused'] and self.current_frame_num < obj_info['frameout_point']: # if forcused --- red
-
                 color = (0, 0, 255)
-
                 self.drawIcon(image, obj_info)
 
-                # cv2.putText(
-                #     'Cross?',
-                #     # '{:.01f}%'.format(float(obj_info['intention_prob']) * 100),
-                #     image,
-                #     (int(float(obj_info['xtl'])), int(float(obj_info['ytl'])) - 10),
-                #     cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA
-                #     )
+                cv2.putText(
+                    # 'Cross?',
+                    image,
+                    '{:.01f}%'.format(obj_info['prob'] * 100),
+                    (int(obj_info['xtl']), int(obj_info['ytl']) - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA
+                    )
 
                 image = cv2.rectangle(image,
                 (obj_info['xtl'], obj_info['ytl']),
@@ -316,26 +322,19 @@ class PieDataVisualize(object):
 
                 # magnifyObject(image, obj_info)
 
-                if len(self.log) == 0:
-                    self.log.append([self.current_frame_num,
-                                     time.time(),
-                                     obj_id,
-                                     # obj_info['intention_prob'],
-                                     # obj_info['critical_point'],
-                                     obj_info['frameout_point'],
-                                     # obj_info['exp_start_point']
-                                     ])
+                if len(self.log) == 0 or self.log[-1][2] != obj_id:
+                    self.log.append([
+                        self.current_frame_num,
+                        time.time(),
+                        obj_id,
+                        obj_info['label'],
+                        obj_info['frameout_point']
+                        # obj_info['intention_prob'],
+                        # obj_info['critical_point'],
+                        ])
 
-                elif self.log[-1][2] != obj_id:
+                if self.log[-1][2] != obj_id:
                     print('obj_changed {}->{}'.format(self.log[-1][2], obj_id))
-                    self.log.append([self.current_frame_num,
-                                     time.time(),
-                                     obj_id,
-                                     # obj_info['intention_prob'],
-                                     # obj_info['critical_point'],
-                                     obj_info['frameout_point'],
-                                     # obj_info['exp_start_point']
-                                     ])
 
             elif displayed_obj_info['is_checked']: # if checked --- green
                 color = (0, 255, 0)
@@ -365,13 +364,21 @@ class PieDataVisualize(object):
         image : image
         obj_info : PIE dataset info of the object in the frame
         """
-        if obj_info['xbr'] < self.image_res[1] * 0.5:
-            icon_info = self.icon_dict['walker_cross_to_right']
-        else:
-            icon_info = self.icon_dict['walker_cross_to_left']
 
-        icon_offset_y = 30.0
-        icon_offset_x = int((icon_info['roi'][1] - (obj_info['xbr'] - obj_info['xtl'])) * 0.5)
+        if obj_info['label'] == 'traffic_light':
+            icon_info = self.icon_dict['tf_red']
+            icon_offset_y = 30.0
+            icon_offset_x = int((icon_info['roi'][1] - (obj_info['xbr'] - obj_info['xtl'])) * 0.5)
+
+
+        if obj_info['label'] == 'pedestrian':
+            if obj_info['xbr'] < self.image_res[1] * 0.5:
+                icon_info = self.icon_dict['walker_cross_to_right']
+            else:
+                icon_info = self.icon_dict['walker_cross_to_left']
+
+            icon_offset_y = 30.0
+            icon_offset_x = int((icon_info['roi'][1] - (obj_info['xbr'] - obj_info['xtl'])) * 0.5)
 
         # position of the icon
         icon_ytl = int(obj_info['ytl'] - icon_info['roi'][0] - icon_offset_y)
@@ -398,7 +405,6 @@ class PieDataVisualize(object):
         frame = 0
 
         while(self.video.isOpened()):
-
             start = time.time()
             self.current_frame_num = str(frame)
             ret, image = self.video.read()
@@ -438,7 +444,7 @@ class PieDataVisualize(object):
 
         with open(self.log_file, 'w') as f:
             writer = csv.writer(f)
-            writer.writerow(['display_frame', 'display_time', 'id', 'intention_prob', 'critical_point', 'frameout_point', 'exp_start_point', 'intervene_type', 'intervene_frame', 'intervene_time'])
+            writer.writerow(['display_frame', 'display_time', 'id', 'obj_type', 'frameout_point', 'intervene_type', 'intervene_frame', 'intervene_time', 'intervene_key'])
             writer.writerows(self.log)
 
 
@@ -491,6 +497,14 @@ def main():
         '--icon_path',
         metavar='/path/to/icon/files',
         default='/home/kuriatsu/share/')
+    argparser.add_argument(
+        '--prob_thres_pedestrian',
+        metavar='RATE',
+        default=1.0)
+    argparser.add_argument(
+        '--prob_thres_tr',
+        metavar='RATE',
+        default=0.5)
     args = argparser.parse_args()
 
     with PieDataVisualize(args) as pie_data_visualize:
