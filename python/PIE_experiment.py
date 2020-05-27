@@ -126,7 +126,7 @@ class PieDataVisualize(object):
 
         for track in root.findall('track'):
             frameout_point = None
-            rand_prob = random.random()
+            tr_blue_prob = random.random()
 
             for anno_itr in track.iter('box'):
                 anno_info = {}
@@ -174,7 +174,7 @@ class PieDataVisualize(object):
                             anno_info['exp_start_point'] = attrib_itr.attrib.get('exp_start_point')
 
                 if anno_info['label'] == 'traffic_light':
-                    anno_info['prob'] = rand_prob
+                    anno_info['prob'] = tr_blue_prob
 
                 # add to pie_data dictionary
                 if anno_itr.attrib.get('frame') not in self.pie_data:
