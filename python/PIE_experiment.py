@@ -50,6 +50,7 @@ class PieDataVisualize(object):
         self.obj_spawn_frame_max = None
         self.prob_thres_tr = args.prob_thres_tr
         self.prob_thres_pedestrian = args.prob_thres_pedestrian
+        self.obj_size_min = args.obj_size_min
         # log
         self.log_file = args.log
         self.log = []
@@ -142,6 +143,7 @@ class PieDataVisualize(object):
                 anno_info['xtl'] = int((float(anno_itr.attrib.get('xtl')) - self.image_offset[2]) * (1 / self.image_crop_rate))
                 anno_info['ybr'] = int((float(anno_itr.attrib.get('ybr')) - self.image_offset[0]) * (1 / self.image_crop_rate))
                 anno_info['ytl'] = int((float(anno_itr.attrib.get('ytl')) - self.image_offset[0]) * (1 / self.image_crop_rate))
+                anno_info['size'] = (anno_info['xbr'] - anno_info['xtl']) * (anno_info['ybr'] - anno_info['ytl'])
 
                 # if the object frameded out, save the frame num and apply it to the already added data in self.pie_data[]
                 if frameout_point is None:
@@ -237,13 +239,14 @@ class PieDataVisualize(object):
             if obj_info['label'] == 'pedestrian' and obj_info['prob'] > self.prob_thres_pedestrian: continue
             if obj_info['label'] == 'traffic_light':
                 if obj_info['type'] != 'regular': continue
-                if obj_info['prob'] > self.prob_thres_pedestrian: continue
+                if obj_info['xbr'] < self.image_res[1] * 0.5: continue
+                if obj_info['prob'] > self.prob_thres_tr: continue
 
             # if the obj was already displayed
             if obj_id in self.target_obj_dict:
 
                 new_target_obj[obj_id] = self.target_obj_dict[obj_id]
-                new_target_obj[obj_id]['is_spawn_range'] = self.obj_spawn_frame_min < (int(obj_info['frameout_point']) - int(self.current_frame_num)) < self.obj_spawn_frame_max
+                new_target_obj[obj_id]['is_spawn_range'] = self.obj_spawn_frame_min < int(obj_info['frameout_point']) - int(self.current_frame_num) and obj_info['size'] > self.obj_size_min
 
                 # forcused obj shold be focused in next frame?
                 if new_target_obj[obj_id]['is_forcused']:
@@ -258,9 +261,11 @@ class PieDataVisualize(object):
 
             # if the obj is new
             else:
-                new_target_obj[obj_id] = {'is_forcused':False,
-                                          'is_checked':False,
-                                          'is_spawn_range':self.obj_spawn_frame_min < (int(obj_info['frameout_point']) - int(self.current_frame_num)) < self.obj_spawn_frame_max}
+                new_target_obj[obj_id] = {
+                    'is_forcused':False,
+                    'is_checked':False,
+                    'is_spawn_range':self.obj_spawn_frame_min < int(obj_info['frameout_point']) - int(self.current_frame_num) and obj_info['size'] > self.obj_size_min
+                    }
 
         # reflesh displaying object container
         self.target_obj_dict = new_target_obj
@@ -307,13 +312,14 @@ class PieDataVisualize(object):
                 self.drawIcon(image, obj_info)
 
                 cv2.putText(
-                    # 'Cross?',
                     image,
-                    '{:.01f}%'.format(obj_info['prob'] * 100),
+                    # 'Cross?',
+                    '{:.01f}'.format((obj_info['xbr'] - obj_info['xtl']) * (obj_info['ybr'] - obj_info['ytl'])),
+                    # '{:.01f}%'.format(obj_info['prob'] * 100),
                     (int(obj_info['xtl']), int(obj_info['ytl']) - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA
                     )
-
+                # print((obj_info['xbr'] - obj_info['xtl']) * (obj_info['ybr'] - obj_info['ytl']))
                 image = cv2.rectangle(image,
                 (obj_info['xtl'], obj_info['ytl']),
                 (obj_info['xbr'], obj_info['ybr']),
@@ -328,8 +334,8 @@ class PieDataVisualize(object):
                         time.time(),
                         obj_id,
                         obj_info['label'],
-                        obj_info['frameout_point']
-                        # obj_info['intention_prob'],
+                        obj_info['frameout_point'],
+                        obj_info['prob']
                         # obj_info['critical_point'],
                         ])
 
@@ -418,8 +424,10 @@ class PieDataVisualize(object):
                 self.refleshTargetObjDict() # udpate self.target_obj_dict
                 self.renderInfo(image) # add info to the image
 
+            cv2.namedWindow(self.window_name, cv2.WND_PROP_FULLSCREEN)
+            cv2.setWindowProperty(self.window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
             cv2.imshow(self.window_name, image) # render
-
+            cv2.moveWindow(self.window_name, 10, 0)
             #  calc sleep time to keep frame rate to be same with video rate
             sleep_time = max(int((1000 / (self.modified_video_rate) - (time.time() - start))), 1)
 
@@ -444,7 +452,7 @@ class PieDataVisualize(object):
 
         with open(self.log_file, 'w') as f:
             writer = csv.writer(f)
-            writer.writerow(['display_frame', 'display_time', 'id', 'obj_type', 'frameout_point', 'intervene_type', 'intervene_frame', 'intervene_time', 'intervene_key'])
+            writer.writerow(['display_frame', 'display_time', 'id', 'obj_type', 'frameout_point','prob', 'intervene_type', 'intervene_frame', 'intervene_time', 'intervene_key'])
             writer.writerows(self.log)
 
 
@@ -455,15 +463,15 @@ def main():
     argparser.add_argument(
         '--video', '-v',
         metavar='VIDEO',
-        default='/media/ssd/PIE_data/PIE_clips/set02/video_0001.mp4')
+        default='/media/ssd/PIE_data/PIE_clips/set01/video_0001.mp4')
     argparser.add_argument(
         '--anno',
         metavar='ANNO',
-        default='/media/ssd/PIE_data/annotations/set02/video_0001_annt.xml')
+        default='/media/ssd/PIE_data/annotations/set01/video_0001_annt.xml')
     argparser.add_argument(
         '--attrib',
         metavar='ATTRIB',
-        default='/media/ssd/PIE_data/annotations_attributes/set02/video_0001_attributes.xml')
+        default='/media/ssd/PIE_data/annotations_attributes/set01/video_0001_attributes.xml')
     argparser.add_argument(
         '--rate_offset',
         metavar='OFFSET',
@@ -494,6 +502,10 @@ def main():
         metavar='MAX_TIME',
         default=4)
     argparser.add_argument(
+        '--obj_size_min',
+        metavar='SIZE(=height x width)',
+        default=1500)
+    argparser.add_argument(
         '--icon_path',
         metavar='/path/to/icon/files',
         default='/home/kuriatsu/share/')
@@ -504,7 +516,7 @@ def main():
     argparser.add_argument(
         '--prob_thres_tr',
         metavar='RATE',
-        default=0.5)
+        default=1.0)
     args = argparser.parse_args()
 
     with PieDataVisualize(args) as pie_data_visualize:
