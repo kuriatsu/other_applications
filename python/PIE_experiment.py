@@ -311,14 +311,14 @@ class PieDataVisualize(object):
                 color = (0, 0, 255)
                 self.drawIcon(image, obj_info)
 
-                cv2.putText(
-                    image,
-                    # 'Cross?',
-                    '{:.01f}'.format((obj_info['xbr'] - obj_info['xtl']) * (obj_info['ybr'] - obj_info['ytl'])),
-                    # '{:.01f}%'.format(obj_info['prob'] * 100),
-                    (int(obj_info['xtl']), int(obj_info['ytl']) - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA
-                    )
+                # cv2.putText(
+                #     image,
+                #     # 'Cross?',
+                #     '{:.01f}'.format((obj_info['xbr'] - obj_info['xtl']) * (obj_info['ybr'] - obj_info['ytl'])),
+                #     # '{:.01f}%'.format(obj_info['prob'] * 100),
+                #     (int(obj_info['xtl']), int(obj_info['ytl']) - 10),
+                #     cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA
+                #     )
                 # print((obj_info['xbr'] - obj_info['xtl']) * (obj_info['ybr'] - obj_info['ytl']))
                 image = cv2.rectangle(image,
                 (obj_info['xtl'], obj_info['ytl']),
@@ -463,15 +463,15 @@ def main():
     argparser.add_argument(
         '--video', '-v',
         metavar='VIDEO',
-        default='/media/ssd/PIE_data/PIE_clips/set01/video_0001.mp4')
+        default='/media/ssd/PIE_data/PIE_clips/set02/video_0001.mp4')
     argparser.add_argument(
         '--anno',
         metavar='ANNO',
-        default='/media/ssd/PIE_data/annotations/set01/video_0001_annt.xml')
+        default='/media/ssd/PIE_data/annotations/set02/video_0001_annt.xml')
     argparser.add_argument(
         '--attrib',
         metavar='ATTRIB',
-        default='/media/ssd/PIE_data/annotations_attributes/set01/video_0001_attributes.xml')
+        default='/media/ssd/PIE_data/annotations_attributes/set02/video_0001_attributes.xml')
     argparser.add_argument(
         '--rate_offset',
         metavar='OFFSET',
