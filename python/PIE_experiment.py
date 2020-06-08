@@ -42,7 +42,8 @@ class PieDataVisualize(object):
             }
 
         # static variables calcurated in this class
-        self.image_res = args.res
+        self.image_res
+        # self.image_res = args.res
         self.modified_video_rate = None
         self.image_crop_rate = args.image_crop_rate
         self.window_name = 'frame'
@@ -93,10 +94,11 @@ class PieDataVisualize(object):
         self.obj_spawn_frame_min = args.obj_spawn_time_min * video_rate
         print(video_rate)
 
+        self.image_res = [self.vedeo.get(cv2.CAP_PROP_FRAME_HEIGHT, cv2.CAP_PROP_FRAME_WIDTH)]
         # adjust video rate to keep genuine broadcast rate
         self.modified_video_rate = video_rate + args.rate_offset
 
-        # calc image crop region crop -> expaned to original frame geometry
+        # calc image-crop-region crop -> expaned to original frame geometry
         offset_yt = self.image_res[0] * ((1.0 - self.image_crop_rate) * 0.5 + args.image_crop_offset_y)
         offset_xl = self.image_res[1] * (1.0 - self.image_crop_rate) * 0.5
         self.image_offset = [int(offset_yt),
@@ -246,7 +248,8 @@ class PieDataVisualize(object):
             if obj_id in self.target_obj_dict:
 
                 new_target_obj[obj_id] = self.target_obj_dict[obj_id]
-                new_target_obj[obj_id]['is_spawn_range'] = self.obj_spawn_frame_min < int(obj_info['frameout_point']) - int(self.current_frame_num) and obj_info['size'] > self.obj_size_min
+                # new_target_obj[obj_id]['is_spawn_range'] = self.obj_spawn_frame_min < int(obj_info['frameout_point']) - int(self.current_frame_num) and obj_info['size'] > self.obj_size_min
+                new_target_obj[obj_id]['is_spawn_range'] = self.obj_spawn_frame_min < int(obj_info['frameout_point']) - int(self.current_frame_num) and 0 < int(obj_info['critical_point']) - int(self.current_frame_num) < self.obj_spawn_frame_max
 
                 # forcused obj shold be focused in next frame?
                 if new_target_obj[obj_id]['is_forcused']:
@@ -264,7 +267,8 @@ class PieDataVisualize(object):
                 new_target_obj[obj_id] = {
                     'is_forcused':False,
                     'is_checked':False,
-                    'is_spawn_range':self.obj_spawn_frame_min < int(obj_info['frameout_point']) - int(self.current_frame_num) and obj_info['size'] > self.obj_size_min
+                    # 'is_spawn_range':self.obj_spawn_frame_min < int(obj_info['frameout_point']) - int(self.current_frame_num) and obj_info['size'] > self.obj_size_min
+                    'is_spawn_range': self.obj_spawn_frame_min < int(obj_info['frameout_point']) - int(self.current_frame_num) and 0 < int(obj_info['critical_point']) - int(self.current_frame_num) < self.obj_spawn_frame_max
                     }
 
         # reflesh displaying object container
@@ -496,11 +500,11 @@ def main():
     argparser.add_argument(
         '--obj_spawn_time_min',
         metavar='MIN_TIME',
-        default=1)
+        default=0.5)
     argparser.add_argument(
         '--obj_spawn_time_max',
         metavar='MAX_TIME',
-        default=4)
+        default=3.0)
     argparser.add_argument(
         '--obj_size_min',
         metavar='SIZE(=height x width)',
