@@ -19,7 +19,7 @@ class PieDataVisualize(object):
 
     def __init__(self, args):
         # static object
-        self.pie_data = {} # obj info of each frames
+        self.pie_data = {}
         self.attrib_tree = None
 
         self.icon_dict = {
@@ -42,7 +42,7 @@ class PieDataVisualize(object):
             }
 
         # static variables calcurated in this class
-        self.image_res = None
+        self.image_res
         # self.image_res = args.res
         self.modified_video_rate = None
         self.image_crop_rate = args.image_crop_rate
@@ -94,7 +94,7 @@ class PieDataVisualize(object):
         self.obj_spawn_frame_min = args.obj_spawn_time_min * video_rate
         print(video_rate)
 
-        self.image_res = [self.vedeo.get(cv2.CAP_PROP_FRAME_HEIGHT), self.video.get(cv2.CAP_PROP_FRAME_WIDTH)]
+        self.image_res = [self.vedeo.get(cv2.CAP_PROP_FRAME_HEIGHT, cv2.CAP_PROP_FRAME_WIDTH)]
         # adjust video rate to keep genuine broadcast rate
         self.modified_video_rate = video_rate + args.rate_offset
 
@@ -149,6 +149,7 @@ class PieDataVisualize(object):
 
                 # if the object frameded out, save the frame num and apply it to the already added data in self.pie_data[]
                 if frameout_point is None:
+
                     # if the pedestrian framed out now, save framenum and apply it to all obj with same id
                     if anno_info['xbr'] > self.image_res[1] or anno_info['xtl'] < 0 or anno_info['ybr'] > self.image_res[0] or anno_info['ytl'] < 0:
                         frameout_point = anno_itr.attrib.get('frame')
@@ -176,12 +177,8 @@ class PieDataVisualize(object):
                             anno_info['crossing_point'] = attrib_itr.attrib.get('crossing_point')
                             anno_info['exp_start_point'] = attrib_itr.attrib.get('exp_start_point')
 
-                # if object is trafficlight, mimic pedestrian and interporate additional information
                 if anno_info['label'] == 'traffic_light':
                     anno_info['prob'] = tr_blue_prob
-                    anno_info['critical_point'] = anno_info['frameout_point']
-                    anno_info['crossing_point'] = anno_info['frameout_point']
-                    anno_info['exp_start_point'] = track[0].attrib.get('frame') # appear frame
 
                 # add to pie_data dictionary
                 if anno_itr.attrib.get('frame') not in self.pie_data:
@@ -244,7 +241,7 @@ class PieDataVisualize(object):
             if obj_info['label'] == 'pedestrian' and obj_info['prob'] > self.prob_thres_pedestrian: continue
             if obj_info['label'] == 'traffic_light':
                 if obj_info['type'] != 'regular': continue
-                if obj_info['xbr'] < self.image_res[1] * 0.5: continue # remove opposite side light
+                if obj_info['xbr'] < self.image_res[1] * 0.5: continue
                 if obj_info['prob'] > self.prob_thres_tr: continue
 
             # if the obj was already displayed
