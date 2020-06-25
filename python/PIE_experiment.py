@@ -57,7 +57,7 @@ class PieDataVisualize(object):
         # dynamic object
         self.video = None
         self.current_frame_num = None
-        self.focused_obj = None
+        self.focused_obj_id = None
 
 
     def __enter__(self):
@@ -87,7 +87,7 @@ class PieDataVisualize(object):
 
         # get video rate and change variable unit from time to frame num
         self.video_rate = int(self.video.get(cv2.CAP_PROP_FPS))
-        self.image_res = [self.vedeo.get(cv2.CAP_PROP_FRAME_HEIGHT), self.video.get(cv2.CAP_PROP_FRAME_WIDTH)]
+        self.image_res = [self.video.get(cv2.CAP_PROP_FRAME_HEIGHT), self.video.get(cv2.CAP_PROP_FRAME_WIDTH)]
         # adjust video rate to keep genuine broadcast rate
         self.modified_video_rate = self.video_rate + args.rate_offset
 
@@ -121,11 +121,13 @@ class PieDataVisualize(object):
 
 
         for track in root.findall('track'):
-            frameout_point = None
+            framein_frame = None
+            frameout_frame = None
             tr_blue_prob = random.random()
 
             for anno_itr in track.iter('box'):
                 anno_info = {}
+                anno_frame = int(anno_itr.attrib.get('frame'))
 
                 # get id and other info from child tree under <box>
                 for attribute in anno_itr.findall('attribute'):
@@ -141,46 +143,46 @@ class PieDataVisualize(object):
                 anno_info['size'] = (anno_info['xbr'] - anno_info['xtl']) * (anno_info['ybr'] - anno_info['ytl'])
 
                 # if the object frameded out, save the frame num and apply it to the already added data in self.pie_data[]
-                if frameout_point is None:
-                    # if the pedestrian framed out now, save framenum and apply it to all obj with same id
-                    if anno_info['xbr'] > self.image_res[1] or anno_info['xtl'] < 0 or anno_info['ybr'] > self.image_res[0] or anno_info['ytl'] < 0:
-                        frameout_point = anno_itr.attrib.get('frame')
-                        anno_info['frameout_point'] = frameout_point
+                if anno_info['xbr'] > self.image_res[1]+50 or anno_info['xtl'] < -50 or anno_info['ybr'] > self.image_res[0] or anno_info['ytl'] < 0:
+                    # if framein_frame is not None and frameout_frame is None:
+                    #     frameout_frame = anno_frame
+                    #
+                    #     for i in range(framein_frame, frameout_frame):
+                    #         if i in self.pie_data:
+                    #             if anno_info['id'] in self.pie_data[i]:
+                    #                 self.pie_data[i][anno_info['id']]['frameout_point'] = anno_frame
+                    continue
 
-                        # scan the already added object in self.pie_data[]
-                        for frame_obj in self.pie_data.values():
-                            for obj_id, obj_info in frame_obj.items():
-                                if obj_id == anno_info['id']:
-                                    obj_info['frameout_point'] = frameout_point
-
-                    # if the framedout_point is not found, the framedout_point filled with final annotated frame
-                    else:
-                        anno_info['frameout_point'] = track.findall('box')[-1].attrib.get('frame')
-
-                else:
-                    anno_info['frameout_point'] = frameout_point
+                if framein_frame is None:
+                    framein_frame = anno_frame
+                #
+                # anno_info['framein_point'] = framein_frame
+                # anno_info['frameout_point'] = track.findall('box')[-1].attrib.get('frame')
 
                 # if object is pedestrian, get additional information from attributes.xml
                 if anno_info['label'] == 'pedestrian':
                     for attrib_itr in self.attrib_tree.iter('pedestrian'):
                         if attrib_itr.attrib.get('id') == anno_info['id']:
                             anno_info['prob'] = float(attrib_itr.attrib.get('intention_prob'))
-                            anno_info['critical_point'] = attrib_itr.attrib.get('critical_point')
-                            anno_info['crossing_point'] = attrib_itr.attrib.get('crossing_point')
-                            anno_info['exp_start_point'] = attrib_itr.attrib.get('exp_start_point')
+                            anno_info['critical_point'] = int(attrib_itr.attrib.get('critical_point'))
+                            anno_info['crossing_point'] = int(attrib_itr.attrib.get('crossing_point'))
+                            anno_info['exp_start_point'] = int(attrib_itr.attrib.get('exp_start_point'))
 
                 # if object is trafficlight, mimic pedestrian and interporate additional information
                 if anno_info['label'] == 'traffic_light':
                     anno_info['prob'] = tr_blue_prob
-                    anno_info['critical_point'] = anno_info['frameout_point']
-                    anno_info['crossing_point'] = anno_info['frameout_point']
-                    anno_info['exp_start_point'] = track[0].attrib.get('frame') # appear frame
+                    anno_info['critical_point'] = None
+                    anno_info['crossing_point'] = int(track[-1].attrib.get('frame'))
+                    anno_info['exp_start_point'] = anno_frame # appear frame
+                    # anno_info['critical_point'] = min(int(track[0].attrib.get('frame')) + 90, int(track[-1].attrib.get('frame')))
+                    # anno_info['crossing_point'] = int(track[-1].attrib.get('frame'))
+                    # anno_info['exp_start_point'] = int(track[0].attrib.get('frame')) # appear frame
 
                 # add to pie_data dictionary
-                if anno_itr.attrib.get('frame') not in self.pie_data:
-                    self.pie_data[anno_itr.attrib.get('frame')] = {}
+                if anno_frame not in self.pie_data:
+                    self.pie_data[anno_frame] = {}
 
-                self.pie_data[anno_itr.attrib.get('frame')][anno_info['id']] = anno_info
+                self.pie_data[anno_frame][anno_info['id']] = anno_info
 
         # delete objects to improve performance
         del root
@@ -198,36 +200,43 @@ class PieDataVisualize(object):
     def touchCallback(self, event, x, y, flags, param):
         """if mouce clicked, check position and judge weather the position is on the rectange or not
         """
-        if self.focused_obj is not None:
-
+        if self.focused_obj_id is not None:
+            focused_obj_info = self.pie_data[self.current_frame_num][self.focused_obj_id]
             # if the event handler is leftButtonDown
-            if event == cv2.EVENT_LBUTTONDOWN and self.focused_obj['xtl'] < x < self.focused_obj['xbr'] and self.focused_obj['ytl'] < y < self.focused_obj['ybr']:
-                self.focused_obj = None
+            if event == cv2.EVENT_LBUTTONDOWN and focused_obj_info['xtl'] < x < focused_obj_info['xbr'] and focused_obj_info['ytl'] < y < focused_obj_info['ybr']:
+                self.focused_obj_id = None
                 self.log[-1] += ['touched' ,self.current_frame_num, time.time()]
 
 
     def pushCallback(self, key):
         """callback of enter key push, target is focused object
         """
-        if self.focused_obj is not None:
-            self.focused_obj = None
+        if self.focused_obj_id is not None:
+            self.focused_obj_id = None
             self.log[-1] += ['pushed', self.current_frame_num, time.time(), key]
 
 
     def updateFocusedObject(self):
         """find focused object from self.target_obj_dict
         """
-        if self.focused_obj is not None:
-            if self.focused_obj['critical_point'] >= self.current_frame_num:
-                self.log[-1] += ['passed', self.current_frame_num, time.time(), key]
-                self.focused_obj = None
+        if self.focused_obj_id is not None:
+
+            if self.focused_obj_id in self.pie_data[self.current_frame_num]:
+                if self.pie_data[self.current_frame_num][self.focused_obj_id]['critical_point'] < self.current_frame_num:
+                    self.log[-1] += ['passed', self.current_frame_num, time.time()]
+                    self.focused_obj_id = None
+
+            else:
+                self.log[-1] += ['passed', self.current_frame_num, time.time()]
+                self.focused_obj_id = None
 
         # is this method called by callback, checked_obj_id has target object id which is checked and should be unfocused
-        if self.focused_obj is None:
+        if self.focused_obj_id is None:
             # find new focused object
             for obj_id, obj_info in self.pie_data[self.current_frame_num].items():
                 if obj_info['label'] not in  ['pedestrian', 'traffic_light']: continue
 
+                # if self.current_frame_num < obj_info['framein_point'] or obj_info['frameout_point'] < self.current_frame_num: continue
                 if obj_info['exp_start_point'] == self.current_frame_num:
                     if obj_info['label'] == 'pedestrian':
                         if obj_info['prob'] > self.prob_thres_pedestrian: continue
@@ -237,16 +246,29 @@ class PieDataVisualize(object):
                         if obj_info['xbr'] < self.image_res[1] * 0.5: continue
                         if obj_info['prob'] > self.prob_thres_tr: continue
 
-                    self.focused_obj = obj_info
+                        min_next_pedestrian_frame = 90
+                        for obj_info_for_pedes in self.pie_data[self.current_frame_num].values():
+                            if obj_info_for_pedes['label'] == 'pedestrian':
+                                next_pedesrian_frame = obj_info_for_pedes['exp_start_point'] - self.current_frame_num
+                                if min_next_pedestrian_frame > next_pedesrian_frame > 0:
+                                    min_next_pedestrian_frame = next_pedesrian_frame
 
+                        for i in range(self.current_frame_num, obj_info['crossing_point']+1):
+                            if i in self.pie_data:
+                                if obj_id in self.pie_data[i]:
+                                    self.pie_data[i][obj_id]['critical_point'] = min(self.current_frame_num+min_next_pedestrian_frame, obj_info['crossing_point'])
+                                    self.pie_data[i][obj_id]['exp_start_point'] = self.current_frame_num
+
+                    self.focused_obj_id = obj_id
+                    print(self.pie_data[self.current_frame_num][self.focused_obj_id])
                     self.log.append([
                         self.current_frame_num,
                         time.time(),
                         obj_id,
                         obj_info['label'],
-                        obj_info['frameout_point'],
+                        # obj_info['frameout_point'],
                         obj_info['prob']
-                        # obj_info['critical_point'],
+                        # obj_info['critical_point']
                         ])
 
                     return
@@ -256,23 +278,27 @@ class PieDataVisualize(object):
         """add information to the image
 
         """
-        self.drawIcon(image, self.focused_obj)
+        if self.focused_obj_id is None: return
+        focused_obj_info = self.pie_data[self.current_frame_num][self.focused_obj_id]
 
+        self.drawIcon(image, focused_obj_info)
+
+        color = (0, 0, 255)
+        # print(int(focused_obj_info['critical_point']), int(self.current_frame_num), self.video_rate)
         cv2.putText(
             image,
             # 'Cross?',
-            # '{:.01f}'.format((self.focused_obj['xbr'] - self.focused_obj['xtl']) * (self.focused_obj['ybr'] - self.focused_obj['ytl'])),
-            # '{:.01f}%'.format(self.focused_obj['prob'] * 100),
-            '{:.01f}s'.format(int(self.focused_obj['critical_point']) - int(self.current_frame_num) * self.video_rate),
-            (int(self.focused_obj['xtl']), int(self.focused_obj['ytl']) - 10),
-            cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA
+            # '{:.01f}'.format((focused_obj_info['xbr'] - focused_obj_info['xtl']) * (focused_obj_info['ybr'] - focused_obj_info['ytl'])),
+            # '{:.01f}%'.format(focused_obj_info['prob'] * 100),
+            '{:.01f}s'.format((focused_obj_info['critical_point'] - self.current_frame_num) / self.video_rate),
+            (int(focused_obj_info['xtl']), int(focused_obj_info['ytl']) - 10),
+            cv2.FONT_HERSHEY_SIMPLEX, 1, color, 3, cv2.LINE_AA
             )
 
-        # print((self.focused_obj['xbr'] - self.focused_obj['xtl']) * (self.focused_obj['ybr'] - self.focused_obj['ytl']))
-        color = (0, 0, 255)
+        # print((focused_obj_info['xbr'] - focused_obj_info['xtl']) * (focused_obj_info['ybr'] - focused_obj_info['ytl']))
         image = cv2.rectangle(image,
-        (self.focused_obj['xtl'], self.focused_obj['ytl']),
-        (self.focused_obj['xbr'], self.focused_obj['ybr']),
+        (focused_obj_info['xtl'], focused_obj_info['ytl']),
+        (focused_obj_info['xbr'], focused_obj_info['ybr']),
         color,
         1)
 
@@ -324,7 +350,7 @@ class PieDataVisualize(object):
 
         while(self.video.isOpened()):
             start = time.time()
-            self.current_frame_num = str(frame)
+            self.current_frame_num = frame
             ret, image = self.video.read()
 
 
@@ -364,7 +390,8 @@ class PieDataVisualize(object):
 
         with open(self.log_file, 'w') as f:
             writer = csv.writer(f)
-            writer.writerow(['display_frame', 'display_time', 'id', 'obj_type', 'frameout_point','prob', 'intervene_type', 'intervene_frame', 'intervene_time', 'intervene_key'])
+            # writer.writerow(['display_frame', 'display_time', 'id', 'obj_type', 'frameout_point','prob', 'intervene_type', 'intervene_frame', 'intervene_time', 'intervene_key'])
+            writer.writerow(['display_frame', 'display_time', 'id', 'obj_type', 'prob', 'intervene_type', 'intervene_frame', 'intervene_time', 'intervene_key'])
             writer.writerows(self.log)
 
 
@@ -375,15 +402,15 @@ def main():
     argparser.add_argument(
         '--video', '-v',
         metavar='VIDEO',
-        default='/media/ssd/PIE_data/PIE_clips/set02/video_0001.mp4')
+        default='/media/ssd/PIE_data/PIE_clips/set02/video_0002.mp4')
     argparser.add_argument(
         '--anno',
         metavar='ANNO',
-        default='/media/ssd/PIE_data/annotations/set02/video_0001_annt.xml')
+        default='/media/ssd/PIE_data/annotations/set02/video_0002_annt.xml')
     argparser.add_argument(
         '--attrib',
         metavar='ATTRIB',
-        default='/media/ssd/PIE_data/annotations_attributes/set02/video_0001_attributes.xml')
+        default='/media/ssd/PIE_data/annotations_attributes/set02/video_0002_attributes.xml')
     argparser.add_argument(
         '--rate_offset',
         metavar='OFFSET',
