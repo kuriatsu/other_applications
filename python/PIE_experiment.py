@@ -43,15 +43,13 @@ class PieDataVisualize(object):
 
         # static variables calcurated in this class
         self.image_res = None
+        self.video_rate = None
         # self.image_res = args.res
         self.modified_video_rate = None
         self.image_crop_rate = args.image_crop_rate
         self.window_name = 'frame'
-        self.obj_spawn_frame_min = None
-        self.obj_spawn_frame_max = None
         self.prob_thres_tr = args.prob_thres_tr
         self.prob_thres_pedestrian = args.prob_thres_pedestrian
-        self.obj_size_min = args.obj_size_min
         # log
         self.log_file = args.log
         self.log = []
@@ -59,8 +57,7 @@ class PieDataVisualize(object):
         # dynamic object
         self.video = None
         self.current_frame_num = None
-        self.target_obj_dict = {}
-        # self.target_obj_dict = [[0]]
+        self.focused_obj = None
 
 
     def __enter__(self):
@@ -89,14 +86,10 @@ class PieDataVisualize(object):
             exit(0)
 
         # get video rate and change variable unit from time to frame num
-        video_rate = int(self.video.get(cv2.CAP_PROP_FPS))
-        self.obj_spawn_frame_max = args.obj_spawn_time_max * video_rate
-        self.obj_spawn_frame_min = args.obj_spawn_time_min * video_rate
-        print(video_rate)
-
+        self.video_rate = int(self.video.get(cv2.CAP_PROP_FPS))
         self.image_res = [self.vedeo.get(cv2.CAP_PROP_FRAME_HEIGHT), self.video.get(cv2.CAP_PROP_FRAME_WIDTH)]
         # adjust video rate to keep genuine broadcast rate
-        self.modified_video_rate = video_rate + args.rate_offset
+        self.modified_video_rate = self.video_rate + args.rate_offset
 
         # calc image-crop-region crop -> expaned to original frame geometry
         offset_yt = self.image_res[0] * ((1.0 - self.image_crop_rate) * 0.5 + args.image_crop_offset_y)
@@ -205,137 +198,47 @@ class PieDataVisualize(object):
     def touchCallback(self, event, x, y, flags, param):
         """if mouce clicked, check position and judge weather the position is on the rectange or not
         """
-        if self.target_obj_dict is None: return
+        if self.focused_obj is not None:
 
-        # if the event handler is leftButtonDown and current frame contains objects
-        if event == cv2.EVENT_LBUTTONDOWN and self.current_frame_num in self.pie_data:
-            for obj_id, obj_info in self.pie_data[self.current_frame_num].items():
-                # if the clicked position is on the rectangle of one of the objects
-                if obj_info['xtl'] < x < obj_info['xbr'] and obj_info['ytl'] < y < obj_info['ybr']:
-                    # if the clicked position is on the focuced object
-                    if self.target_obj_dict[obj_id]['is_forcused']:
-                        # update "is_forcused" in self.dislpayed_obj
-                        self.updateFocusedObject(obj_id)
-                        self.log[-1] += ['touched' ,self.current_frame_num, time.time()]
-                        return
+            # if the event handler is leftButtonDown
+            if event == cv2.EVENT_LBUTTONDOWN and self.focused_obj['xtl'] < x < self.focused_obj['xbr'] and self.focused_obj['ytl'] < y < self.focused_obj['ybr']:
+                self.focused_obj = None
+                self.log[-1] += ['touched' ,self.current_frame_num, time.time()]
 
 
     def pushCallback(self, key):
         """callback of enter key push, target is focused object
         """
-        if self.target_obj_dict is None: return
-
-        for obj_id, obj_info in self.target_obj_dict.items():
-            if obj_info['is_forcused']:
-                self.updateFocusedObject(obj_id)
-                self.log[-1] += ['pushed', self.current_frame_num, time.time(), key]
-                return
+        if self.focused_obj is not None:
+            self.focused_obj = None
+            self.log[-1] += ['pushed', self.current_frame_num, time.time(), key]
 
 
-    def refleshTargetObjDict(self):
-        """magage displaying object
-        is_checked ; flag wether the subject check obj and input some action or not
-        """
-        new_target_obj = {} # new container
-        is_forcused_obj_exist = False # flag
-
-        for obj_id, obj_info in self.pie_data[self.current_frame_num].items():
-            if obj_info['label'] not in  ['pedestrian', 'traffic_light']: continue
-            if obj_info['label'] == 'pedestrian' and obj_info['prob'] > self.prob_thres_pedestrian: continue
-            if obj_info['label'] == 'traffic_light':
-                if obj_info['type'] != 'regular': continue
-                if obj_info['xbr'] < self.image_res[1] * 0.5: continue # remove opposite side light
-                if obj_info['prob'] > self.prob_thres_tr: continue
-
-            # if the obj was already displayed
-            if obj_id in self.target_obj_dict:
-
-                new_target_obj[obj_id] = self.target_obj_dict[obj_id]
-                new_target_obj[obj_id]['is_spawn_range'] = self.obj_spawn_frame_min < int(obj_info['frameout_point']) - int(self.current_frame_num) and obj_info['size'] > self.obj_size_min
-                # new_target_obj[obj_id]['is_spawn_range'] = self.obj_spawn_frame_min < int(obj_info['frameout_point']) - int(self.current_frame_num) and 0 < int(obj_info['critical_point']) - int(self.current_frame_num) < self.obj_spawn_frame_max
-
-                # forcused obj shold be focused in next frame?
-                if new_target_obj[obj_id]['is_forcused']:
-                    if int(self.current_frame_num) < int(obj_info['frameout_point']):
-                        is_forcused_obj_exist = True
-
-                    # if frame outed, assume is as passing and focus is cleared and save to log
-                    else:
-                        new_target_obj[obj_id]['is_forcused'] = False
-                        self.log[-1] += ['passed' ,self.current_frame_num, time.time()]
-
-
-            # if the obj is new
-            else:
-                new_target_obj[obj_id] = {
-                    'is_forcused':False,
-                    'is_checked':False,
-                    # 'is_spawn_range':self.obj_spawn_frame_min < int(obj_info['frameout_point']) - int(self.current_frame_num) and obj_info['size'] > self.obj_size_min
-                    'is_spawn_range':self.obj_spawn_frame_min < int(obj_info['frameout_point']) - int(self.current_frame_num) and obj_info['size'] > self.obj_size_min
-                    }
-
-        # reflesh displaying object container
-        self.target_obj_dict = new_target_obj
-
-        # if the forcused object is not checked, don't search new forcused obj
-        if not is_forcused_obj_exist:
-            self.updateFocusedObject()
-
-
-    def updateFocusedObject(self, checked_obj_id=None):
+    def updateFocusedObject(self):
         """find focused object from self.target_obj_dict
         """
-        min_obj_id = None # initial variable for searching new imporant objects
-        min_time = 20000 # initial variable for searching new imporant objects
+        if self.focused_obj is not None:
+            if self.focused_obj['critical_point'] >= self.current_frame_num:
+                self.log[-1] += ['passed', self.current_frame_num, time.time(), key]
+                self.focused_obj = None
 
         # is this method called by callback, checked_obj_id has target object id which is checked and should be unfocused
-        if checked_obj_id is not None:
-            self.target_obj_dict[checked_obj_id]['is_checked'] = True
-            self.target_obj_dict[checked_obj_id]['is_forcused'] = False
+        if self.focused_obj is None:
+            # find new focused object
+            for obj_id, obj_info in self.pie_data[self.current_frame_num].items():
+                if obj_info['label'] not in  ['pedestrian', 'traffic_light']: continue
 
-        # find new focused object
-        for obj_id, obj_info in self.target_obj_dict.items():
-            # search the new forcused obj
-            if not obj_info['is_checked'] and obj_info['is_spawn_range']:
-            # if not obj_info['is_checked'] and obj_info['is_spawn_range'] and int(self.pie_data[self.current_frame_num][obj_id]['frameout_point']) < min_time:
-                min_obj_id = obj_id
-                min_time = int(self.pie_data[self.current_frame_num][obj_id]['frameout_point'])
+                if obj_info['exp_start_point'] == self.current_frame_num:
+                    if obj_info['label'] == 'pedestrian':
+                        if obj_info['prob'] > self.prob_thres_pedestrian: continue
 
-        # if the new forcused obj is found, add the flag
-        if min_obj_id is not None:
-            self.target_obj_dict[min_obj_id]['is_forcused'] = True
+                    if obj_info['label'] == 'traffic_light':
+                        if obj_info['type'] != 'regular': continue
+                        if obj_info['xbr'] < self.image_res[1] * 0.5: continue
+                        if obj_info['prob'] > self.prob_thres_tr: continue
 
+                    self.focused_obj = obj_info
 
-    def renderInfo(self, image):
-        """add information to the image
-
-        """
-        # loop for each object in the frame from PIE dataset
-        for obj_id, displayed_obj_info in self.target_obj_dict.items():
-            obj_info = self.pie_data[self.current_frame_num][obj_id]
-
-            if displayed_obj_info['is_forcused'] and self.current_frame_num < obj_info['frameout_point']: # if forcused --- red
-                color = (0, 0, 255)
-                self.drawIcon(image, obj_info)
-
-                # cv2.putText(
-                #     image,
-                #     # 'Cross?',
-                #     '{:.01f}'.format((obj_info['xbr'] - obj_info['xtl']) * (obj_info['ybr'] - obj_info['ytl'])),
-                #     # '{:.01f}%'.format(obj_info['prob'] * 100),
-                #     (int(obj_info['xtl']), int(obj_info['ytl']) - 10),
-                #     cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA
-                #     )
-                # print((obj_info['xbr'] - obj_info['xtl']) * (obj_info['ybr'] - obj_info['ytl']))
-                image = cv2.rectangle(image,
-                (obj_info['xtl'], obj_info['ytl']),
-                (obj_info['xbr'], obj_info['ybr']),
-                color,
-                1)
-
-                # magnifyObject(image, obj_info)
-
-                if len(self.log) == 0 or self.log[-1][2] != obj_id:
                     self.log.append([
                         self.current_frame_num,
                         time.time(),
@@ -346,30 +249,32 @@ class PieDataVisualize(object):
                         # obj_info['critical_point'],
                         ])
 
-                if self.log[-1][2] != obj_id:
-                    print('obj_changed {}->{}'.format(self.log[-1][2], obj_id))
-
-            elif displayed_obj_info['is_checked']: # if checked --- green
-                color = (0, 255, 0)
-
-            elif displayed_obj_info['is_spawn_range']: # passed --- blue
-                color = (255, 0, 0)
-
-            else:
-                color = (0,0,0)
+                    return
 
 
-    def magnifyObject(self, image, obj_info):
+    def renderInfo(self, image):
+        """add information to the image
 
-        try:
-            scale = 50.0 / (float(obj_info['xbr']) - float(obj_info['xtl']))
-            pedestrian_image = cv2.resize(image[obj_info['ytl'] : obj_info['ybr'], obj_info['xtl'] : obj_info['xbr']], dsize=None, fx=scale, fy=scale)
-            print('pedestrian rendered, y:', pedestrian_image.shape[0], pedestrian_image.shape[1])
-            # image[500:500+pedestrian_image.shape[0], 500:500+pedestrian_image.shape[1]] = pedestrian_image
-            image[obj_info['ytl'] - pedestrian_image.shape[0] : obj_info['ytl'], obj_info['xbr'] - int(pedestrian_image.shape[1]*0.5) : obj_info['xbr'] + int(pedestrian_image.shape[1]*0.5)] = pedestrian_image
+        """
+        self.drawIcon(image, self.focused_obj)
 
-        except:
-            print('pedestrian render is out of image')
+        cv2.putText(
+            image,
+            # 'Cross?',
+            # '{:.01f}'.format((self.focused_obj['xbr'] - self.focused_obj['xtl']) * (self.focused_obj['ybr'] - self.focused_obj['ytl'])),
+            # '{:.01f}%'.format(self.focused_obj['prob'] * 100),
+            '{:.01f}s'.format(int(self.focused_obj['critical_point']) - int(self.current_frame_num) * self.video_rate),
+            (int(self.focused_obj['xtl']), int(self.focused_obj['ytl']) - 10),
+            cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA
+            )
+
+        # print((self.focused_obj['xbr'] - self.focused_obj['xtl']) * (self.focused_obj['ybr'] - self.focused_obj['ytl']))
+        color = (0, 0, 255)
+        image = cv2.rectangle(image,
+        (self.focused_obj['xtl'], self.focused_obj['ytl']),
+        (self.focused_obj['xbr'], self.focused_obj['ybr']),
+        color,
+        1)
 
 
     def drawIcon(self, image, obj_info):
@@ -428,7 +333,7 @@ class PieDataVisualize(object):
             image = cv2.resize(image[self.image_offset[0]:self.image_offset[1], self.image_offset[2]:self.image_offset[3]], dsize=None, fx=scale, fy=scale)
 
             if self.current_frame_num in self.pie_data:
-                self.refleshTargetObjDict() # udpate self.target_obj_dict
+                self.updateFocusedObject() # udpate self.target_obj_dict
                 self.renderInfo(image) # add info to the image
 
             cv2.namedWindow(self.window_name, cv2.WND_PROP_FULLSCREEN)
@@ -504,14 +409,6 @@ def main():
         '--obj_spawn_time_min',
         metavar='MIN_TIME',
         default=0.5)
-    argparser.add_argument(
-        '--obj_spawn_time_max',
-        metavar='MAX_TIME',
-        default=3.0)
-    argparser.add_argument(
-        '--obj_size_min',
-        metavar='SIZE(=height x width)',
-        default=1500)
     argparser.add_argument(
         '--icon_path',
         metavar='/path/to/icon/files',
