@@ -368,8 +368,7 @@ class PieDataVisualize(object):
             sleep_time = max(int((1000 / (self.modified_video_rate) - (time.time() - start))), 1)
 
             # sleep and wait quit key
-            key = cv2.waitKey(1) & 0xFF
-            # key = cv2.waitKey(sleep_time) & 0xFF
+            key = cv2.waitKey(sleep_time) & 0xFF
             if key is not 255 : print(key)
             if key == ord('q'):
                 break
