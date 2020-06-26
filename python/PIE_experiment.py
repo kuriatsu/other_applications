@@ -42,13 +42,10 @@ class PieDataVisualize(object):
             }
 
         # static variables calcurated in this class
-<<<<<<< HEAD
         self.image_res=None
         self.window_position=args.window_position
-=======
-        self.image_res = None
         self.video_rate = None
->>>>>>> 14f2d2b2b7c9d4e6059e06f6b56b4cb44b9dd989
+
         # self.image_res = args.res
         self.modified_video_rate = None
         self.image_crop_rate = args.image_crop_rate
@@ -92,15 +89,7 @@ class PieDataVisualize(object):
             exit(0)
 
         # get video rate and change variable unit from time to frame num
-<<<<<<< HEAD
-        video_rate = int(self.video.get(cv2.CAP_PROP_FPS))
-        self.obj_spawn_frame_max = args.obj_spawn_time_max * video_rate
-        self.obj_spawn_frame_min = args.obj_spawn_time_min * video_rate
-        print(video_rate)
-
-=======
         self.video_rate = int(self.video.get(cv2.CAP_PROP_FPS))
->>>>>>> 14f2d2b2b7c9d4e6059e06f6b56b4cb44b9dd989
         self.image_res = [self.video.get(cv2.CAP_PROP_FRAME_HEIGHT), self.video.get(cv2.CAP_PROP_FRAME_WIDTH)]
         # adjust video rate to keep genuine broadcast rate
         self.modified_video_rate = self.video_rate + args.rate_offset
@@ -297,15 +286,15 @@ class PieDataVisualize(object):
         self.drawIcon(image, focused_obj_info)
 
         color = (0, 0, 255)
-        # cv2.putText(
-        #     image,
-        #     # 'Cross?',
-        #     # '{:.01f}'.format((focused_obj_info['xbr'] - focused_obj_info['xtl']) * (focused_obj_info['ybr'] - focused_obj_info['ytl'])),
-        #     # '{:.01f}%'.format(focused_obj_info['prob'] * 100),
-        #     '{:.01f}s'.format((focused_obj_info['critical_point'] - self.current_frame_num) / self.video_rate),
-        #     (int(focused_obj_info['xtl']), int(focused_obj_info['ytl']) - 10),
-        #     cv2.FONT_HERSHEY_SIMPLEX, 1, color, 3, cv2.LINE_AA
-        #     )
+        cv2.putText(
+            image,
+            # 'Cross?',
+            # '{:.01f}'.format((focused_obj_info['xbr'] - focused_obj_info['xtl']) * (focused_obj_info['ybr'] - focused_obj_info['ytl'])),
+            '{:.01f}%'.format(focused_obj_info['prob'] * 100),
+            # '{:.01f}s'.format((focused_obj_info['critical_point'] - self.current_frame_num) / self.video_rate),
+            (int(focused_obj_info['xtl']), int(focused_obj_info['ytl']) - 10),
+            cv2.FONT_HERSHEY_SIMPLEX, 1, color, 3, cv2.LINE_AA
+            )
 
         image = cv2.rectangle(image,
         (focused_obj_info['xtl'], focused_obj_info['ytl']),
@@ -412,15 +401,15 @@ def main():
     argparser.add_argument(
         '--video', '-v',
         metavar='VIDEO',
-        default='/media/ssd/PIE_data/PIE_clips/set02/video_0002.mp4')
+        default='/media/ssd/PIE_data/PIE_clips/set04/video_0002.mp4')
     argparser.add_argument(
         '--anno',
         metavar='ANNO',
-        default='/media/ssd/PIE_data/annotations/set02/video_0002_annt.xml')
+        default='/media/ssd/PIE_data/annotations/set04/video_0002_annt.xml')
     argparser.add_argument(
         '--attrib',
         metavar='ATTRIB',
-        default='/media/ssd/PIE_data/annotations_attributes/set02/video_0002_attributes.xml')
+        default='/media/ssd/PIE_data/annotations_attributes/set04/video_0002_attributes.xml')
     argparser.add_argument(
         '--rate_offset',
         metavar='OFFSET',
@@ -462,7 +451,7 @@ def main():
     argparser.add_argument(
         '--prob_thres_tr',
         metavar='RATE',
-        default=1.0)
+        default=0.0)
     args = argparser.parse_args()
 
     with PieDataVisualize(args) as pie_data_visualize:

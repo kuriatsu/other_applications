@@ -38,9 +38,9 @@ var element_4_name = "作業成績";
 var element_5_name = "努力";
 var element_6_name = "いらだち";
 var element_1_desc = "どの程度の知的・知覚的活動(考える，決める，計算する，見るなど)を必要とするか．思考・判断の難易度．"
-var element_2_desc = "どの程度の身体的活動(操作するなど)を必要とするか(ロボットの後ろに付いて歩くことは考えない)．操作の難易度."
+var element_2_desc = "どの程度の身体的活動(操作するなど)を必要とするか．操作の難易度."
 var element_3_desc = "操作のペースやタスクが発生する頻度によって感じる時間的切迫感はどの程度か．時間的・精神的余裕の有無．"
-var element_4_desc = "「できるだけ自然(スムーズ)かつ安全に走行する」という目標をどの程度達成できたか．目標の達成に対する満足度."
+var element_4_desc = "設定されたタスクの目標(正確かつ迅速に介入する)をどの程度達成できたか．目標の達成に対する満足度."
 var element_5_desc = "作業成績のレベルを達成・維持するために，精神的・身体的にどの程度一生懸命に作業たか．努力度"
 var element_6_desc = "作業中にいらいら，ストレスなどをどの程度感じたか．"
 
@@ -63,6 +63,9 @@ function displayChange(node_num){
         i+=1;
     }
     else {
+	var selected_element = eval("element_"+node_num+"_array")[i-1];
+        var selected_element_num = selected_element.split('_')[1];
+        comp_result[selected_element_num-1] += 1;
         document.body.innerHTML = "<div align='center'><input type='button' value='Next Page' onclick='nextPage()'><br />";
     }
     // <input type="button" value="Next" onclick="location.href='html_test3.html'"/><br />
