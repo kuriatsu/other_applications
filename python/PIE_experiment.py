@@ -266,8 +266,8 @@ class PieDataVisualize(object):
                         time.time(),
                         obj_id,
                         obj_info['label'],
-                        obj_info['prob']
-                        obj_info['framein_point']
+                        obj_info['prob'],
+                        obj_info['framein_point'],
                         obj_info['frameout_point']
                         ])
 
