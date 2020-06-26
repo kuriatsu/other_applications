@@ -42,7 +42,8 @@ class PieDataVisualize(object):
             }
 
         # static variables calcurated in this class
-        self.image_res
+        self.image_res=None
+        self.window_position=args.window_position
         # self.image_res = args.res
         self.modified_video_rate = None
         self.image_crop_rate = args.image_crop_rate
@@ -94,7 +95,7 @@ class PieDataVisualize(object):
         self.obj_spawn_frame_min = args.obj_spawn_time_min * video_rate
         print(video_rate)
 
-        self.image_res = [self.vedeo.get(cv2.CAP_PROP_FRAME_HEIGHT, cv2.CAP_PROP_FRAME_WIDTH)]
+        self.image_res = [self.video.get(cv2.CAP_PROP_FRAME_HEIGHT), self.video.get(cv2.CAP_PROP_FRAME_WIDTH)]
         # adjust video rate to keep genuine broadcast rate
         self.modified_video_rate = video_rate + args.rate_offset
 
@@ -431,7 +432,7 @@ class PieDataVisualize(object):
             cv2.namedWindow(self.window_name, cv2.WND_PROP_FULLSCREEN)
             cv2.setWindowProperty(self.window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
             cv2.imshow(self.window_name, image) # render
-            cv2.moveWindow(self.window_name, 10, 0)
+            cv2.moveWindow(self.window_name, int(self.window_position[0]), int(self.window_position[1]))
             #  calc sleep time to keep frame rate to be same with video rate
             sleep_time = max(int((1000 / (self.modified_video_rate) - (time.time() - start))), 1)
 
@@ -497,6 +498,11 @@ def main():
         metavar='height x width',
         type=parser_res,
         default='1080x1900')
+    argparser.add_argument(
+        '--window_position',
+        metavar='x x y',
+        type=parser_res,
+        default='10x0')
     argparser.add_argument(
         '--obj_spawn_time_min',
         metavar='MIN_TIME',
