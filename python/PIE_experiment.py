@@ -50,6 +50,7 @@ class PieDataVisualize(object):
         self.window_name = 'frame'
         self.prob_thres_tr = args.prob_thres_tr
         self.prob_thres_pedestrian = args.prob_thres_pedestrian
+        self.obj_spawn_time_min = args.obj_spawn_time_min
         # log
         self.log_file = args.log
         self.log = []
@@ -121,8 +122,6 @@ class PieDataVisualize(object):
 
 
         for track in root.findall('track'):
-            framein_frame = None
-            frameout_frame = None
             tr_blue_prob = random.random()
 
             for anno_itr in track.iter('box'):
@@ -144,20 +143,9 @@ class PieDataVisualize(object):
 
                 # if the object frameded out, save the frame num and apply it to the already added data in self.pie_data[]
                 if anno_info['xbr'] > self.image_res[1]+50 or anno_info['xtl'] < -50 or anno_info['ybr'] > self.image_res[0] or anno_info['ytl'] < 0:
-                    # if framein_frame is not None and frameout_frame is None:
-                    #     frameout_frame = anno_frame
-                    #
-                    #     for i in range(framein_frame, frameout_frame):
-                    #         if i in self.pie_data:
-                    #             if anno_info['id'] in self.pie_data[i]:
-                    #                 self.pie_data[i][anno_info['id']]['frameout_point'] = anno_frame
-                    continue
-
-                if framein_frame is None:
-                    framein_frame = anno_frame
-                #
-                # anno_info['framein_point'] = framein_frame
-                # anno_info['frameout_point'] = track.findall('box')[-1].attrib.get('frame')
+                    anno_info['in_frame'] = False
+                else:
+                    anno_info['in_frame'] = True
 
                 # if object is pedestrian, get additional information from attributes.xml
                 if anno_info['label'] == 'pedestrian':
@@ -220,13 +208,7 @@ class PieDataVisualize(object):
         """find focused object from self.target_obj_dict
         """
         if self.focused_obj_id is not None:
-
-            if self.focused_obj_id in self.pie_data[self.current_frame_num]:
-                if self.pie_data[self.current_frame_num][self.focused_obj_id]['critical_point'] < self.current_frame_num:
-                    self.log[-1] += ['passed', self.current_frame_num, time.time()]
-                    self.focused_obj_id = None
-
-            else:
+            if self.pie_data[self.current_frame_num][self.focused_obj_id]['critical_point'] < self.current_frame_num:
                 self.log[-1] += ['passed', self.current_frame_num, time.time()]
                 self.focused_obj_id = None
 
@@ -266,7 +248,6 @@ class PieDataVisualize(object):
                         time.time(),
                         obj_id,
                         obj_info['label'],
-                        # obj_info['frameout_point'],
                         obj_info['prob']
                         # obj_info['critical_point']
                         ])
