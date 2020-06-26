@@ -12,7 +12,7 @@ setting_table = {
 --        fg_colour=0x165cc4,
         fg_color=0xc35822,
         fg_alpha=0.4,
-        start_x=185, start_y=523,
+        start_x=185, start_y=687,
         length = 170,
         thickness=5
     },
@@ -24,7 +24,7 @@ setting_table = {
 --        fg_colour=0x165cc4,
         fg_color=0xc35822,
         fg_alpha=0.4,
-        start_x=185, start_y=562,
+        start_x=185, start_y=732,
         length=170,
         thickness=5
     },
