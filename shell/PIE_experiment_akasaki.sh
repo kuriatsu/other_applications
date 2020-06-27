@@ -31,27 +31,35 @@ attrib_list=(
 "/media/ssd/PIE_data/annotations_attributes/set04/video_0006_attributes.xml"
 )
 
-cowsay -f kitty 'Prease input your name'
+cowsay -f vader 'Prease input your name'
 read subject_name
-cowsay 'Prease input operation type'
-read operation_type
-
-cowsay -f meow 'Are you ready? [Enter]'
+cowsay -f vader 'We are going to start operation practice. Are you ready? [Enter]'
 read
 
-for i in {0..2}; do
+python3 /home/kuriatsu/share/git_other_app/python/PIE_experiment.py --window_position "3840x0"
+
+cowsay -f vader "Let's Start the experiment. [Enter]"
+read
+
+cowsay -f ghostbusters 'Prease input operation type'
+read operation_type
+
+cowsay -f ghostbusters 'Are you ready? '
+read
+
+for i in {0..1}; do
     log_file="${output_file}/${subject_name}_$(( $i+1 ))_${operation_type}.csv"
     python3 /home/kuriatsu/share/git_other_app/python/PIE_experiment.py --video ${clip_list[$i]} --anno ${anno_list[$i]} --attrib ${attrib_list[$i]} --log $log_file --window_position "3840x0"
 done
 
-cowsay -f hiyoko 'Did yow answer the questions? [Enter]'
+cowsay -f koala 'Did yow answer the questions? [Enter]'
 read
-cowsay -f goat 'Prease input operation type'
+cowsay -f koala 'Prease input operation type'
 read operation_type
-cowsay 'Are you ready? [Enter]'
+cowsay -f koala 'Are you ready? [Enter]'
 read
 
-for i in {0..2}; do
+for i in {0..1}; do
     log_file="${output_file}/${subject_name}_$(( $i+1 ))_${operation_type}.csv"
     python3 /home/kuriatsu/share/git_other_app/python/PIE_experiment.py --video ${clip_list[$i]} --anno ${anno_list[$i]} --attrib ${attrib_list[$i]} --log $log_file --window_position "3840x0"
 done
