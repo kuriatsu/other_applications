@@ -139,7 +139,7 @@ def alignData(result, annotations_tree, ego_vehicle_tree, attributes_tree, exper
                 intervene_distance = None
                 intervene_ego_speed = None
 
-            aligned_data.append([experiment_type, time, prob, clarity, display_distance, display_ego_vel, box_size, intervene_distance, intervene_ego_speed, is_intervene_correct, intervene_time])
+            aligned_data.append([experiment_type, time, prob, clarity, display_distance, display_ego_vel, box_size, intervene_distance, intervene_ego_speed, intervene_time, is_intervene_correct])
 
         # elif obj_type == 'traffic_light':
         #     for box in annotations_tree.iter('box'):

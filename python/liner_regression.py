@@ -13,11 +13,11 @@ def readCsv(filename, delete_cols=[]):
     with open(filename, 'r') as file_obj:
         reader = csv.reader(file_obj)
         header = next(reader)
-        header = [v for i, v in enumeate(header) if i not in delete_cols]
+        header = [v for i, v in enumerate(header) if i not in delete_cols]
         out = []
 
         for row in reader:
-            row = [v for i, v in enumeate(row) if i not in delete_cols]
+            row = [v for i, v in enumerate(row) if i not in delete_cols]
             if '' not in row:
                 out.append(row)
             else:
@@ -77,20 +77,22 @@ def showData(x, y, header_x, header_y):
 def main():
     data, header = readCsv('/home/kuriatsu/share/PIE_result/june/result_logistic.csv')
     data_time = np.array(data)
-    x_time = np.array(data[:, :9], dtype=float)
-    y_time = np.array(data[:, 10], dtype=float)
-    xss_time, yss_time = dataScaling(x_time, y_time)
-    regression(xss_time, yss_time.reshape(-1, 1))
-    getCoef(xss_time, yss_time, header[:9]+header[10])
+    data_time = np.delete(data_time, [5, 6, 7], 1)
+    x_time = np.array(data_time[:, :5], dtype=float)
+    y_time = np.array(data_time[:, 6], dtype=float)
+    xss_time, yss_time = dataScaling(x_time, y_time.reshape(-1, 1))
+    regression(xss_time, yss_time)
+    getCoef(xss_time, yss_time, header[:4] + [header[8]] + [header[9]])
 
     # showData(x_time, y_time,  header[:5], header[5:7])
     data, header = readCsv('/home/kuriatsu/share/PIE_result/june/result_logistic.csv', delete_cols=[7, 8, 9])
     data_acc = np.array(data)
-    x_acc = np.array(data[:, :6], dtype=float)
-    y_acc = np.array(data[:, 7], dtype=float)
-    xss_acc, yss_acc = dataScaling(x_acc, y_acc)
-    regression(xss_acc, yss_acc[:,1].reshape(-1, 1))
-    getCoef(xss_acc, yss_acc, header[:6]+header[7])
+    data_acc = np.delete(data_time, 5, 1)
+    x_acc = np.array(data_time[:, :5], dtype=float)
+    y_acc = np.array(data_time[:, 7], dtype=float)
+    xss_acc, yss_acc = dataScaling(x_acc, y_acc.reshape(-1, 1))
+    regression(xss_acc, yss_acc)
+    getCoef(xss_acc, yss_acc, header[:5]+[header[7]])
 
 
     # coef, intercept, score = regression(x, y[:,1].reshape(-1, 1))
