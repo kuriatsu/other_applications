@@ -79,7 +79,7 @@ def alignData(result, annotations_tree, ego_vehicle_tree, attributes_tree, exper
             intervene_result_of_obj[obj_id]['correct'] += is_intervene_correct
             intervene_result_of_obj[obj_id]['cross'] += answer_cross
         else:
-            intervene_result_of_obj[obj_id] = {'total':1, 'correct':is_intervene_correct, 'frame': display_point, 'cross':answer_cross, 'prob':prob}
+            intervene_result_of_obj[obj_id] = {'total':1, 'correct':is_intervene_correct, 'frame': display_point, 'cross':answer_cross, 'prob':prob, 'clarity': clarity}
 
         # intervene acc per time
         if int(time / 60) in intervene_result_of_time:
@@ -139,7 +139,7 @@ def alignData(result, annotations_tree, ego_vehicle_tree, attributes_tree, exper
                 intervene_distance = None
                 intervene_ego_speed = None
 
-            aligned_data.append([experiment_type, time, prob, clarity, display_distance, display_ego_vel, intervene_distance, intervene_ego_speed, box_size, intervene_time, is_intervene_correct])
+            aligned_data.append([experiment_type, time, prob, clarity, display_distance, display_ego_vel, box_size, intervene_distance, intervene_ego_speed, is_intervene_correct, intervene_time])
 
         # elif obj_type == 'traffic_light':
         #     for box in annotations_tree.iter('box'):
@@ -165,7 +165,7 @@ def writeCsv(pedestrian_data, filename):
 
     with open(filename, 'a') as file_obj:
         writer = csv.writer(file_obj)
-        writer.writerow(['intervene_type', 'time', 'prob', 'clarity', 'display_distance', 'display_velocity', 'intervene_distance', 'intervene_ego_speed', 'box_size', 'intervene_time', 'is_intervene_correct'])
+        writer.writerow(['intervene_type', 'time', 'prob', 'clarity', 'display_distance', 'display_velocity', 'box_size', 'intervene_distance', 'intervene_ego_speed', 'intervene_time', 'is_intervene_correct'])
 
         writer.writerows(pedestrian_data)
         # writer.writerow(['display_point', 'display_time', 'id', 'obj_type', 'frameout_frame', 'prob', 'intervene_type', 'intervene_time', 'intervene_point', 'intervene_key',
@@ -178,9 +178,9 @@ def writeDict(obj, time, file):
     with open(file, 'a') as file_obj:
         writer = csv.writer(file_obj)
 
-        writer.writerow(['id','frame', 'acc', 'prob_experiment', 'prob_anno'])
+        writer.writerow(['id','frame', 'acc', 'prob_experiment', 'prob_anno', 'clarity'])
         for key, val in obj.items():
-            writer.writerow([key, val['frame'], float(val['correct']) / float(val['total']), float(val['cross']) / float(val['total']), val['prob']])
+            writer.writerow([key, val['frame'], float(val['correct']) / float(val['total']), float(val['cross']) / float(val['total']), val['prob'], val['clarity']])
 
         writer.writerow(['minute', 'total', 'acc', 'acc_enter', 'acc_touch'])
         for key, val in time.items():

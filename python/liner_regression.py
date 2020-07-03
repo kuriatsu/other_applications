@@ -9,22 +9,20 @@ import statsmodels.api as sm
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-def readCsv(filename):
+def readCsv(filename, delete_cols=[]):
     with open(filename, 'r') as file_obj:
         reader = csv.reader(file_obj)
         header = next(reader)
-        del header[5]
-        del header[5]
-        del header[5]
+        header = [v for i, v in enumeate(header) if i not in delete_cols]
         out = []
+
         for row in reader:
-            del row[5]
-            del row[5]
-            del row[5]
+            row = [v for i, v in enumeate(row) if i not in delete_cols]
             if '' not in row:
                 out.append(row)
             else:
-                print(out)
+                print("remove row")
+
         return out, header
 
 
@@ -78,16 +76,22 @@ def showData(x, y, header_x, header_y):
 
 def main():
     data, header = readCsv('/home/kuriatsu/share/PIE_result/june/result_logistic.csv')
-    data = np.array(data)
-    x = np.array(data[:, :5], dtype=float)
-    y = np.array(data[:, 5:7], dtype=float)
-    xss, yss = dataScaling(x, y)
+    data_time = np.array(data)
+    x_time = np.array(data[:, :9], dtype=float)
+    y_time = np.array(data[:, 10], dtype=float)
+    xss_time, yss_time = dataScaling(x_time, y_time)
+    regression(xss_time, yss_time.reshape(-1, 1))
+    getCoef(xss_time, yss_time, header[:9]+header[10])
 
-    showData(x, y,  header[:5], header[5:7])
+    # showData(x_time, y_time,  header[:5], header[5:7])
+    data, header = readCsv('/home/kuriatsu/share/PIE_result/june/result_logistic.csv', delete_cols=[7, 8, 9])
+    data_acc = np.array(data)
+    x_acc = np.array(data[:, :6], dtype=float)
+    y_acc = np.array(data[:, 7], dtype=float)
+    xss_acc, yss_acc = dataScaling(x_acc, y_acc)
+    regression(xss_acc, yss_acc[:,1].reshape(-1, 1))
+    getCoef(xss_acc, yss_acc, header[:6]+header[7])
 
-    regression(xss, yss[:,0].reshape(-1, 1))
-    regression(xss, yss[:,1].reshape(-1, 1))
-    getCoef(xss, yss, header[:5]+header[5:7])
 
     # coef, intercept, score = regression(x, y[:,1].reshape(-1, 1))
     # print('coef: {}, intercept:{}, score:{}'.format(coef, intercept, score))
