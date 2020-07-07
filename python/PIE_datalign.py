@@ -78,8 +78,20 @@ def alignData(result, annotations_tree, ego_vehicle_tree, attributes_tree, exper
             intervene_result_of_obj[obj_id]['total'] += 1
             intervene_result_of_obj[obj_id]['correct'] += is_intervene_correct
             intervene_result_of_obj[obj_id]['cross'] += answer_cross
+            if experiment_type:
+                intervene_result_of_obj[obj_id]['total_touch'] += 1
+                intervene_result_of_obj[obj_id]['answer_cross_touch'] += answer_cross
+            else:
+                intervene_result_of_obj[obj_id]['total_enter'] += 1
+                intervene_result_of_obj[obj_id]['answer_cross_enter'] += answer_cross
         else:
-            intervene_result_of_obj[obj_id] = {'total':1, 'correct':is_intervene_correct, 'frame': display_point, 'cross':answer_cross, 'prob':prob, 'clarity': clarity}
+            intervene_result_of_obj[obj_id] = {'total':1, 'correct':is_intervene_correct, 'frame': display_point, 'cross':answer_cross, 'prob':prob, 'clarity': clarity, 'total_enter': 0, 'answer_cross_enter':0, 'total_touch': 0, 'answer_cross_touch':0}
+            if experiment_type:
+                intervene_result_of_obj[obj_id]['total_touch'] += 1
+                intervene_result_of_obj[obj_id]['answer_cross_touch'] += answer_cross
+            else:
+                intervene_result_of_obj[obj_id]['total_enter'] += 1
+                intervene_result_of_obj[obj_id]['answer_cross_enter'] += answer_cross
 
         # intervene acc per time
         if int(time / 60) in intervene_result_of_time:
@@ -148,6 +160,7 @@ def alignData(result, annotations_tree, ego_vehicle_tree, attributes_tree, exper
         #                 box.attrib.get('xtl'),
         #                 box.attrib.get('ytl'),
         #                 box.attrib.get('xbr'),
+
         #                 box.attrib.get('ybr'),
         #                 box[0].text,
         #                 box[2].text
@@ -178,9 +191,9 @@ def writeDict(obj, time, file):
     with open(file, 'a') as file_obj:
         writer = csv.writer(file_obj)
 
-        writer.writerow(['id','frame', 'acc', 'prob_experiment', 'prob_anno', 'clarity'])
+        writer.writerow(['id','frame', 'acc', 'prob_experiment', 'prob_anno', 'clarity', 'prob_enter', 'prob_touch'])
         for key, val in obj.items():
-            writer.writerow([key, val['frame'], float(val['correct']) / float(val['total']), float(val['cross']) / float(val['total']), val['prob'], val['clarity']])
+            writer.writerow([key, val['frame'], float(val['correct']) / float(val['total']), float(val['cross']) / float(val['total']), val['prob'], val['clarity'], float(val['answer_cross_enter'])/ float(val['total_enter']), float(val['answer_cross_touch'])/ float(val['total_touch'])])
 
         writer.writerow(['minute', 'total', 'acc', 'acc_enter', 'acc_touch'])
         for key, val in time.items():
