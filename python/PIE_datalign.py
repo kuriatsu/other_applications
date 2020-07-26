@@ -80,18 +80,34 @@ def alignData(result, annotations_tree, ego_vehicle_tree, attributes_tree, exper
             intervene_result_of_obj[obj_id]['cross'] += answer_cross
             if experiment_type:
                 intervene_result_of_obj[obj_id]['total_touch'] += 1
-                intervene_result_of_obj[obj_id]['answer_cross_touch'] += answer_cross
+                intervene_result_of_obj[obj_id]['num_touch'] += answer_cross
+                intervene_result_of_obj[obj_id]['correct_touch'] += is_intervene_correct
             else:
                 intervene_result_of_obj[obj_id]['total_enter'] += 1
-                intervene_result_of_obj[obj_id]['answer_cross_enter'] += answer_cross
+                intervene_result_of_obj[obj_id]['num_enter'] += answer_cross
+                intervene_result_of_obj[obj_id]['correct_enter'] += is_intervene_correct
         else:
-            intervene_result_of_obj[obj_id] = {'total':1, 'correct':is_intervene_correct, 'frame': display_point, 'cross':answer_cross, 'prob':prob, 'clarity': clarity, 'total_enter': 0, 'answer_cross_enter':0, 'total_touch': 0, 'answer_cross_touch':0}
+            intervene_result_of_obj[obj_id] = {'total':1,
+                                               'correct':is_intervene_correct,
+                                               'frame': display_point,
+                                               'cross':answer_cross,
+                                               'prob':prob,
+                                               'clarity': clarity,
+                                               'total_enter': 0,
+                                               'num_enter':0,
+                                               'correct_enter':0,
+                                               'total_touch': 0,
+                                               'num_touch':0,
+                                               'correct_touch':0
+                                               }
             if experiment_type:
                 intervene_result_of_obj[obj_id]['total_touch'] += 1
-                intervene_result_of_obj[obj_id]['answer_cross_touch'] += answer_cross
+                intervene_result_of_obj[obj_id]['num_touch'] += answer_cross
+                intervene_result_of_obj[obj_id]['correct_touch'] += is_intervene_correct
             else:
                 intervene_result_of_obj[obj_id]['total_enter'] += 1
-                intervene_result_of_obj[obj_id]['answer_cross_enter'] += answer_cross
+                intervene_result_of_obj[obj_id]['num_enter'] += answer_cross
+                intervene_result_of_obj[obj_id]['correct_enter'] += is_intervene_correct
 
         # intervene acc per time
         if int(time / 60) in intervene_result_of_time:
@@ -151,7 +167,11 @@ def alignData(result, annotations_tree, ego_vehicle_tree, attributes_tree, exper
                 intervene_distance = None
                 intervene_ego_speed = None
 
-            aligned_data.append([experiment_type, time, prob, clarity, display_distance, display_ego_vel, box_size, intervene_distance, intervene_ego_speed, intervene_time, is_intervene_correct])
+            if intervene_point is not None:
+                intervene_early = (float(critical_point)-float(intervene_point))/30
+            else:
+                intervene_early = None
+            aligned_data.append([experiment_type, time, prob, clarity, display_distance, display_ego_vel, box_size, intervene_distance, intervene_ego_speed, intervene_time, is_intervene_correct, intervene_early])
 
         # elif obj_type == 'traffic_light':
         #     for box in annotations_tree.iter('box'):
@@ -178,7 +198,7 @@ def writeCsv(pedestrian_data, filename):
 
     with open(filename, 'a') as file_obj:
         writer = csv.writer(file_obj)
-        writer.writerow(['intervene_type', 'time', 'prob', 'clarity', 'display_distance', 'display_velocity', 'box_size', 'intervene_distance', 'intervene_ego_speed', 'intervene_time', 'is_intervene_correct'])
+        writer.writerow(['intervene_type', 'time', 'prob', 'clarity', 'display_distance', 'display_velocity', 'box_size', 'intervene_distance', 'intervene_ego_speed', 'intervene_time', 'is_intervene_correct', 'critical_point'])
 
         writer.writerows(pedestrian_data)
         # writer.writerow(['display_point', 'display_time', 'id', 'obj_type', 'frameout_frame', 'prob', 'intervene_type', 'intervene_time', 'intervene_point', 'intervene_key',
@@ -191,9 +211,14 @@ def writeDict(obj, time, file):
     with open(file, 'a') as file_obj:
         writer = csv.writer(file_obj)
 
-        writer.writerow(['id','frame', 'acc', 'prob_experiment', 'prob_anno', 'clarity', 'prob_enter', 'prob_touch'])
+        writer.writerow(['id','frame', 'prob_anno', 'clarity', 'total', 'correct', 'enter_total', 'enter_num', 'correct_enter', 'touch_total', 'touch_num', 'correct_touch'])
         for key, val in obj.items():
-            writer.writerow([key, val['frame'], float(val['correct']) / float(val['total']), float(val['cross']) / float(val['total']), val['prob'], val['clarity'], float(val['answer_cross_enter'])/ float(val['total_enter']), float(val['answer_cross_touch'])/ float(val['total_touch'])])
+            # acc = float(val['correct']) / float(val['total'])
+            #
+            # prob_experiment = float(val['cross']) / float(val['total'])
+            # prob_enter = float(val['num_enter'])/ float(val['total_enter'])
+            # prob_touch = float(val['num_touch'])/ float(val['total_touch'])]
+            writer.writerow([key, val['frame'], val['prob'], val['clarity'], val['total'], val['correct'], val['total_enter'], val['num_enter'], val['correct_enter'], val['total_touch'], val['num_touch'], val['correct_touch']])
 
         writer.writerow(['minute', 'total', 'acc', 'acc_enter', 'acc_touch'])
         for key, val in time.items():
