@@ -79,5 +79,5 @@ class PieLib():
             buf = cv2.add(icon_info['icon_fg'], image_bg) # put icon of roi
             image[position.get('ytl'):position.get('ybr'), position.get('xtl'):position.get('xbr')] = buf # replace image region to roi
 
-        except:
-            print('failed to put icon')
+        except Exception as e:
+            print(f'failed to put icon: {e}')

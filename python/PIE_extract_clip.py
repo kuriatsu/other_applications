@@ -51,6 +51,23 @@ def pieExtractClip(video, crop_value, crop_rate, attrib_tree, annt_tree, vehicle
                     'start_point' : int(float(track[-1].attrib.get('frame')) - random.random() * 3.0 * frame_rate)
                 }
 
+        dist_buf = 0
+
+        for i in range(int(track[0].attrib.get('frame')), len(vehicle_tree)):
+            dist_buf += float(vehicle_tree[i].attrib.get('OBD_speed')) * 0.03 / 3.6
+            future_angle = float(vehicle_tree[i].attrib.get('yaw')) - float(vehicle_tree[int(track[0].attrib.get('frame'))].attrib.get('yaw'))
+            if dist_buf > 50:
+                break
+
+        if 1.0 < abs(future_angle) % 3.14 < 2.0:
+            if future_angle > 0.0:
+                out_data.get(id)['future_direction'] = 'right'
+            else:
+                out_data.get(id)['future_direction'] = 'left'
+                direction = -1
+        else:
+            out_data.get(id)['future_direction'] = 'straight'
+
         frame_info_list = []
         for annt_itr in track.iter('box'):
             frame_info = {}
@@ -68,6 +85,9 @@ def pieExtractClip(video, crop_value, crop_rate, attrib_tree, annt_tree, vehicle
             frame_info['ytl'] = int((float(annt_itr.attrib.get('ytl')) - crop_value[0]) * (1 / crop_rate))
 
             frame_info['speed'] = float(vehicle_tree[frame_index].attrib.get('GPS_speed'))
+
+
+            frame_info['yaw'] = float(vehicle_tree[min(frame_index + 150, len(vehicle_tree)-1)].attrib.get('yaw')) - float(vehicle_tree[frame_index].attrib.get('yaw'))
 
             if label == 'pedestrian':
                 dist = 0
@@ -91,7 +111,8 @@ def pieExtractClip(video, crop_value, crop_rate, attrib_tree, annt_tree, vehicle
             out_data.get(id)['frames_info'] = frame_info_list
 
         if os.path.isfile(f'{out_file}/clips/{id}.mp4'):
-            print('skiped bacause the file exists')
+        # if label == 'pedestrian' and os.path.isfile(f'{out_file}/clips/{id}.mp4'):
+            print('skiped pedestrian clip bacause the file exists')
             continue
 
         print(f"start get video frame from {out_data.get(id).get('start_point')} to {out_data.get(id).get('critical_point')}")
@@ -141,7 +162,7 @@ def main(args):
         pickle.dump(out_data, file)
     print('saved_pickle')
 
-        if i==3: return
+    # if i==3: return
 
 if __name__ == '__main__':
 

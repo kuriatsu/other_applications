@@ -98,7 +98,21 @@ class PiePickleVisualize(object):
             'xbr': int(self.current_obj_info.get('xtl') + icon_info.get('roi')[1] - icon_offset_x)
             }
 
+        # print(float(self.current_obj_info.get('yaw')))
+        # print(float(obj_info.get('frames_info')[-1].get('heading_angle')) - float(self.current_obj_info.get('heading_angle')))
         PieLib.drawIcon(image, icon_info, icon_position, self.image_res)
+
+        arrow_color = 'green' if self.is_checked else 'red'
+        arrow_info = self.icon_dict.get(f"{obj_info.get('future_direction')}_{arrow_color}")
+        arrow_position = {
+            'ytl': int(self.image_res[0] - 300),
+            'xtl': int(self.image_res[1] / 2 - arrow_info.get('roi')[1]/2),
+            'ybr': int(self.image_res[0] - 300 + arrow_info.get('roi')[0]),
+            'xbr': int(self.image_res[1] / 2 + arrow_info.get('roi')[1]/2)
+        }
+        print(arrow_position)
+        print()
+        PieLib.drawIcon(image, arrow_info, arrow_position, self.image_res)
 
         color = (0, 255, 0) if self.is_checked else (0, 0, 255)
 
@@ -234,6 +248,8 @@ def main(args):
             pie_pickle_visualize.loop(cv_video, id, val)
             del data[id]
             cv_video.release()
+
+        print('time is over')
 
 
 if __name__ == '__main__':
