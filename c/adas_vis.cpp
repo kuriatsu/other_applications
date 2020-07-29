@@ -14,7 +14,7 @@ private:
 	std::map<int ,std::vector<std::string>> adas_points;
 	std::map<int, std::vector<std::string>> adas_lines;
 	std::map<int, std::vector<std::string>> adas_whitelines;
-
+	std::string adas_points_header;
 public:
 	AdasVis();
 	~AdasVis();
@@ -35,9 +35,9 @@ AdasVis::AdasVis()
 	server.reset(new interactive_markers::InteractiveMarkerServer("adas_vis_node"));
 	pub_marker = n.advertise<visualization_msgs::MarkerArray>("/adas_vis_marker", 5);
 
-	adas_points = readCsv("/home/kuri-ros/mfds_points.csv");
 	adas_lines = readCsv("/home/kuri-ros/mfds_line.csv");
 	adas_whitelines = readCsv("/home/kuri-ros/mfds_whiteline.csv");
+	adas_points = readCsv("/home/kuri-ros/mfds_points.csv");
 
 	refleshAdasMarker();
 }
@@ -46,6 +46,17 @@ AdasVis::AdasVis()
 AdasVis::~AdasVis()
 {
 	server.reset();
+	std::ofstream ofs("/home/kuri-ros/mfds_points_new.csv");
+	ofs << adas_points_header << std::endl;
+
+	for(auto &e : adas_points)
+	{
+		for (int j = 0; j < e.second.size() - 1 ; j++)
+		{
+			ofs << e.second[j] << ",";
+		}
+		ofs << e.second.back() << std::endl;
+	}
 }
 
 
@@ -56,18 +67,19 @@ std::map<int, std::vector<std::string>> AdasVis::readCsv(const std::string &file
 	std::vector<std::string> result_row;
 	std::map<int, std::vector<std::string>> result_out;
 
-	std::getline(ifs, line);
+	std::getline(ifs, adas_points_header);
+
 	while(std::getline(ifs, line))
 	{
 		std::istringstream stream(line);
 		while(std::getline(stream, field, ','))
 		{
-			std::cout << field << std::endl;
 			result_row.emplace_back(field);
 		}
 		result_out[std::stoi(result_row[0])] = result_row;
 		result_row.clear();
 	}
+	std::cout << result_out.size() << std::endl;
 	return result_out;
 }
 
