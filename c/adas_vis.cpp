@@ -4,6 +4,8 @@
 #include <fstream>
 #include <vector>
 #include <geometry_msgs/Point.h>
+#include <opencv2/opencv.hpp>
+
 
 boost::shared_ptr<interactive_markers::InteractiveMarkerServer> server;
 
@@ -35,9 +37,11 @@ AdasVis::AdasVis()
 	server.reset(new interactive_markers::InteractiveMarkerServer("adas_vis_node"));
 	pub_marker = n.advertise<visualization_msgs::MarkerArray>("/adas_vis_marker", 5);
 
-	adas_lines = readCsv("/home/kuri-ros/mfds_line.csv");
-	adas_whitelines = readCsv("/home/kuri-ros/mfds_whiteline.csv");
-	adas_points = readCsv("/home/kuri-ros/mfds_points.csv");
+	adas_lines = readCsv("/media/kuriatsu/SamsungKURI/brainIV/map/mfds_adas_new/line.csv");
+	adas_whitelines = readCsv("/media/kuriatsu/SamsungKURI/brainIV/map/mfds_adas_new/whiteline.csv");
+	adas_points = readCsv("/media/kuriatsu/SamsungKURI/brainIV/map/mfds_adas_new/point.csv");
+
+    cv::Mat map_image = cv::imread("/home/kuriatsu/Picture/mfds_satelite.png", 1);
 
 	refleshAdasMarker();
 }
@@ -46,7 +50,7 @@ AdasVis::AdasVis()
 AdasVis::~AdasVis()
 {
 	server.reset();
-	std::ofstream ofs("/home/kuri-ros/mfds_points_new.csv");
+	std::ofstream ofs("/media/kuriatsu/SamsungKURI/brainIV/map/mfds_points_new.csv");
 	ofs << adas_points_header << std::endl;
 
 	for(auto &e : adas_points)
@@ -76,6 +80,10 @@ std::map<int, std::vector<std::string>> AdasVis::readCsv(const std::string &file
 		{
 			result_row.emplace_back(field);
 		}
+        if (result_out.count(std::stoi(result_row[0])) != 0)
+        {
+            std::cout << result_row[0] << std::endl;
+        }
 		result_out[std::stoi(result_row[0])] = result_row;
 		result_row.clear();
 	}
@@ -96,8 +104,11 @@ void AdasVis::refleshAdasMarker()
 		for (int i = 1; i <= 2; i++)
 		{
 			point = adas_points.at(std::stoi(adas_lines.at(std::stoi(e.second[1]))[i]));
-			p.x = std::stof(point[4]) - std::stof(adas_points.at(1)[4]);
-			p.y = std::stof(point[5]) - std::stof(adas_points.at(1)[5]);
+			// p.x = std::stof(point[4]) - std::stof(adas_points.at(1)[4]);
+			// p.y = std::stof(point[5]) - std::stof(adas_points.at(1)[5]);
+
+            p.y = std::stof(point[4]);
+			p.x = std::stof(point[5]);
 			p.z = std::stof(point[3]);
 			server->insert(makeIntMarker(point[0], p));
 			server->setCallback(point[0], boost::bind(&AdasVis::intMarkerCb, this, _1));
@@ -129,9 +140,9 @@ visualization_msgs::InteractiveMarker AdasVis::makeIntMarker(const std::string &
 	control.orientation.w = 1;
 
 	visualization_msgs::Marker marker;
-	marker.ns="adas";
+	marker.ns="point";
 	marker.id = std::stoi(name);
-	marker.type = visualization_msgs::Marker::CYLINDER;
+	marker.type = visualization_msgs::Marker::SPHERE;
 	marker.action = visualization_msgs::Marker::ADD;
 	marker.scale.x = 0.5;
 	marker.scale.y = 0.5;
@@ -142,7 +153,29 @@ visualization_msgs::InteractiveMarker AdasVis::makeIntMarker(const std::string &
 	marker.color.a = 0.5;
 
 	control.markers.emplace_back(marker);
-	int_marker.controls.emplace_back(control);
+    int_marker.controls.emplace_back(control);
+
+    // control.always_visible = true;
+    // control.interaction_mode = visualization_msgs::InteractiveMarkerControl::NONE;
+    // control.orientation.x = 0;
+    // control.orientation.y = 1;
+    // control.orientation.z = 0;
+    // control.orientation.w = 1;
+
+    // marker.ns="range";
+	// marker.id = std::stoi(name);
+	// marker.type = visualization_msgs::Marker::CYLINDER;
+	// marker.action = visualization_msgs::Marker::ADD;
+	// marker.scale.x = 3.5;
+	// marker.scale.y = 3.5;
+	// marker.scale.z = 0.1;
+	// marker.color.r = 0.5;
+	// marker.color.g = 0.5;
+	// marker.color.b = 1;
+	// marker.color.a = 0.2;
+
+    // control.markers.emplace_back(marker);
+	// int_marker.controls.emplace_back(control);
 	return int_marker;
 }
 
