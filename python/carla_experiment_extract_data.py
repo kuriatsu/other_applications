@@ -78,11 +78,13 @@ def readRosbag(filename, waypoints, waypoint_interval, goal_confirm_waypoint, sc
             intervene = 'touch'
 
         if topic == '/joy':
-            if msg.axes[2] != 0.0:
+            if msg.axes[2] != 0.0 and msg.axes[3] != 0.0:
+                intervene = 'throttle&brake'
+            elif msg.axes[2] != 0.0:
                 intervene = 'throttle'
-            if msg.axes[3] != 0.0:
+            elif msg.axes[3] != 0.0:
                 intervene = 'brake'
-            if msg.buttons[23]:
+            elif msg.buttons[23]:
                 intervene = 'button'
 
 
