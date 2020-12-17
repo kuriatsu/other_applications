@@ -78,11 +78,11 @@ def readRosbag(filename, waypoints, waypoint_interval, goal_confirm_waypoint, sc
             intervene = 'touch'
 
         if topic == '/joy':
-            if msg.axes[2] != 0.0 and msg.axes[3] != 0.0:
+            if (-1.0 < msg.axes[2] < 0.0) or (0.0 < msg.axes[2] < 1.0) and (-1.0 < msg.axes[3] < 0.0) or (0.0 < msg.axes[3] < 1.0):
                 intervene = 'throttle&brake'
-            elif msg.axes[2] != 0.0:
+            elif (-1.0 < msg.axes[3] < 0.0) or (0.0 < msg.axes[3] < 1.0):
                 intervene = 'throttle'
-            elif msg.axes[3] != 0.0:
+            elif (-1.0 < msg.axes[2] < 0.0) or (0.0 < msg.axes[2] < 1.0):
                 intervene = 'brake'
             elif msg.buttons[23]:
                 intervene = 'button'
@@ -181,10 +181,11 @@ def savePickle(data):
 
 
 def main():
+    # waypoints = readCsv("/home/kuriatsu/Program/EnjoyCarla/waypoint/town1_plactice.csv")
     waypoints = readCsv("/home/kuriatsu/Program/EnjoyCarla/waypoint/town1.csv")
     scenario_info = readCsv("/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/aso/aso_actor_id_Town01.csv")
     extracted_data = readRosbag("/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/aso/aso_Town01.bag", waypoints, 1.0, 50, scenario_info)
-    print(np.array(extracted_data.get(981).get('data')))
+    # print(np.array(extracted_data.get(981).get('data')))
     savePickle(extracted_data)
 
 
