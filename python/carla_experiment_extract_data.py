@@ -18,9 +18,17 @@ def readRosbag(filename, waypoints, waypoint_interval, goal_confirm_waypoint, sc
     bag = rosbag.Bag(filename)
     # scenario_info = np.array(scenario_info)
 
-    extracted_data = {}
-    profile_data = []
+    extracted_data = {} # final data, all interventions....
+    profile_data = [] # data of all time step while correcting data
 
+    # face direction params
+    face_angle_thres = -1.0
+    face_position_x_min = 200
+    face_position_x_max = 650
+    face_position_y_min = 200
+    face_position_y_max = 480
+    last_face_direction = 'front'
+    current_face_direction = None
 
     target_object = None
     target_object_waypoint_index = None
@@ -79,7 +87,7 @@ def readRosbag(filename, waypoints, waypoint_interval, goal_confirm_waypoint, sc
 
         if topic == '/joy':
             if (-1.0 < msg.axes[2] < 0.0) or (0.0 < msg.axes[2] < 1.0) and (-1.0 < msg.axes[3] < 0.0) or (0.0 < msg.axes[3] < 1.0):
-                intervene = 'throttle&brake'
+                intervene = 'throttle'
             elif (-1.0 < msg.axes[3] < 0.0) or (0.0 < msg.axes[3] < 1.0):
                 intervene = 'throttle'
             elif (-1.0 < msg.axes[2] < 0.0) or (0.0 < msg.axes[2] < 1.0):
@@ -87,9 +95,18 @@ def readRosbag(filename, waypoints, waypoint_interval, goal_confirm_waypoint, sc
             elif msg.buttons[23]:
                 intervene = 'button'
 
+        if topic == '/face_position':
+            if face_position_x_min < msg.pose.position.x < face_position_x_max and face_position_y_min < msg.pose.position.y < face_position_y_max:
+                if msg.pose.position.z == 0.0:
+                    current_face_direction = last_face_direction
+                elif msg.pose.position.z > face_angle_thres:
+                    current_face_direction = 'ui'
+                else:
+                    current_face_direction = 'front'
 
         if topic == '/carla/ego_vehicle/odometry' and is_correcting_data:
-            # ros_time = time
+            # ros_time = tim
+            # data at each time step
             step_data = []
 
             # skip if not collection range
@@ -138,7 +155,8 @@ def readRosbag(filename, waypoints, waypoint_interval, goal_confirm_waypoint, sc
                     ego_mileage,
                     ((target_object_position.x - msg.pose.pose.position.x) ** 2 + (target_object_position.y - msg.pose.pose.position.y) ** 2) ** 0.5,
                     ego_to_wall,
-                    intervene
+                    intervene,
+                    current_face_direction
                     ]
                 profile_data.append(step_data)
                 intervene = None

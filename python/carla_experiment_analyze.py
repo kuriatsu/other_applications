@@ -6,73 +6,91 @@ import numpy as np
 import matplotlib.pyplot as plt
 import csv
 
-analyzed_data = [['experiment_type', 'world_id', 'intervene_time', 'distance to stopline']]
+def summarizeData(extracted_data):
 
-with open('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/aso/Town01_data.pickle', 'rb') as f:
-    data = pickle.load(f)
+    intervene_time = [['experiment_type', 'world_id', 'intervene_time', 'distance to stopline', 'max_vel', 'min_vel']]
+    accuracy_data = [['experiment_type', 'world_id', 'intervene_distance', 'is_correct']]
 
-for world_id, profile in data.items():
-    # if world_id == 232:
-    #     print([col[5] for col in profile.get('data')])
-    if profile.get('actor_action') in ['static', 'pose']:
-        print('experiment_type: ' + profile.get('experiment_type') + ' world_id: ' + str(world_id))
-        for index, profile_data in enumerate(profile.get('data')):
+    fig = plt.figure()
+    ax_dict = {'control': fig.add_subplot(2,2,1), 'ui': fig.add_subplot(2,2,2), 'button': fig.add_subplot(2,2,3), 'touch': fig.add_subplot(2,2,4)}
+    for axes in ax_dict.values():
+        axes.invert_xaxis()
+        axes.set_xlim([50, -20])
+        axes.set_ylim([0, 40])
+        axes.set_xlabel("Mileage [m]", fontsize=20)
+        axes.set_ylabel("Velocity [m/s]", fontsize=20)
 
-            if profile_data[5] is None:
-                continue
+    cmap = plt.get_cmap("tab10")
 
-            if index == 0:
-                continue
+    for world_id, profile in extracted_data.items():
+        print(world_id)
 
-            if profile.get('experiment_type') == 'touch' and profile_data[5] == 'touch':
-                intervene_time = profile_data[0]
-                analyzed_data.append([profile.get('experiment_type'), world_id, intervene_time, profile_data[3]])
-                # print('touch:' + str(intervene_time))
-                # print('mileage: ' + str(profile_data[3]))
-                break
+        # summarize data -get intervene time
+        if profile.get('actor_action') in ['static', 'pose']:
+            arr_data = np.array(profile.get('data'))[1:, :] # skip first column
 
-            if profile.get('experiment_type') == 'control' and 'throttle' in profile_data[5]:
-                intervene_time = profile_data[0]
-                analyzed_data.append([profile.get('experiment_type'), world_id, intervene_time, profile_data[3]])
-                # print('control:' + str(intervene_time))
-                # print('mileage: ' + str(profile_data[3]))
-                break
+            if profile.get('experiment_type') in ['control', 'ui']:
+                intervene_column_index = np.where( (arr_data[:, 5] == 'throttle&brake') | (arr_data[:, 5] == 'throttle') )[0][0]
+                intervene_time.append( [ profile.get('experiment_type'), world_id, arr_data[intervene_column_index, 0], arr_data[intervene_column_index, 4 ] ] )
 
-            if profile.get('experiment_type') == 'ui' and 'throttle' in profile_data[5]:
-                intervene_time = profile_data[0]
-                analyzed_data.append([profile.get('experiment_type'), world_id, intervene_time, profile_data[3]])
-                # print('ui:' + str(intervene_time))
-                # print('mileage: ' + str(profile_data[3]))
-                break
+            elif profile.get('experiment_type') in ['touch', 'button']:
+                intervene_column_index = np.where( (arr_data[:, 5] == 'touch') | (arr_data[:, 5] == 'button') )[0][0]
+                intervene_time.append( [ profile.get('experiment_type'), world_id, arr_data[intervene_column_index, 0], arr_data[intervene_column_index, 4 ] ] )
 
-            if profile.get('experiment_type') == 'button' and profile_data[5] in ['button', 'touch']:
-                intervene_time = profile_data[0]
-                analyzed_data.append([profile.get('experiment_type'), world_id, intervene_time, profile_data[3]])
-                # print('touch:' + str(intervene_time))
-                # print('mileage: ' + str(profile_data[3]))
-                break
+            else:
+                intervene_column_index = np.where(arr_data[:, 5] != None)[0][0]
+                intervene_time.append( [ profile.get('experiment_type'), world_id, arr_data[intervene_column_index, 0], arr_data[intervene_column_index, 4], arr_data[intervene_column_index, 5] ] )
 
-print(analyzed_data)
-with open('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/aso/Town01_summalize.csv', 'w') as f:
-    writer = csv.writer(f)
-    writer.writerows(analyzed_data)
+            # get min vel and max vel
+            intervene_time[-1].append(np.amax(arr_data[:, 1]) * 3.6)
+            intervene_time[-1].append(np.amin(arr_data[:, 1]) * 3.6)
+            writeMotionGraphOnPlt(ax_dict.get(profile.get('experiment_type')), arr_data[:, 4], arr_data[:, 1] * 3.6, arr_data[:, 5] != None, cmap(world_id%10))
 
-motion_profile = [['experiment_type', 'world_id', 'time', 'velocity', 'mileage', 'intervene']]
+        # get accuracy of intervention
+        elif profile.get('actor_action') == 'cross':
+            arr_data = np.array(profile.get('data'))[1:, :] # skip first column
+            intervene_column_index = np.where(arr_data[:, 5] != None)[0][0]
+            accuracy_data.append([
+                profile.get('experiment_type'),
+                world_id,
+                arr_data[intervene_column_index][4],
+                arr_data[intervene_column_index][1] > 1.0
+                ])
 
-for world_id, profile in data.items():
-    # if world_id == 232:
-    #     print([col[5] for col in profile.get('data')])
-    if profile.get('actor_action') in ['static', 'pose']:
-        print('experiment_type: ' + profile.get('experiment_type') + ' world_id: ' + str(world_id))
-        for index, profile_data in enumerate(profile.get('data')):
-
-            if index == 0:
-                continue
-
-            motion_profile.append([profile.get('experiment_type'), world_id, profile_data[0], profile_data[1] * 3.6, -profile_data[2], (profile_data[5] is not None)])
+    plt.show()
+    return intervene_time, accuracy_data
 
 
-print(motion_profile)
-with open('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/aso/Town01_motion_profile.csv', 'w') as f:
-    writer = csv.writer(f)
-    writer.writerows(motion_profile)
+def saveCsv(data, filename):
+    with open(filename, 'w') as f:
+        writer = csv.writer(f)
+        writer.writerows(data)
+
+
+def writeMotionGraphOnPlt(axes, x, y, area, cmap_color):
+
+    axes.plot(x, y, color=cmap_color, alpha=0.5)
+
+    for index, value in enumerate(area):
+        if value:
+            axes.fill([x[index], x[index], x[index] + 0.5, x[index] + 0.5], [0, 40, 40, 0], color=cmap_color, alpha=0.1)
+
+    plt.legend(loc='lower right', fontsize=12)
+
+
+def main():
+
+    pickle_file = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/aso/Town04_data.pickle'
+    intervene_time_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/aso/Town01_summalize_2.csv'
+    intervene_acc_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/aso/Town01_accracy_2.csv'
+
+    with open(pickle_file, 'rb') as f:
+        extracted_data = pickle.load(f)
+
+    intervene_time, intervene_acc = summarizeData(extracted_data)
+    saveCsv(intervene_time, intervene_time_out)
+    saveCsv(intervene_acc, intervene_acc_out)
+
+
+if __name__ == '__main__':
+    main()
