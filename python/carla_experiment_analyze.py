@@ -63,7 +63,7 @@ def summarizeData(extracted_data):
                     world_id,
                     None,
                     True
-                    ])
+                ])
             else:
                 intervene_column_index = intervene_index[0][0]
                 accuracy_data.append([
@@ -71,7 +71,7 @@ def summarizeData(extracted_data):
                     world_id,
                     arr_data[intervene_column_index][4],
                     arr_data[intervene_column_index][1] < 1.0
-                    ])
+                ])
 
 
 
