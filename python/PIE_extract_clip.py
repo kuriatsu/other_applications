@@ -109,29 +109,40 @@ def pieExtractClip(video, crop_value, crop_rate, attrib_tree, annt_tree, vehicle
             continue
         else:
             out_data.get(id)['frames_info'] = frame_info_list
+            rep_id_list = [id]
 
-        if os.path.isfile(f'{out_file}/clips/{id}.mp4'):
-        # if label == 'pedestrian' and os.path.isfile(f'{out_file}/clips/{id}.mp4'):
-            print('skiped pedestrian clip bacause the file exists')
-            continue
+            for rep in range(2, int((out_data.get(id).get('critical_point') - out_data.get(id).get('start_point')) // 0.5)):
+                clip_length = rep * 0.5
+                rep_id = f"{id}_{clip_length}"
+                out_data[rep_id] = out_data.get(id)
+                out_data.get(rep_id).get('start_point') = out_data.get(rep_id).get('critical_point') - int(clip_length * 30)
+                out_data.get(rep_id).get('frames_info') = out_data.get(rep_id).get('frames_info')[int(clip_length * 30):]
+                rep_id_list.append(rep_id)
 
-        print(f"start get video frame from {out_data.get(id).get('start_point')} to {out_data.get(id).get('critical_point')}")
+        for rep_id in rep_id_list:
 
-        # frame_list = []
-        fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')        # 動画保存時のfourcc設定（mp4用）
-        writer = cv2.VideoWriter(f'{out_file}/clips/{id}.mp4', fourcc, frame_rate, (image_res[1], image_res[0]))
-        for index in range(out_data.get(id).get('start_point'), out_data.get(id).get('critical_point')):
-            video.set(cv2.CAP_PROP_POS_FRAMES, index)
-            ret, frame = video.read()
-            if ret:
-                frame = cv2.resize(frame[crop_value[0]:crop_value[1], crop_value[2]:crop_value[3]], dsize=None, fx=expand_rate, fy=expand_rate)
-                writer.write(frame)
-                # frame_list.append(frame)
-            else:
-                break
+            if os.path.isfile(f'{out_file}/clips/{rep_id}.mp4'):
+            # if label == 'pedestrian' and os.path.isfile(f'{out_file}/clips/{id}.mp4'):
+                print('skiped pedestrian clip bacause the file exists')
+                continue
 
-        writer.release()
-        # out_data.get(id)['frames'] = frame_list
+            print(f"start get video frame from {out_data.get(rep_id).get('start_point')} to {out_data.get(rep_id).get('critical_point')}")
+
+            # frame_list = []
+            fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')        # 動画保存時のfourcc設定（mp4用）
+            writer = cv2.VideoWriter(f'{out_file}/clips/{rep_id}.mp4', fourcc, frame_rate, (image_res[1], image_res[0]))
+            for index in range(out_data.get(rep_id).get('start_point'), out_data.get(rep_id).get('critical_point')):
+                video.set(cv2.CAP_PROP_POS_FRAMES, index)
+                ret, frame = video.read()
+                if ret:
+                    frame = cv2.resize(frame[crop_value[0]:crop_value[1], crop_value[2]:crop_value[3]], dsize=None, fx=expand_rate, fy=expand_rate)
+                    writer.write(frame)
+                    # frame_list.append(frame)
+                else:
+                    break
+
+            writer.release()
+        # out_data.get(rep_id)['frames'] = frame_list
 
 
 
