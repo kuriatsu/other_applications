@@ -40,7 +40,7 @@ def pieExtractClip(video, crop_value, crop_rate, attrib_tree, annt_tree, vehicle
                 print(id)
 
         if label == 'traffic_light':
-            if float(track[0].attrib.get('xbr')) > image_res[1] / 2:
+            if float(track[0].attrib.get('xbr')) < image_res[1] / 2:
                 continue
             else:
                 out_data[id] = {

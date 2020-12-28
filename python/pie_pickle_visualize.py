@@ -110,8 +110,6 @@ class PiePickleVisualize(object):
             'ybr': int(self.image_res[0] - 300 + arrow_info.get('roi')[0]),
             'xbr': int(self.image_res[1] / 2 + arrow_info.get('roi')[1]/2)
         }
-        print(arrow_position)
-        print()
         PieLib.drawIcon(image, arrow_info, arrow_position, self.image_res)
 
         color = (0, 255, 0) if self.is_checked else (0, 0, 255)
