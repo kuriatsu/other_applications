@@ -10,6 +10,7 @@ def summarizeData(extracted_data):
 
     intervene_time = [['experiment_type', 'world_id', 'intervene_time', 'distance to stopline', 'max_vel', 'min_vel']]
     accuracy_data = [['experiment_type', 'world_id', 'intervene_distance', 'is_correct']]
+    face_turn_result = [['experiment_type', 'world_id', 'actor_action', 'count']]
 
     fig = plt.figure()
     ax_dict = {'control': fig.add_subplot(2,2,1), 'ui': fig.add_subplot(2,2,2), 'button': fig.add_subplot(2,2,3), 'touch': fig.add_subplot(2,2,4)}
@@ -28,6 +29,10 @@ def summarizeData(extracted_data):
         # summarize data -get intervene time
         if profile.get('actor_action') in ['static', 'pose']:
             arr_data = np.array(profile.get('data'))[1:, :] # skip first column
+
+            if np.where(arr_data[:, 5] != None)[0].size == 0:
+                print('skiped no intervention')
+                continue
 
             if profile.get('experiment_type') in ['control', 'ui']:
                 intervene_column_index = np.where( (arr_data[:, 5] == 'throttle&brake') | (arr_data[:, 5] == 'throttle') )[0][0]
@@ -48,17 +53,48 @@ def summarizeData(extracted_data):
 
         # get accuracy of intervention
         elif profile.get('actor_action') == 'cross':
+
             arr_data = np.array(profile.get('data'))[1:, :] # skip first column
-            intervene_column_index = np.where(arr_data[:, 5] != None)[0][0]
-            accuracy_data.append([
-                profile.get('experiment_type'),
-                world_id,
-                arr_data[intervene_column_index][4],
-                arr_data[intervene_column_index][1] > 1.0
-                ])
+            intervene_index = np.where(arr_data[:, 5] != None)
+
+            if intervene_index[0].size == 0:
+                accuracy_data.append([
+                    profile.get('experiment_type'),
+                    world_id,
+                    None,
+                    True
+                    ])
+            else:
+                intervene_column_index = intervene_index[0][0]
+                accuracy_data.append([
+                    profile.get('experiment_type'),
+                    world_id,
+                    arr_data[intervene_column_index][4],
+                    arr_data[intervene_column_index][1] < 1.0
+                    ])
+
+
+
+        if profile.get('actor_action') in ['static', 'pose', 'cross']:
+            last_face_direction = arr_data[0, 6]
+            face_turn_count = 0
+            pub_rate = 30
+
+            for index, face_direction in enumerate(arr_data[:, 6]):
+                print(face_direction)
+                if face_direction != last_face_direction:
+                    face_direction_count_length = min(pub_rate // 2, len(arr_data)-index)
+                    print(arr_data[index:index + face_direction_count_length, 6])
+                    face_direction_count = np.where( arr_data[index:index + face_direction_count_length, 6] == face_direction )[0].size
+                    if face_direction_count == face_direction_count_length:
+                        face_turn_count += 1
+                        last_face_direction = face_direction
+
+            face_turn_result.append([profile.get('experiment_type'), profile.get('world_id'), profile.get('actor_action'), face_turn_count])
+
 
     plt.show()
-    return intervene_time, accuracy_data
+    return intervene_time, accuracy_data, face_turn_result
 
 
 def saveCsv(data, filename):
@@ -80,16 +116,18 @@ def writeMotionGraphOnPlt(axes, x, y, area, cmap_color):
 
 def main():
 
-    pickle_file = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/aso/Town04_data.pickle'
-    intervene_time_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/aso/Town01_summalize_2.csv'
-    intervene_acc_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/aso/Town01_accracy_2.csv'
+    pickle_file = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/teranishi/Town01.pickle'
+    intervene_time_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/teranishi/Town01_summalize.csv'
+    intervene_acc_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/teranishi/Town01_accracy.csv'
+    face_turn_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/teranishi/Town01_face.csv'
 
     with open(pickle_file, 'rb') as f:
         extracted_data = pickle.load(f)
 
-    intervene_time, intervene_acc = summarizeData(extracted_data)
+    intervene_time, intervene_acc, face_turn = summarizeData(extracted_data)
     saveCsv(intervene_time, intervene_time_out)
     saveCsv(intervene_acc, intervene_acc_out)
+    saveCsv(face_turn, face_turn_out)
 
 
 if __name__ == '__main__':

@@ -22,13 +22,12 @@ def readRosbag(filename, waypoints, waypoint_interval, goal_confirm_waypoint, sc
     profile_data = [] # data of all time step while correcting data
 
     # face direction params
-    face_angle_thres = -1.0
-    face_position_x_min = 200
-    face_position_x_max = 650
+    face_angle_thres = -0.8
+    face_position_x_min = 80
+    face_position_x_max = 400
     face_position_y_min = 200
-    face_position_y_max = 480
-    last_face_direction = 'front'
-    current_face_direction = None
+    face_position_y_max = 450
+    current_face_direction = 'front'
 
     target_object = None
     target_object_waypoint_index = None
@@ -46,6 +45,8 @@ def readRosbag(filename, waypoints, waypoint_interval, goal_confirm_waypoint, sc
 
 
     for topic, msg, time in bag.read_messages():
+        # print(topic)
+
         if topic == '/managed_objects' and not is_correcting_data:
 
             for object in msg.objects:
@@ -68,7 +69,7 @@ def readRosbag(filename, waypoints, waypoint_interval, goal_confirm_waypoint, sc
                     if str(object.object.id) in [info[1] for info in scenario_info]:
                         experiment_type = scenario_info[ [ info[1] for info in scenario_info ].index( str(object.object.id) ) ][2]
                         scenario_id = scenario_info[ [ info[1] for info in scenario_info ].index( str(object.object.id) ) ][0]
-                        if 'pose' in scenario_id:
+                        if 'call' in scenario_id or 'phone' in scenario_id:
                             actor_action = 'pose'
                         if 'cross' in scenario_id:
                             actor_action = 'cross'
@@ -97,9 +98,9 @@ def readRosbag(filename, waypoints, waypoint_interval, goal_confirm_waypoint, sc
 
         if topic == '/face_position':
             if face_position_x_min < msg.pose.position.x < face_position_x_max and face_position_y_min < msg.pose.position.y < face_position_y_max:
-                if msg.pose.position.z == 0.0:
-                    current_face_direction = last_face_direction
-                elif msg.pose.position.z > face_angle_thres:
+                if msg.pose.orientation.z == 0.0:
+                    current_face_direction = current_face_direction
+                elif msg.pose.orientation.z > face_angle_thres:
                     current_face_direction = 'ui'
                 else:
                     current_face_direction = 'front'
@@ -194,15 +195,15 @@ def offsetMileage(profile_data):
     return profile_data
 
 def savePickle(data):
-    with open("/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/aso/Town01_data.pickle", 'wb') as f:
+    with open("/media/ssd/master_study_bag/202012experiment/teranishi/Town01.pickle", 'wb') as f:
         pickle.dump(data, f)
 
 
 def main():
     # waypoints = readCsv("/home/kuriatsu/Program/EnjoyCarla/waypoint/town1_plactice.csv")
-    waypoints = readCsv("/home/kuriatsu/Program/EnjoyCarla/waypoint/town1.csv")
-    scenario_info = readCsv("/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/aso/aso_actor_id_Town01.csv")
-    extracted_data = readRosbag("/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/aso/aso_Town01.bag", waypoints, 1.0, 50, scenario_info)
+    waypoints = readCsv("/media/ssd/master_study_bag/202012experiment/town1.csv")
+    scenario_info = readCsv("/media/ssd/master_study_bag/202012experiment/teranishi/actor_id_Town01.csv")
+    extracted_data = readRosbag("/media/ssd/master_study_bag/202012experiment/teranishi/teranishi_Town01_face.bag", waypoints, 1.0, 50, scenario_info)
     # print(np.array(extracted_data.get(981).get('data')))
     savePickle(extracted_data)
 
