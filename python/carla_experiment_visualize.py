@@ -58,7 +58,7 @@ plt.show()
 ###########################################
 
 summary_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/summary.csv')
-face_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/face.csv')
+face_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/results/face.csv')
 nasa_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/nasa-tlx.csv')
 accuracy_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/accuracy.csv')
 time_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/time.csv')
@@ -93,6 +93,11 @@ plt.show()
 
 sns.barplot(x='experiment_type', y='accuracy', data=accuracy_df)
 multicomp_result = multicomp.MultiComparison(accuracy_df['accuracy'], accuracy_df['experiment_type'])
+multicomp_result.tukeyhsd().summary()
+plt.show()
+
+sns.barplot(x='experiment_type', y='count', data=face_df)
+multicomp_result = multicomp.MultiComparison(face_df['count'], face_df['experiment_type'])
 multicomp_result.tukeyhsd().summary()
 plt.show()
 
