@@ -13,7 +13,9 @@ def summarizeData(extracted_data):
     face_turn_result = [['experiment_type', 'world_id', 'actor_action', 'count']]
 
     fig = plt.figure()
-    ax_dict = {'control': fig.add_subplot(2,2,1), 'ui': fig.add_subplot(2,2,2), 'button': fig.add_subplot(2,2,3), 'touch': fig.add_subplot(2,2,4)}
+    # for 202012experiment/ data
+    # ax_dict = {'control': fig.add_subplot(2,2,1), 'ui': fig.add_subplot(2,2,2), 'button': fig.add_subplot(2,2,3), 'touch': fig.add_subplot(2,2,4)}
+    ax_dict = {'baseline': fig.add_subplot(2,2,1), 'control': fig.add_subplot(2,2,2), 'button': fig.add_subplot(2,2,3), 'touch': fig.add_subplot(2,2,4)}
     for axes in ax_dict.values():
         axes.invert_xaxis()
         axes.set_xlim([50, -20])
@@ -34,7 +36,9 @@ def summarizeData(extracted_data):
                 print('skiped no intervention')
                 continue
 
-            if profile.get('experiment_type') in ['control', 'ui']:
+            # for 202012experiment/ data
+            # if profile.get('experiment_type') in ['ui', 'control']:
+            if profile.get('experiment_type') in ['baseline', 'control']:
                 intervene_column_index = np.where( (arr_data[:, 5] == 'throttle&brake') | (arr_data[:, 5] == 'throttle') )[0][0]
                 intervene_time.append( [ profile.get('experiment_type'), world_id, arr_data[intervene_column_index, 0], arr_data[intervene_column_index, 4 ], None, None, None] )
 
@@ -93,7 +97,7 @@ def summarizeData(extracted_data):
         if profile.get('actor_action') in ['static', 'pose', 'cross']:
             last_face_direction = arr_data[0, 6]
             face_turn_count = 0
-            pub_rate = 30
+            pub_rate = 2
 
             for index, face_direction in enumerate(arr_data[:, 6]):
                 # print(face_direction)
@@ -131,10 +135,10 @@ def writeMotionGraphOnPlt(axes, x, y, area, cmap_color):
 
 def main():
 
-    pickle_file = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/nakatani/Town01.pickle'
-    intervene_time_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/nakatani/Town01_summalize.csv'
-    intervene_acc_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/nakatani/Town01_accracy.csv'
-    face_turn_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/nakatani/Town01_face.csv'
+    pickle_file = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/kuroyanagi/Town01.pickle'
+    intervene_time_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/kuroyanagi/Town01_summalize.csv'
+    intervene_acc_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/kuroyanagi/Town01_accracy.csv'
+    face_turn_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/kuroyanagi/Town01_face.csv'
 
     with open(pickle_file, 'rb') as f:
         extracted_data = pickle.load(f)

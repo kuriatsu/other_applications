@@ -206,8 +206,9 @@ addAnotation(plt, 0, 1, 40, 2, 0, '*', 'k')
 plt.show()
 
 sns.barplot(x='experiment_type', y='count', data=face_df)
+print('face count')
 multicomp_result = multicomp.MultiComparison(face_df['count'], face_df['experiment_type'])
-multicomp_result.tukeyhsd().summary()
+print(multicomp_result.tukeyhsd().summary())
 plt.show()
 
 #### nasa-tlx ####
