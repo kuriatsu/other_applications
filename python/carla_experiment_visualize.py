@@ -205,6 +205,11 @@ sns.barplot(x='is_correct', y='intervene_distance', data=accuracy_raw_df)
 addAnotation(plt, 0, 1, 40, 2, 0, '*', 'k')
 plt.show()
 
+sns.barplot(x='experiment_type', y='count', data=face_df)
+multicomp_result = multicomp.MultiComparison(face_df['count'], face_df['experiment_type'])
+multicomp_result.tukeyhsd().summary()
+plt.show()
+
 #### nasa-tlx ####
 multicomp_result = multicomp.MultiComparison(nasa_df['mental'], nasa_df['type'])
 print('mental')
