@@ -11,13 +11,14 @@ backup_list=(
 "/home/kuriatsu/Documents/presentation/seminar $mount_dir/documents"
 "/home/kuriatsu/Documents/report $mount_dir/documents"
 "/home/kuriatsu/Documents/tex $mount_dir/documents"
-"/home/kuriatsu/Pictures/presentation $mount_dir/picture/M1"
+"/home/kuriatsu/Pictures/material $mount_dir/picture/M1"
+"/home/kuriatsu/Pictures/edited $mount_dir/picture/M1"
 "/home/kuriatsu/Pictures/svg $mount_dir/picture/M1"
 "/home/kuriatsu/Pictures/xcf $mount_dir/picture/M1"
 "/home/kuriatsu/Pictures/graph $mount_dir/picture/M1"
 "/home/kuriatsu/Videos/edited $mount_dir/video"
 "/home/kuriatsu/Videos/kdenlive $mount_dir/video"
-"/home/kuriatsu/Videos/raw $mount_dir/video"
+"/home/kuriatsu/Videos/material $mount_dir/video"
 )
 
 # len=${#backup_list[@]}
@@ -41,4 +42,6 @@ for item in "${backup_list[@]}" ; do
     # i=$(( $i + 1))
     rsync -ruv --exclude '.*' $item
 done
-# fusermount -u "$mount_dir"
+fusermount -u "$mount_dir"
+
+shutdown now
