@@ -54,20 +54,15 @@ def addAnotation(plt_obj, x1, x2, y, hight, h_offset, text, color):
 ## visualize motion datas ##
 ############################
 pickle_files = [
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/nakatani/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/yoshikawa/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/yasuhara/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/sakashita/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/otake/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/seiya/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/taga/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/miyazaki/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/teranishi/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/ichiki/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/hayashi/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/kuroyanagi/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/teranishi/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/okawa/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/yokoyama/Town01.pickle',
 ]
 
 fig = plt.figure()
-ax_dict = {'control': fig.add_subplot(2,2,1), 'ui': fig.add_subplot(2,2,2), 'button': fig.add_subplot(2,2,3), 'touch': fig.add_subplot(2,2,4)}
+ax_dict = {'baseline': fig.add_subplot(2,2,1), 'control': fig.add_subplot(2,2,2), 'button': fig.add_subplot(2,2,3), 'touch': fig.add_subplot(2,2,4)}
 cmap = plt.get_cmap("tab10")
 for title, axes in ax_dict.items():
     axes.invert_xaxis()
@@ -106,14 +101,14 @@ print('average_vel_mileage' ,sum(total_vel_mileage)/ len(total_vel_mileage))
 ## visualize and analyze summarized data ##
 ###########################################
 
-summary_raw_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/results/summary.csv')
-summary_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/results/summary_summary.csv')
-summary_intervene_count_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/results/summary_intervene_count.csv')
-face_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/results/face.csv')
-nasa_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/results/nasa-tlx.csv')
-accuracy_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/results/accuracy_summary.csv')
-accuracy_raw_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/results/accuracy.csv')
-time_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/results/time.csv')
+summary_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/summary.csv')
+avoid_deceleration_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/avoid_deceleration.csv')
+summary_intervene_count_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/intervene_count.csv')
+face_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/face.csv')
+nasa_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/nasa-tlx.csv')
+accuracy_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/accuracy_summary.csv')
+accuracy_raw_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/accuracy.csv')
+time_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/time.csv')
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
@@ -122,35 +117,35 @@ sns.barplot(x='experiment_type', y='time', data=time_df)
 multicomp_result = multicomp.MultiComparison(time_df['time'], time_df['experiment_type'])
 print('time')
 print(multicomp_result.tukeyhsd().summary())
-addAnotation(plt, 1, 3, time_df.query('experiment_type == ["button", "touch"]').time.max(), 2, -2, '*', 'k')
+# addAnotation(plt, 1, 3, time_df.query('experiment_type == ["button", "touch"]').time.max(), 2, -2, '*', 'k')
 plt.show()
 
-sns.barplot(x='experiment_type', y='intervene_time', data=summary_raw_df)
-multicomp_result = multicomp.MultiComparison(summary_raw_df['intervene_time'], summary_raw_df['experiment_type'])
+sns.barplot(x='experiment_type', y='intervene_time', data=summary_df)
+multicomp_result = multicomp.MultiComparison(summary_df['intervene_time'], summary_df['experiment_type'])
 print('intervene_time')
 print(multicomp_result.tukeyhsd().summary())
 plt.show()
 
-sns.barplot(x='experiment_type', y='distance_to_stopline', data=summary_raw_df)
-multicomp_result = multicomp.MultiComparison(summary_raw_df['distance_to_stopline'], summary_raw_df['experiment_type'])
+sns.barplot(x='experiment_type', y='distance_to_stopline', data=summary_df)
+multicomp_result = multicomp.MultiComparison(summary_df['distance_to_stopline'], summary_df['experiment_type'])
 print('distance_to_stopline')
 print(multicomp_result.tukeyhsd().summary())
 plt.show()
 
-sns.barplot(x='experiment_type', y='max_vel', data=summary_raw_df)
-multicomp_result = multicomp.MultiComparison(summary_raw_df['max_vel'], summary_raw_df['experiment_type'])
-addAnotation(plt, 0, 1, 40, 1, 0, '*', 'k')
-addAnotation(plt, 0, 3, 43, 1, 0, '**', 'k')
-addAnotation(plt, 1, 2, 46, 1, 0, '***', 'k')
-addAnotation(plt, 1, 3, 49, 1, 0, '****', 'k')
+sns.barplot(x='experiment_type', y='max_vel', data=summary_df)
+multicomp_result = multicomp.MultiComparison(summary_df['max_vel'], summary_df['experiment_type'])
+addAnotation(plt, 0, 2, 45, 1, 0, '*', 'k')
+addAnotation(plt, 0, 3, 45, 1, 3, '**', 'k')
+addAnotation(plt, 1, 2, 45, 1, 6, '***', 'k')
+addAnotation(plt, 1, 3, 45, 1, 9, '****', 'k')
 print('max_vel')
 print(multicomp_result.tukeyhsd().summary())
 plt.show()
 
-sns.barplot(x='experiment_type', y='min_vel', data=summary_raw_df)
-multicomp_result = multicomp.MultiComparison(summary_raw_df['min_vel'], summary_raw_df['experiment_type'])
-addAnotation(plt, 0, 1, 9, 0.5, 0, '*', 'k')
-addAnotation(plt, 0, 2, 11, 0.5, 0, '**', 'k')
+sns.barplot(x='experiment_type', y='min_vel', data=summary_df)
+multicomp_result = multicomp.MultiComparison(summary_df['min_vel'], summary_df['experiment_type'])
+# addAnotation(plt, 0, 1, 9, 0.5, 0, '*', 'k')
+# addAnotation(plt, 0, 2, 11, 0.5, 0, '**', 'k')
 print('min_vel')
 print(multicomp_result.tukeyhsd().summary())
 plt.show()
@@ -162,13 +157,13 @@ print('accuracy')
 print(multicomp_result.tukeyhsd().summary())
 plt.show()
 
-melted_df = pd.melt(summary_df, id_vars=summary_df.columns.values[:1], var_name='experiment_type', value_name='deccelerated_time_rate')
-sns.barplot(x='experiment_type', y='deccelerated_time_rate', data=melted_df)
-addAnotation(plt, 0, 1, 0.8, 0.05, 0, '*', 'k')
-addAnotation(plt, 0, 2, 0.9, 0.05, 0, '**', 'k')
+melted_df = pd.melt(avoid_deceleration_df, id_vars=avoid_deceleration_df.columns.values[:1], var_name='experiment_type', value_name='avoid_decceleration_rate')
+sns.barplot(x='experiment_type', y='avoid_decceleration_rate', data=melted_df)
+# addAnotation(plt, 0, 1, 0.8, 0.05, 0, '*', 'k')
+# addAnotation(plt, 0, 2, 0.9, 0.05, 0, '**', 'k')
 axes.set_ylim([0, 1.0])
-multicomp_result = multicomp.MultiComparison(melted_df['deccelerated_time_rate'], melted_df['experiment_type'])
-print('deccelerated_time_rate')
+multicomp_result = multicomp.MultiComparison(melted_df['avoid_decceleration_rate'], melted_df['experiment_type'])
+print('avoid_decceleration_rate')
 print(multicomp_result.tukeyhsd().summary())
 plt.show()
 
@@ -234,10 +229,11 @@ multicomp_result = multicomp.MultiComparison(nasa_df['entire'], nasa_df['type'])
 print('entire')
 print(multicomp_result.tukeyhsd().summary())
 melted_df = pd.melt(nasa_df, id_vars=nasa_df.columns.values[:2], var_name="args", value_name="value")
-sns.barplot(x='args', y="value", hue="type", data=melted_df)
-addAnotation(plt, -0.3, -0.1, 7, 0.3, 0, '*', 'k')
-addAnotation(plt, -0.3, 0.1, 7, 0.3, 0.5, '**', 'k')
-addAnotation(plt, 0.7, 1.1, 7, 0.3, 0, '*', 'k')
+plot = sns.barplot(x='args', y="value", hue="type", data=melted_df)
+plot.legend(loc='lower left', bbox_to_anchor=(1.01, 0))
+addAnotation(plt, -0.3, 0.1, 7.5, 0.3, 0, '*', 'k')
+addAnotation(plt, 0.9, 1.1, 7, 0.3, 0, '**', 'k')
+addAnotation(plt, 5.7, 6.1, 7, 0.3, 0, '***', 'k')
 plt.show()
 
 ###########

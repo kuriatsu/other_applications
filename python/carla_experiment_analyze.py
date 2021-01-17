@@ -74,7 +74,6 @@ def summarizeData(extracted_data):
 
             arr_data = np.array(profile.get('data'))[1:, :] # skip first column
             intervene_index = np.where(arr_data[:, 5] != None)
-
             if intervene_index[0].size == 0:
                 accuracy_data.append([
                     profile.get('experiment_type'),
@@ -135,10 +134,10 @@ def writeMotionGraphOnPlt(axes, x, y, area, cmap_color):
 
 def main():
 
-    pickle_file = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/kuroyanagi/Town01.pickle'
-    intervene_time_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/kuroyanagi/Town01_summalize.csv'
-    intervene_acc_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/kuroyanagi/Town01_accracy.csv'
-    face_turn_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/kuroyanagi/Town01_face.csv'
+    pickle_file = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/yokoyama/Town01.pickle'
+    intervene_time_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/yokoyama/Town01_summalize.csv'
+    intervene_acc_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/yokoyama/Town01_accracy.csv'
+    face_turn_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/yokoyama/Town01_face.csv'
 
     with open(pickle_file, 'rb') as f:
         extracted_data = pickle.load(f)
