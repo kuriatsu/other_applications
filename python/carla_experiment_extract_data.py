@@ -45,13 +45,18 @@ def readRosbag(filename, waypoints, waypoint_interval, goal_confirm_waypoint, sc
 
 
     for topic, msg, time in bag.read_messages():
-        # print(topic)
+
+        # if topic == '/managed_objects':
+        #     print(is_correcting_data)
+        #     for object in msg.objects:
+        #         print(object.object.id)
+        #         if object.object.id == 1000:
+        #             print(object)
 
         if topic == '/managed_objects' and not is_correcting_data:
-
             for object in msg.objects:
-                # print(object.is_important)
                 if object.is_important:
+                    print(object.object.id)
                     # get target object info
                     target_object = object
                     target_object_waypoint_index, target_object_waypoint = findClosestWaypoint(waypoints, object.object.pose.position)
@@ -69,7 +74,7 @@ def readRosbag(filename, waypoints, waypoint_interval, goal_confirm_waypoint, sc
                     if str(object.object.id) in [info[1] for info in scenario_info]:
                         experiment_type = scenario_info[ [ info[1] for info in scenario_info ].index( str(object.object.id) ) ][2]
                         scenario_id = scenario_info[ [ info[1] for info in scenario_info ].index( str(object.object.id) ) ][0]
-                        if 'call' in scenario_id or 'phone' in scenario_id:
+                        if 'call' in scenario_id or 'phone' in scenario_id or 'pose' in scenario_id:
                             actor_action = 'pose'
                         if 'cross' in scenario_id:
                             actor_action = 'cross'
@@ -97,13 +102,21 @@ def readRosbag(filename, waypoints, waypoint_interval, goal_confirm_waypoint, sc
                 intervene = 'button'
 
         if topic == '/face_position':
-            if face_position_x_min < msg.pose.position.x < face_position_x_max and face_position_y_min < msg.pose.position.y < face_position_y_max:
-                if msg.pose.orientation.z == 0.0:
-                    current_face_direction = current_face_direction
-                elif msg.pose.orientation.z > face_angle_thres:
-                    current_face_direction = 'ui'
-                else:
-                    current_face_direction = 'front'
+            ## for posenet detection
+            # if face_position_x_min < msg.pose.position.x < face_position_x_max and face_position_y_min < msg.pose.position.y < face_position_y_max:
+            #     if msg.pose.orientation.z == 0.0:
+            #         current_face_direction = current_face_direction
+            #     elif msg.pose.orientation.z > face_angle_thres:
+            #         current_face_direction = 'ui'
+            #     else:
+            #         current_face_direction = 'front'
+
+            if msg.angular.z == 1.0:
+                current_face_direction = 'ui'
+
+            elif msg.angular.z == -1.0:
+                current_face_direction = 'front'
+
 
         if topic == '/carla/ego_vehicle/odometry' and is_correcting_data:
             # ros_time = tim
@@ -124,11 +137,18 @@ def readRosbag(filename, waypoints, waypoint_interval, goal_confirm_waypoint, sc
             ego_waypoint_index, ego_waypoint = findClosestWaypoint(waypoints, msg.pose.pose.position)
             ego_to_wall = (target_object_waypoint_index - ego_waypoint_index) * waypoint_interval
 
-            if len(waypoints) - ego_waypoint_index < goal_confirm_waypoint and target_object_waypoint_index < goal_confirm_waypoint:
-                ego_to_wall = ((msg.pose.pose.position.x - float(target_object_waypoint[0])) ** 2 + (msg.pose.pose.position.y - float(target_object_waypoint[1])) ** 2) ** 0.5
-            # print(ego_to_wall)
-
+            # deal with the boundary(goal-start) of waypoint
+            # if obstacle is in front of boundary and ego_vehicle is behind the boundary
+            if ego_to_wall > goal_confirm_waypoint * waypoint_interval:
+                ego_to_wall = -(len(waypoints) - target_object_waypoint_index + ego_waypoint_index) * waypoint_interval
+                print(len(waypoints), target_object_waypoint_index, ego_waypoint_index)
+            # if obstacle is behind the boundary and ego_vehicle is in front of the boundary
+            elif ego_to_wall < -goal_confirm_waypoint * waypoint_interval:
+                ego_to_wall = (len(waypoints) - ego_waypoint_index + target_object_waypoint_index) * waypoint_interval
+                print(len(waypoints), target_object_waypoint_index, ego_waypoint_index)
             # stop collecting data and save it (end)
+            print(ego_to_wall)
+
             if ego_to_wall < -20.0:
                 is_correcting_data = False
 
@@ -195,15 +215,15 @@ def offsetMileage(profile_data):
     return profile_data
 
 def savePickle(data):
-    with open("/media/ssd/master_study_bag/202012experiment/teranishi/Town01.pickle", 'wb') as f:
+    with open("/media/ssd/master_study_bag/202012experiment2/kuroyanagi/Town01.pickle", 'wb') as f:
         pickle.dump(data, f)
 
 
 def main():
     # waypoints = readCsv("/home/kuriatsu/Program/EnjoyCarla/waypoint/town1_plactice.csv")
-    waypoints = readCsv("/media/ssd/master_study_bag/202012experiment/town1.csv")
-    scenario_info = readCsv("/media/ssd/master_study_bag/202012experiment/teranishi/actor_id_Town01.csv")
-    extracted_data = readRosbag("/media/ssd/master_study_bag/202012experiment/teranishi/teranishi_Town01_face.bag", waypoints, 1.0, 50, scenario_info)
+    waypoints = readCsv("/media/ssd/master_study_bag/202012experiment2/town1.csv")
+    scenario_info = readCsv("/media/ssd/master_study_bag/202012experiment2/kuroyanagi/actor_id_Town01.csv")
+    extracted_data = readRosbag("/media/ssd/master_study_bag/202012experiment2/kuroyanagi/kuroyanagi_Town01_face.bag", waypoints, 1.0, 100, scenario_info)
     # print(np.array(extracted_data.get(981).get('data')))
     savePickle(extracted_data)
 
