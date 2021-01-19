@@ -67,8 +67,11 @@ pickle_files = [
 ]
 
 fig = plt.figure()
-ax_dict = {'control': fig.add_subplot(2,2,1), 'ui': fig.add_subplot(2,2,2), 'button': fig.add_subplot(2,2,3), 'touch': fig.add_subplot(2,2,4)}
-cmap = plt.get_cmap("tab10")
+ax_dict = {'baseline': fig.add_subplot(2,2,1), 'control': fig.add_subplot(2,2,2), 'button': fig.add_subplot(2,2,3), 'touch': fig.add_subplot(2,2,4)}
+## colorlize for each subject
+# cmap = plt.get_cmap("tab10")
+color = {'pose':'tomato', 'static':'teal'}
+
 for title, axes in ax_dict.items():
     axes.invert_xaxis()
     axes.set_xlim([50, -20])
@@ -80,6 +83,8 @@ for title, axes in ax_dict.items():
 
 total_vel = []
 total_vel_mileage = []
+label_handle_pose = None
+label_handle_static = None
 
 for index, pickle_file in enumerate(pickle_files):
     with open(pickle_file, 'rb') as f:
@@ -94,11 +99,21 @@ for index, pickle_file in enumerate(pickle_files):
             # ax_dict.get(profile.get('experiment_type')).plot(arr_data[:, 4], arr_data[:, 1]*3.6, color=cmap(index%10), alpha=0.5, label='subject_'+str(index))
 
             splined_data = splineXAxis(arr_data[:, 4], arr_data[:, 1])
-            ax_dict.get(profile.get('experiment_type')).plot(splined_data[:,0], splined_data[:,1]*3.6, color=cmap(index%10), alpha=0.5, label='subject_'+str(index))
+            ## colorlize for each subject
+            # ax_dict.get(profile.get('experiment_type')).plot(splined_data[:,0], splined_data[:,1]*3.6, color=cmap(index%10), alpha=0.5, label='subject_'+str(index))
+            handle, = ax_dict.get(profile.get('experiment_type')).plot(splined_data[:,0], splined_data[:,1]*3.6, alpha=0.5, label=profile.get('actor_action'), c=color.get(profile.get('actor_action')))
+            if profile.get('actor_action') == 'pose':
+                label_handle_pose = handle
+            elif profile.get('actor_action') == 'static':
+                label_handle_static = handle
             total_vel_mileage += splined_data[:,1].tolist()
 # for axes in ax_dict.values():
 #     axes.legend(loc='lower right', fontsize=12)
+for axes in ax_dict.values():
+    axes.legend([label_handle_pose, label_handle_static], ['pose', 'static'])
 plt.show()
+
+
 print('average_vel' ,sum(total_vel)/ len(total_vel))
 print('average_vel_mileage' ,sum(total_vel_mileage)/ len(total_vel_mileage))
 
@@ -164,8 +179,9 @@ print(multicomp_result.tukeyhsd().summary())
 plt.show()
 
 melted_df = pd.melt(avoid_deceleration_df, id_vars=avoid_deceleration_df.columns.values[:1], var_name='experiment_type', value_name='avoid_decceleration_rate')
-sns.barplot(x='experiment_type', y='avoid_decceleration_rate', data=melted_df)
-# addAnotation(plt, 0, 1, 0.8, 0.05, 0, '*', 'k')
+plot = sns.barplot(x='experiment_type', y='avoid_decceleration_rate', data=melted_df)
+# addAnotation(plt, 0, 1, 0.5, 0.05, 0, '*', 'k')
+plot.set(ylim=(0.0,1.0))
 # addAnotation(plt, 0, 2, 0.9, 0.05, 0, '**', 'k')
 axes.set_ylim([0, 1.0])
 multicomp_result = multicomp.MultiComparison(melted_df['avoid_decceleration_rate'], melted_df['experiment_type'])
