@@ -54,15 +54,20 @@ def addAnotation(plt_obj, x1, x2, y, hight, h_offset, text, color):
 ## visualize motion datas ##
 ############################
 pickle_files = [
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/hayashi/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/kuroyanagi/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/teranishi/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/okawa/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/yokoyama/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/ichiki/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/miyazaki/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/otake/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/sakashita/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/seiya/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/taga/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/teranishi/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/yoshikawa/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/yasuhara/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/nakatani/Town01.pickle',
 ]
 
 fig = plt.figure()
-ax_dict = {'baseline': fig.add_subplot(2,2,1), 'control': fig.add_subplot(2,2,2), 'button': fig.add_subplot(2,2,3), 'touch': fig.add_subplot(2,2,4)}
+ax_dict = {'control': fig.add_subplot(2,2,1), 'ui': fig.add_subplot(2,2,2), 'button': fig.add_subplot(2,2,3), 'touch': fig.add_subplot(2,2,4)}
 cmap = plt.get_cmap("tab10")
 for title, axes in ax_dict.items():
     axes.invert_xaxis()
@@ -101,14 +106,15 @@ print('average_vel_mileage' ,sum(total_vel_mileage)/ len(total_vel_mileage))
 ## visualize and analyze summarized data ##
 ###########################################
 
-summary_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/summary.csv')
-avoid_deceleration_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/avoid_deceleration.csv')
-summary_intervene_count_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/intervene_count.csv')
-face_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/face.csv')
-nasa_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/nasa-tlx.csv')
-accuracy_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/accuracy_summary.csv')
-accuracy_raw_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/accuracy.csv')
-time_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/time.csv')
+summary_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/results/summary.csv')
+avoid_deceleration_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/results/avoid_deceleration_20km.csv')
+summary_intervene_count_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/results/intervene_count.csv')
+face_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/results/face.csv')
+nasa_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/results/nasa-tlx.csv')
+accuracy_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/results/accuracy_summary.csv')
+accuracy_raw_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/results/accuracy.csv')
+time_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/results/time.csv')
+rank_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/results/rank.csv')
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
@@ -134,10 +140,10 @@ plt.show()
 
 sns.barplot(x='experiment_type', y='max_vel', data=summary_df)
 multicomp_result = multicomp.MultiComparison(summary_df['max_vel'], summary_df['experiment_type'])
-addAnotation(plt, 0, 2, 45, 1, 0, '*', 'k')
-addAnotation(plt, 0, 3, 45, 1, 3, '**', 'k')
-addAnotation(plt, 1, 2, 45, 1, 6, '***', 'k')
-addAnotation(plt, 1, 3, 45, 1, 9, '****', 'k')
+# addAnotation(plt, 0, 2, 45, 1, 0, '*', 'k')
+# addAnotation(plt, 0, 3, 45, 1, 3, '**', 'k')
+# addAnotation(plt, 1, 2, 45, 1, 6, '***', 'k')
+# addAnotation(plt, 1, 3, 45, 1, 9, '****', 'k')
 print('max_vel')
 print(multicomp_result.tukeyhsd().summary())
 plt.show()
@@ -150,9 +156,9 @@ print('min_vel')
 print(multicomp_result.tukeyhsd().summary())
 plt.show()
 
-melted_df = pd.melt(accuracy_df, id_vars=accuracy_df.columns.values[:1], var_name='experiment_type', value_name='accuracy')
-sns.barplot(x='experiment_type', y='accuracy', data=melted_df)
-multicomp_result = multicomp.MultiComparison(melted_df['accuracy'], melted_df['experiment_type'])
+melted_df = pd.melt(accuracy_df, id_vars=accuracy_df.columns.values[:1], var_name='experiment_type', value_name='avoid_unnecessary_intervention_rate')
+sns.barplot(x='experiment_type', y='avoid_unnecessary_intervention_rate', data=melted_df)
+multicomp_result = multicomp.MultiComparison(melted_df['avoid_unnecessary_intervention_rate'], melted_df['experiment_type'])
 print('accuracy')
 print(multicomp_result.tukeyhsd().summary())
 plt.show()
@@ -167,6 +173,7 @@ print('avoid_decceleration_rate')
 print(multicomp_result.tukeyhsd().summary())
 plt.show()
 
+# print('intervene_count')
 melted_df = pd.melt(summary_intervene_count_df, id_vars=summary_intervene_count_df.columns.values[:1], var_name='experiment_type', value_name='intervene_count_average')
 sns.barplot(x='experiment_type', y='intervene_count_average', data=melted_df)
 plt.show()
@@ -192,13 +199,18 @@ print('levene-intervene_distance', p)
 result = stats.ttest_ind(accuracy_raw_df.query('is_correct == 1').intervene_time, accuracy_raw_df.query('is_correct == 0').intervene_time, equal_var=True)
 print('ttest accuracy-time', result)
 sns.barplot(x='is_correct', y='intervene_time', data=accuracy_raw_df)
-addAnotation(plt, 0, 1, 16, 1, 0, '*', 'k')
+# addAnotation(plt, 0, 1, 16, 1, 0, '*', 'k')
 plt.show()
 result = stats.ttest_ind(accuracy_raw_df.query('is_correct == 1').intervene_distance, accuracy_raw_df.query('is_correct == 0').intervene_distance, equal_var=True)
 print('ttest accuracy-distance', result)
 sns.barplot(x='is_correct', y='intervene_distance', data=accuracy_raw_df)
-addAnotation(plt, 0, 1, 40, 2, 0, '*', 'k')
+# addAnotation(plt, 0, 1, 40, 2, 0, '*', 'k')
 plt.show()
+
+print('ranking')
+melted_df = pd.melt(rank_df, id_vars=rank_df.columns.values[:1], var_name='experiment_type', value_name='ranking')
+multicomp_result = multicomp.MultiComparison(melted_df['ranking'], melted_df['experiment_type'])
+print(multicomp_result.tukeyhsd().summary())
 
 sns.barplot(x='experiment_type', y='count', data=face_df)
 print('face count')
@@ -231,9 +243,9 @@ print(multicomp_result.tukeyhsd().summary())
 melted_df = pd.melt(nasa_df, id_vars=nasa_df.columns.values[:2], var_name="args", value_name="value")
 plot = sns.barplot(x='args', y="value", hue="type", data=melted_df)
 plot.legend(loc='lower left', bbox_to_anchor=(1.01, 0))
-addAnotation(plt, -0.3, 0.1, 7.5, 0.3, 0, '*', 'k')
-addAnotation(plt, 0.9, 1.1, 7, 0.3, 0, '**', 'k')
-addAnotation(plt, 5.7, 6.1, 7, 0.3, 0, '***', 'k')
+# addAnotation(plt, -0.3, 0.1, 7.5, 0.3, 0, '*', 'k')
+# addAnotation(plt, 0.9, 1.1, 7, 0.3, 0, '**', 'k')
+# addAnotation(plt, 5.7, 6.1, 7, 0.3, 0, '***', 'k')
 plt.show()
 
 ###########

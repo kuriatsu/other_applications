@@ -215,15 +215,15 @@ def offsetMileage(profile_data):
     return profile_data
 
 def savePickle(data):
-    with open("/media/ssd/master_study_bag/202012experiment2/kuroyanagi/Town01.pickle", 'wb') as f:
+    with open("/media/ssd/master_study_bag/202101experiment/hikosaka/Town01.pickle", 'wb') as f:
         pickle.dump(data, f)
 
 
 def main():
     # waypoints = readCsv("/home/kuriatsu/Program/EnjoyCarla/waypoint/town1_plactice.csv")
-    waypoints = readCsv("/media/ssd/master_study_bag/202012experiment2/town1.csv")
-    scenario_info = readCsv("/media/ssd/master_study_bag/202012experiment2/kuroyanagi/actor_id_Town01.csv")
-    extracted_data = readRosbag("/media/ssd/master_study_bag/202012experiment2/kuroyanagi/kuroyanagi_Town01_face.bag", waypoints, 1.0, 100, scenario_info)
+    waypoints = readCsv("/media/ssd/master_study_bag/202101experiment/town1.csv")
+    scenario_info = readCsv("/media/ssd/master_study_bag/202101experiment/hikosaka/actor_id_Town01.csv")
+    extracted_data = readRosbag("/media/ssd/master_study_bag/202101experiment/hikosaka/hikosaka_Town01.bag", waypoints, 1.0, 100, scenario_info)
     # print(np.array(extracted_data.get(981).get('data')))
     savePickle(extracted_data)
 

@@ -134,10 +134,10 @@ def writeMotionGraphOnPlt(axes, x, y, area, cmap_color):
 
 def main():
 
-    pickle_file = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/yokoyama/Town01.pickle'
-    intervene_time_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/yokoyama/Town01_summalize.csv'
-    intervene_acc_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/yokoyama/Town01_accracy.csv'
-    face_turn_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/yokoyama/Town01_face.csv'
+    pickle_file = '/media/kuriatsu/SamsungKURI/master_study_bag/202101experiment/hikosaka/Town01.pickle'
+    intervene_time_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202101experiment/hikosaka/Town01_summalize.csv'
+    intervene_acc_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202101experiment/hikosaka/Town01_accracy.csv'
+    face_turn_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202101experiment/hikosaka/Town01_face.csv'
 
     with open(pickle_file, 'rb') as f:
         extracted_data = pickle.load(f)
