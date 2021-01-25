@@ -31,7 +31,6 @@ def summarizeData(extracted_data):
         # summarize data -get intervene time
         if profile.get('actor_action') in ['static', 'pose']:
             arr_data = np.array(profile.get('data'))[1:, :] # skip first column
-
             if np.where(arr_data[:, 5] != None)[0].size == 0:
                 print('skiped no intervention')
                 continue
@@ -134,10 +133,10 @@ def writeMotionGraphOnPlt(axes, x, y, area, cmap_color):
 
 def main():
 
-    pickle_file = '/media/kuriatsu/SamsungKURI/master_study_bag/202101experiment/hikosaka/Town01.pickle'
-    intervene_time_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202101experiment/hikosaka/Town01_summalize.csv'
-    intervene_acc_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202101experiment/hikosaka/Town01_accracy.csv'
-    face_turn_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202101experiment/hikosaka/Town01_face.csv'
+    pickle_file = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/sakashita/Town01.pickle'
+    intervene_time_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/sakashita/Town01_summalize.csv'
+    intervene_acc_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/sakashita/Town01_accracy.csv'
+    face_turn_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/sakashita/Town01_face.csv'
 
     with open(pickle_file, 'rb') as f:
         extracted_data = pickle.load(f)
