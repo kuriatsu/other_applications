@@ -8,8 +8,8 @@ import csv
 
 def summarizeData(extracted_data):
 
-    intervene_time = [['experiment_type', 'world_id', 'intervene_time', 'distance to stopline', 'max_vel', 'min_vel', 'intervene_count']]
-    accuracy_data = [['experiment_type', 'world_id', 'intervene_time', 'intervene_distance', 'is_correct']]
+    intervene_time = [['experiment_type', 'world_id', 'first_intervene_time', 'last_intervene_time', 'first_intervene_distance', 'last_intervene_distance', 'max_vel', 'min_vel', 'intervene_count']]
+    accuracy_data =  [['experiment_type', 'world_id', 'first_intervene_time', 'last_intervene_time', 'first_intervene_distance', 'last_intervene_distance', 'is_correct','intervene_count']]
     face_turn_result = [['experiment_type', 'world_id', 'actor_action', 'count']]
 
     fig = plt.figure()
@@ -38,34 +38,65 @@ def summarizeData(extracted_data):
             # for 202012experiment/ data
             # if profile.get('experiment_type') in ['ui', 'control']:
             if profile.get('experiment_type') in ['baseline', 'control']:
-                intervene_column_index = np.where( (arr_data[:, 5] == 'throttle&brake') | (arr_data[:, 5] == 'throttle') )[0][0]
-                intervene_time.append( [ profile.get('experiment_type'), world_id, arr_data[intervene_column_index, 0], arr_data[intervene_column_index, 4 ], None, None, None] )
+                print(np.where( (arr_data[:, 5] == 'throttle&brake') | (arr_data[:, 5] == 'throttle') ))
+                intervene_start_column_index = np.where( (arr_data[:, 5] == 'throttle&brake') | (arr_data[:, 5] == 'throttle') )[0][0]
+                intervene_end_column_index   = np.where( (arr_data[:, 5] == 'throttle&brake') | (arr_data[:, 5] == 'throttle') )[0][-1]
+                intervene_time.append( [ profile.get('experiment_type'),
+                                         world_id,
+                                         arr_data[intervene_start_column_index, 0],
+                                         arr_data[intervene_end_column_index, 0],
+                                         arr_data[intervene_start_column_index, 4],
+                                         arr_data[intervene_end_column_index, 4],
+                                         None,
+                                         None,
+                                         None])
 
             elif profile.get('experiment_type') in ['touch', 'button']:
 
-                # intervene_column_index = np.where( (arr_data[:, 5] == 'throttle&brake') | (arr_data[:, 5] == 'throttle') )[0][0]
+                # intervene_start_column_index = np.where( (arr_data[:, 5] == 'throttle&brake') | (arr_data[:, 5] == 'throttle') )[0][0]
                 # get intervene count to find how dificult to touch
-                intervene_column_index_list = np.where( (arr_data[:, 5] == 'touch') | (arr_data[:, 5] == 'button') )[0]
-                intervene_column_index = intervene_column_index_list[0]
+                intervene_start_column_index_list = np.where( (arr_data[:, 5] == 'touch') | (arr_data[:, 5] == 'button') )[0]
+                intervene_start_column_index = intervene_start_column_index_list[0]
+                intervene_end_column_index   = intervene_start_column_index_list[-1]
 
-                last_intervene_time = arr_data[intervene_column_index, 0]
+                last_intervene_time = arr_data[intervene_start_column_index, 0]
                 intervene_count = 1
-                for column in intervene_column_index_list:
+                for column in intervene_start_column_index_list:
                     print(arr_data[column, 0])
                     if (arr_data[column, 0] - last_intervene_time) > 0.5:
                         intervene_count += 1
                         last_intervene_time = arr_data[column, 0]
                         print(intervene_count, last_intervene_time)
 
-                intervene_time.append( [ profile.get('experiment_type'), world_id, arr_data[intervene_column_index, 0], arr_data[intervene_column_index, 4 ], None, None, intervene_count ] )
+                intervene_time.append( [ profile.get('experiment_type'),
+                                         world_id,
+                                         arr_data[intervene_start_column_index, 0],
+                                         arr_data[intervene_end_column_index, 0],
+                                         arr_data[intervene_start_column_index, 4 ],
+                                         arr_data[intervene_end_column_index, 4 ],
+                                         None,
+                                         None,
+                                         intervene_count ])
 
             else:
-                intervene_column_index = np.where(arr_data[:, 5] != None)[0][0]
-                intervene_time.append( [ profile.get('experiment_type'), world_id, arr_data[intervene_column_index, 0], arr_data[intervene_column_index, 4], None, None, arr_data[intervene_column_index, 5] ] )
+                intervene_start_column_index = np.where(arr_data[:, 5] != None)[0][0]
+                intervene_start_column_index = np.where(arr_data[:, 5] != None)[0][-1]
+                intervene_time.append( [ profile.get('experiment_type'),
+                                         world_id,
+                                         arr_data[intervene_start_column_index, 0],
+                                         arr_data[intervene_end_column_index, 0],
+                                         arr_data[intervene_start_column_index, 4],
+                                         arr_data[intervene_end_column_index, 4],
+                                         None,
+                                         None,
+                                         arr_data[intervene_start_column_index,
+                                         5] ] )
 
             # get min vel and max vel
-            intervene_time[-1][4] = np.amax(arr_data[:, 1]) * 3.6
-            intervene_time[-1][5] = np.amin(arr_data[:, 1]) * 3.6
+            intervene_time[-1][6] = np.amax(arr_data[:, 1]) * 3.6
+            intervene_time[-1][7] = np.amin(arr_data[:, 1]) * 3.6
+            # remove after 0m from stop line to remove the effect of deceleration in curve
+            # intervene_time[-1][7] = np.amin(arr_data[np.where(arr_data[:, 4] >= 0.0)[0], 1]) * 3.6
             writeMotionGraphOnPlt(ax_dict.get(profile.get('experiment_type')), arr_data[:, 4], arr_data[:, 1] * 3.6, arr_data[:, 5] != None, cmap(world_id%10))
 
         # get accuracy of intervention
@@ -78,20 +109,28 @@ def summarizeData(extracted_data):
                     profile.get('experiment_type'),
                     world_id,
                     None,
-                    True
+                    None,
+                    None,
+                    True,
+                    None
                 ])
             else:
-                intervene_column_index = intervene_index[0][0]
+                intervene_start_column_index = intervene_index[0][0]
+                intervene_end_column_index = intervene_index[0][-1]
+                intervene_count = len(np.where( (arr_data[:, 5] != None) )[0])
                 accuracy_data.append([
                     profile.get('experiment_type'),
                     world_id,
-                    arr_data[intervene_column_index][0],
-                    arr_data[intervene_column_index][4],
-                    arr_data[intervene_column_index][1] < 1.0
+                    arr_data[intervene_start_column_index][0],
+                    arr_data[intervene_end_column_index][0],
+                    arr_data[intervene_start_column_index][4],
+                    arr_data[intervene_end_column_index][4],
+                    arr_data[intervene_start_column_index][1] < 1.0,
+                    intervene_count
                 ])
 
 
-
+        # face turn count
         if profile.get('actor_action') in ['static', 'pose', 'cross']:
             last_face_direction = arr_data[0, 6]
             face_turn_count = 0
@@ -133,10 +172,10 @@ def writeMotionGraphOnPlt(axes, x, y, area, cmap_color):
 
 def main():
 
-    pickle_file = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/sakashita/Town01.pickle'
-    intervene_time_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/sakashita/Town01_summalize.csv'
-    intervene_acc_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/sakashita/Town01_accracy.csv'
-    face_turn_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/sakashita/Town01_face.csv'
+    pickle_file = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/yoshioka/Town01.pickle'
+    intervene_time_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/yoshioka/Town01_summalize.csv'
+    intervene_acc_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/yoshioka/Town01_accracy.csv'
+    face_turn_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/yoshioka/Town01_face.csv'
 
     with open(pickle_file, 'rb') as f:
         extracted_data = pickle.load(f)
