@@ -73,8 +73,8 @@ def summarizeData(extracted_data):
                                      arr_data[intervene_end_column_index, 0],
                                      arr_data[intervene_start_column_index, 4 ],
                                      arr_data[intervene_end_column_index, 4 ],
-                                     np.amax(arr_data[:, 1]) * 3.6,
-                                     np.amin(arr_data[:, 1]) * 3.6,
+                                     np.amax(arr_data[np.where(arr_data[:, 2]>0.0)], 1) * 3.6,
+                                     np.amin(arr_data[np.where(arr_data[:, 2]>0.0)], 1) * 3.6,
                                      np.std(arr_data[:, 1]),
                                      intervene_count ])
 

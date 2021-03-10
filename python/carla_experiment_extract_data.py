@@ -5,6 +5,7 @@ import rosbag
 import numpy as np
 import csv
 import pickle
+import sys
 
 def readCsv(filename):
     with open(filename, 'r') as file_obj:
@@ -215,15 +216,14 @@ def offsetMileage(profile_data):
     return profile_data
 
 def savePickle(data):
-    with open("/media/ssd/master_study_bag/202012experiment2/sakashita/Town01.pickle", 'wb') as f:
+    with open("/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/" + sys.argv[1] + "/Town01.pickle", 'wb') as f:
         pickle.dump(data, f)
 
 
 def main():
-    # waypoints = readCsv("/home/kuriatsu/Program/EnjoyCarla/waypoint/town1_plactice.csv")
-    waypoints = readCsv("/media/ssd/master_study_bag/202012experiment2/town1.csv")
-    scenario_info = readCsv("/media/ssd/master_study_bag/202012experiment2/sakashita/actor_id_Town01.csv")
-    extracted_data = readRosbag("/media/ssd/master_study_bag/202012experiment2/sakashita/sakashita_Town01.bag", waypoints, 1.0, 100, scenario_info)
+    waypoints = readCsv("/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/town1.csv")
+    scenario_info = readCsv("/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/" + sys.argv[1] + "/actor_id_Town01.csv")
+    extracted_data = readRosbag("/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/"  + sys.argv[1] + "/"  + sys.argv[1] + "_Town01.bag", waypoints, 1.0, 100, scenario_info)
     # print(np.array(extracted_data.get(981).get('data')))
     savePickle(extracted_data)
 
