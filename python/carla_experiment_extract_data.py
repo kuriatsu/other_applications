@@ -89,7 +89,7 @@ def readRosbag(filename, waypoints, waypoint_interval, goal_confirm_waypoint, sc
         # if topic is '/wall_object' and not is_correcting_data:
         #     target_object_waypoint_index, target_object_waypoint = findClosestWaypoint(waypoints, msg.object.pose.position)
 
-        if topic == '/feedback_object':
+        if topic == '/touch_event':
             intervene = 'touch'
 
         if topic == '/joy':

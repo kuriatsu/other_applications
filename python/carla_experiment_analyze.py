@@ -44,7 +44,7 @@ def summarizeData(extracted_data):
 
             # if profile.get('experiment_type') in ['ui', 'control']:
             if profile.get('experiment_type') in ['baseline', 'control']:
-                print(np.where( (arr_data[:, 5] == 'throttle&brake') | (arr_data[:, 5] == 'throttle') ))
+                # print(np.where( (arr_data[:, 5] == 'throttle&brake') | (arr_data[:, 5] == 'throttle') ))
                 intervene_start_column_index = np.where( (arr_data[:, 5] == 'throttle&brake') | (arr_data[:, 5] == 'throttle') )[0][0]
                 intervene_end_column_index   = np.where( (arr_data[:, 5] == 'throttle&brake') | (arr_data[:, 5] == 'throttle') )[0][-1]
 
@@ -53,6 +53,7 @@ def summarizeData(extracted_data):
 
                 # intervene_start_column_index = np.where( (arr_data[:, 5] == 'throttle&brake') | (arr_data[:, 5] == 'throttle') )[0][0]
                 # get intervene count to find how dificult to touch
+                print(arr_data[:, 5])
                 intervene_start_column_index_list = np.where( (arr_data[:, 5] == 'touch') | (arr_data[:, 5] == 'button') )[0]
                 intervene_start_column_index = intervene_start_column_index_list[0]
                 intervene_end_column_index   = intervene_start_column_index_list[-1]
@@ -60,11 +61,10 @@ def summarizeData(extracted_data):
                 last_intervene_time = arr_data[intervene_start_column_index, 0]
                 intervene_count = 1
                 for column in intervene_start_column_index_list:
-                    print(arr_data[column, 0])
                     if (arr_data[column, 0] - last_intervene_time) > 0.5:
                         intervene_count += 1
                         last_intervene_time = arr_data[column, 0]
-                        print(intervene_count, last_intervene_time)
+                        # print(intervene_count, last_intervene_time)
 
 
             intervene_time.append( [ profile.get('experiment_type'),
@@ -73,8 +73,8 @@ def summarizeData(extracted_data):
                                      arr_data[intervene_end_column_index, 0],
                                      arr_data[intervene_start_column_index, 4 ],
                                      arr_data[intervene_end_column_index, 4 ],
-                                     np.amax(arr_data[np.where(arr_data[:, 2]>0.0)], 1) * 3.6,
-                                     np.amin(arr_data[np.where(arr_data[:, 2]>0.0)], 1) * 3.6,
+                                     np.amax(arr_data[np.where(arr_data[:, 2]>0.0), 1]) * 3.6,
+                                     np.amin(arr_data[np.where(arr_data[:, 2]>0.0), 1]) * 3.6,
                                      np.std(arr_data[:, 1]),
                                      intervene_count ])
 
@@ -156,10 +156,10 @@ def writeMotionGraphOnPlt(axes, x, y, area, cmap_color):
 
 def main():
 
-    pickle_file = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/' + sys.argv[1] + '/Town01.pickle'
-    intervene_time_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/' + sys.argv[1] + '/Town01_summalize.csv'
-    intervene_acc_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/' + sys.argv[1] + '/Town01_accracy.csv'
-    face_turn_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/' + sys.argv[1] + '/Town01_face.csv'
+    pickle_file = '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/' + sys.argv[1] + '/Town01.pickle'
+    intervene_time_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/' + sys.argv[1] + '/Town01_summalize.csv'
+    intervene_acc_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/' + sys.argv[1] + '/Town01_accracy.csv'
+    face_turn_out = '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/' + sys.argv[1] + '/Town01_face.csv'
 
     with open(pickle_file, 'rb') as f:
         extracted_data = pickle.load(f)

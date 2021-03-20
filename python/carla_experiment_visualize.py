@@ -139,7 +139,7 @@ def calcMeanAndDev(df, element, list):
                           np.std(df.query('experiment_type == "button"')[element]),
                           np.std(df.query('experiment_type == "touch"')[element])
                          ])
-    print(list[-1])
+    print(list[-2],list[-1])
 
 def saveCsv(data, filename):
     with open(filename, 'w') as f:
@@ -256,7 +256,7 @@ print('average_vel_mileage' ,sum(total_vel_mileage)/ len(total_vel_mileage))
 ###########################################
 
 summary_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/summary.csv')
-avoid_deceleration_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/deceleration_10km.csv')
+avoid_deceleration_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/deceleration_20km.csv')
 summary_intervene_count_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/intervene_count.csv')
 face_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/face.csv')
 nasa_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/nasa-tlx.csv')
@@ -356,7 +356,6 @@ plt.show()
 
 print('std_vel')
 axes = sns.boxplot(x='experiment_type', y='std_vel', data=summary_df, showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
-multicomp_result = multicomp.MultiComparison(summary_df['std_vel'], summary_df['experiment_type'])
 _, p = stats.levene(summary_df.query('experiment_type == "baseline"').std_vel, summary_df.query('experiment_type == "control"').std_vel, summary_df.query('experiment_type == "button"').std_vel, summary_df.query('experiment_type == "touch"').std_vel, center='median')
 print('levene-first std_vel', p)
 addAnotation(plt, 0, 2, 4, 0.1, 0, '*', 'k')
@@ -364,7 +363,10 @@ addAnotation(plt, 0, 3, 4, 0.1, 0.25, '*', 'k')
 addAnotation(plt, 1, 2, 4, 0.1, 0.5, '*', 'k')
 addAnotation(plt, 1, 3, 4, 0.1, 0.75, '*', 'k')
 calcMeanAndDev(summary_df, 'std_vel', total_list)
-print(multicomp_result.tukeyhsd().summary())
+# multicomp_result = multicomp.MultiComparison(summary_df['std_vel'], summary_df['experiment_type'])
+# print(multicomp_result.tukeyhsd().summary())
+print(gamesHowellTest(summary_df, 'std_vel', 'experiment_type'))
+
 axes.set_ylim([0, 5])
 plt.show()
 
@@ -430,6 +432,8 @@ plt.show()
 print('ranking')
 melted_df = pd.melt(rank_df, id_vars=rank_df.columns.values[:1], var_name='experiment_type', value_name='ranking')
 calcMeanAndDev(melted_df, 'ranking', total_list)
+_, p = stats.levene(melted_df.query('experiment_type == "baseline"').ranking, melted_df.query('experiment_type == "control"').ranking, melted_df.query('experiment_type == "button"').ranking, melted_df.query('experiment_type == "touch"').ranking, center='median')
+print('levene-first rank', p)
 multicomp_result = multicomp.MultiComparison(melted_df['ranking'], melted_df['experiment_type'])
 print(multicomp_result.tukeyhsd().summary())
 axes = sns.boxplot(x='experiment_type', y='ranking', data=melted_df, showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
