@@ -9,8 +9,8 @@ import sys
 
 def summarizeData(extracted_data):
 
-    intervene_time = [['experiment_type', 'world_id', 'first_intervene_time', 'last_intervene_time', 'first_intervene_distance', 'last_intervene_distance', 'max_vel', 'min_vel', 'std_vel', 'intervene_count']]
-    accuracy_data =  [['experiment_type', 'world_id', 'first_intervene_time', 'last_intervene_time', 'first_intervene_distance', 'last_intervene_distance', 'is_correct','intervene_count']]
+    intervene_time = [['experiment_type', 'world_id', 'scenario_id', 'first_intervene_time', 'last_intervene_time', 'first_intervene_distance', 'last_intervene_distance', 'max_vel', 'min_vel', 'std_vel', 'intervene_count']]
+    accuracy_data =  [['experiment_type', 'world_id', 'scenario_id', 'first_intervene_time', 'last_intervene_time', 'first_intervene_distance', 'last_intervene_distance', 'is_correct','intervene_count']]
     face_turn_result = [['experiment_type', 'world_id', 'actor_action', 'count']]
 
     fig = plt.figure()
@@ -69,6 +69,7 @@ def summarizeData(extracted_data):
 
             intervene_time.append( [ profile.get('experiment_type'),
                                      world_id,
+                                     profile.get('scenario_id'),
                                      arr_data[intervene_start_column_index, 0],
                                      arr_data[intervene_end_column_index, 0],
                                      arr_data[intervene_start_column_index, 4 ],
@@ -92,11 +93,12 @@ def summarizeData(extracted_data):
                 accuracy_data.append([
                     profile.get('experiment_type'),
                     world_id,
-                    None,
-                    None,
-                    None,
+                    profile.get('scenario_id'),
+                    "",
+                    "",
+                    "",
                     True,
-                    None
+                    ""
                 ])
             else:
                 intervene_start_column_index = intervene_index[0][0]

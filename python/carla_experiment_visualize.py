@@ -150,17 +150,39 @@ def saveCsv(data, filename):
 ## visualize motion datas ##
 ############################
 pickle_files = [
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/okawa/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/hayashi/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/teranishi/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/kuroyanagi/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/yokoyama/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/inuzuka/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/kanayama/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/sakashita/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/saji/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/sakai/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/yoshioka/Town01.pickle',
+
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/aso/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/ichiki/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/ienaga/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/matsubara/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/ikai/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/nakakuki/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/yamamoto/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/ando/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/negi/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/kato1/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/kato2/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/sumiya/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/ito/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/isobe/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/yasuhara/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/nakatani/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/otake1/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/otake2/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/taga/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/hikosaka/Town01.pickle',
+
+    # '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/okawa/Town01.pickle',
+    # '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/hayashi/Town01.pickle',
+    # '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/teranishi/Town01.pickle',
+    # '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/kuroyanagi/Town01.pickle',
+    # '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/yokoyama/Town01.pickle',
+    # '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/inuzuka/Town01.pickle',
+    # '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/kanayama/Town01.pickle',
+    # '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/sakashita/Town01.pickle',
+    # '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/saji/Town01.pickle',
+    # '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/sakai/Town01.pickle',
+    # '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/yoshioka/Town01.pickle',
 
     # '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/ichiki/Town01.pickle',
     # '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/miyazaki/Town01.pickle',
@@ -175,7 +197,7 @@ pickle_files = [
 
 ]
 
-out_file='/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/total.csv'
+out_file='/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results/total.csv'
 total_list = [['item', 'name', 'baseline', 'control', 'button', 'touch']]
 
 fig = plt.figure()
@@ -183,19 +205,22 @@ fig = plt.figure()
 
 # speed
 # ax_dict_vel = {'baseline': fig.add_subplot(2,2,1), 'control': fig.add_subplot(2,2,2), 'button': fig.add_subplot(2,2,3), 'touch': fig.add_subplot(2,2,4)}
+# sns.set_palette('YlGnBu',4)
 
 # speed and intervene
-grid = fig.add_gridspec(ncols=2, nrows=4, width_ratios=[1,1], height_ratios=[3,1,3,1])
-ax_dict_vel = {'baseline': fig.add_subplot(grid[0,0]), 'control': fig.add_subplot(grid[0,1]), 'button': fig.add_subplot(grid[2,0]), 'touch': fig.add_subplot(grid[2,1])}
-ax_dict_intervene = {'baseline': fig.add_subplot(grid[1,0]), 'control': fig.add_subplot(grid[1,1]), 'button': fig.add_subplot(grid[3,0]), 'touch': fig.add_subplot(grid[3,1])}
-
+grid = fig.add_gridspec(ncols=1, nrows=2, height_ratios=[3,1])
+# # ax_dict_vel = {'baseline': fig.add_subplot(grid[0,0]), 'control': fig.add_subplot(grid[0,1]), 'button': fig.add_subplot(grid[2,0]), 'touch': fig.add_subplot(grid[2,1])}
+# # ax_dict_intervene = {'baseline': fig.add_subplot(grid[1,0]), 'control': fig.add_subplot(grid[1,1]), 'button': fig.add_subplot(grid[3,0]), 'touch': fig.add_subplot(grid[3,1])}
+ax_vel = fig.add_subplot(grid[0])
+ax_intervene = fig.add_subplot(grid[1])
 ## colorlize for each subject
 # cmap = plt.get_cmap("tab10")
-color = {'pose':'tomato', 'static':'teal'}
+color = {'pose':'#335290ff', 'static':'#335290ff'}
 
-total_vel = []
+vel_df = None
+intervene_df = None
 total_vel_mileage = []
-dict_intervene = {'baseline': np.array([]), 'control': np.array([]), 'button': np.array([]), 'touch': np.array([])}
+dict_intervene = {'baseline': 0, 'control': 0, 'button': 0, 'touch': 0}
 label_handle_pose = None
 label_handle_static = None
 
@@ -205,79 +230,103 @@ for index, pickle_file in enumerate(pickle_files):
 
     for world_id, profile in extracted_data.items():
         arr_data = np.array(profile.get('data'))[1:, :] # skip first column
-        # total_vel += arr_data[:,1]
-        total_vel += arr_data[:, 1].tolist()
-        # print(total_vel)
+
         if profile.get('actor_action') in ['static', 'pose']:
-            # ax_dict_vel.get(profile.get('experiment_type')).plot(arr_data[:, 4], arr_data[:, 1]*3.6, color=cmap(index%10), alpha=0.5, label='subject_'+str(index))
 
-            splined_data = splineXAxis(arr_data[:, 4], arr_data[:, 1])
-            ## colorlize for each subject
-            # ax_dict_vel.get(profile.get('experiment_type')).plot(splined_data[:,0], splined_data[:,1]*3.6, color=cmap(index%10), alpha=0.5, label='subject_'+str(index))
-            handle, = ax_dict_vel.get(profile.get('experiment_type')).plot(splined_data[:,0], splined_data[:,1]*3.6, alpha=0.5, label=profile.get('actor_action'), c=color.get(profile.get('actor_action')))
-            if profile.get('actor_action') == 'pose':
-                label_handle_pose = handle
-            elif profile.get('actor_action') == 'static':
-                label_handle_static = handle
-            total_vel_mileage += splined_data[:,1].tolist()
+            # remove mileage overlap and add them to dataframe
+            splined_data = splineXAxis(arr_data[:, 4], arr_data[:, 1] * 3.6)
+            if vel_df is None:
+                vel_df = pd.DataFrame(splined_data, columns=['mileage', 'velocity'])
+                vel_df = pd.concat([vel_df, pd.DataFrame(np.array([[profile.get('experiment_type')]] * len(splined_data)), columns=['experiment_type'])], axis=1)
+            else:
+                buf_df = pd.DataFrame(splined_data, columns=['mileage', 'velocity'])
+                buf_df = pd.concat([buf_df, pd.DataFrame(np.array([[profile.get('experiment_type')]] * len(splined_data)), columns=['experiment_type'])], axis=1)
+                vel_df = pd.concat([vel_df, buf_df], axis=0)
 
-            intervene_list = np.unique(arr_data[np.where( arr_data[:,5] != None)[0], 4])
-            dict_intervene[profile.get('experiment_type')] = np.append(dict_intervene.get(profile.get('experiment_type')), intervene_list)
+            if intervene_df is None:
+                buf_arr = np.unique(arr_data[np.where( arr_data[:,5] != None)[0], 4])
+                intervene_df = pd.DataFrame(buf_arr , columns=['mileage'], dtype=float)
+                intervene_df = pd.concat([intervene_df, pd.DataFrame(np.array([[profile.get('experiment_type')]] * len(buf_arr)), columns=['experiment_type'])], axis=1)
+            else:
+                buf_arr = np.unique(arr_data[np.where( arr_data[:,5] != None)[0], 4])
+                buf_df = pd.DataFrame(buf_arr , columns=['mileage'], dtype=float)
+                buf_df = pd.concat([buf_df, pd.DataFrame(np.array([[profile.get('experiment_type')]] * len(buf_arr)), columns=['experiment_type'])], axis=1)
+                intervene_df = pd.concat([intervene_df, buf_df], axis=0)
 
-for title, axes in ax_dict_vel.items():
-    axes.legend([label_handle_pose, label_handle_static], ['pose', 'static'])
-    axes.invert_xaxis()
-    axes.set_xlim([50, -20])
-    axes.set_ylim([0, 60])
-    axes.set_xticks([])
-    axes.set_ylabel("velocity [m/s]", fontsize=15)
-    # axes.set_xlabel("Mileage [m]", fontsize=15)
-    # axes.set_title(title, fontsize=15, y=-0.3)
+sns.lineplot(data=vel_df, x="mileage", y="velocity", hue="experiment_type", ax=ax_vel)
+ax_vel.invert_xaxis()
+ax_vel.set_xlim([50, -20])
+ax_vel.set_ylim([0, 60])
+ax_vel.set_xlabel('distance from obstacle [m]', fontsize=15)
+# ax_vel.set_xlabel('', fontsize=15)
+ax_vel.set_ylabel('velocity [km/h]', fontsize=15)
+
+print(intervene_df.mileage)
+sns.histplot(data=intervene_df, x='mileage', ax=ax_intervene,  binwidth=1.0, hue='experiment_type', alpha=0.2)
+ax_intervene.invert_xaxis()
+ax_intervene.set_xlim([50, -20])
+ax_intervene.set_xlabel('distance from obstacle [m]', fontsize=15)
+ax_intervene.set_ylabel('intervene \ncount', fontsize=15)
+# for title, axes in ax_dict_vel.items():
+#     axes.legend([label_handle_pose, label_handle_static], ['pose', 'static'])
+#     axes.invert_xaxis()
+#     axes.set_xlim([50, -20])
+#     axes.set_ylim([0, 60])
+#     axes.set_xticks([])
+#     axes.set_ylabel("velocity [m/s]", fontsize=15)
+#     # axes.set_xlabel("Mileage [m]", fontsize=15)
+#     # axes.set_title(title, fontsize=15, y=-0.3)
 
 # speed and intervene
-for title, axes in ax_dict_intervene.items():
-    sns.histplot(data=dict_intervene.get(title), ax=axes, binwidth=1.0)
-    axes.invert_xaxis()
-    axes.set_xlim([50, -20])
-    axes.set_xlabel("distance from obstacle [m]", fontsize=15)
-    axes.set_ylabel("intervene \ncount", fontsize=15)
-    axes.set_title(title, fontsize=15, y=-1.0)
+# for title, axes in ax_dict_intervene.items():
+#     sns.histplot(data=dict_intervene.get(title), ax=axes, binwidth=1.0, color='#7dbeb5ff')
+#     axes.invert_xaxis()
+#     axes.set_xlim([50, -20])
+#     axes.set_xlabel("distance from obstacle [m]", fontsize=15)
+#     axes.set_ylabel("intervene \ncount", fontsize=15)
+#     axes.set_title(title, fontsize=15, y=-1.0)
 # for axes in ax_dict_vel.values():
 #     axes.legend(loc='lower right', fontsize=12)
 
 plt.show()
 
+exit()
 
-print('average_vel' ,sum(total_vel)/ len(total_vel))
-print('average_vel_mileage' ,sum(total_vel_mileage)/ len(total_vel_mileage))
+# print('average_vel' ,sum(total_vel)/ len(total_vel))
+# print('average_vel_mileage' ,sum(total_vel_mileage)/ len(total_vel_mileage))
 
 ###########################################
 ## visualize and analyze summarized data ##
 ###########################################
 
-summary_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/summary.csv')
-avoid_deceleration_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/deceleration_20km.csv')
-summary_intervene_count_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/intervene_count.csv')
-face_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/face.csv')
-nasa_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/nasa-tlx.csv')
-accuracy_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/accuracy_summary.csv')
-accuracy_raw_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/accuracy.csv')
-time_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/time.csv')
-rank_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/rank.csv')
+summary_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results2/summary.csv')
+avoid_deceleration_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results2/deceleration_20km.csv')
+# summary_intervene_count_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results2/intervene_count.csv')
+# face_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results2/face.csv')
+nasa_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results2/nasa-tlx.csv')
+accuracy_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results/accuracy_summary.csv')
+# accuracy_raw_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results2/accuracy.csv')
+time_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results2/time.csv')
+rank_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results2/rank.csv')
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
+# hatches = ['/', '+', 'x', '.']
+sns.set_palette('YlGnBu',4)
+
 
 print('time')
-axes = sns.boxplot(x='experiment_type', y='time', data=time_df,showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
-# sns.barplot(x='experiment_type', y='time', data=time_df)
 _, p = stats.levene(time_df.query('experiment_type == "baseline"').time, time_df.query('experiment_type == "control"').time, time_df.query('experiment_type == "button"').time, time_df.query('experiment_type == "touch"').time, center='median')
 print('levene-first time', p)
 multicomp_result = multicomp.MultiComparison(time_df['time'], time_df['experiment_type'])
 calcMeanAndDev(time_df, 'time', total_list)
 print(multicomp_result.tukeyhsd().summary())
-# addAnotation(plt, 1, 3, time_df.query('experiment_type == ["button", "touch"]').time.max(), 2, -2, '*', 'k')
+axes = sns.boxplot(x='experiment_type', y='time', data=time_df,showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
 axes.set_ylim([0, 100])
+## add hatch
+# for i, bar in enumerate(axes.artists):
+#     bar.set_hatch(hatches[i])
+# addAnotation(plt, 1, 3, time_df.query('experiment_type == ["button", "touch"]').time.max(), 2, -2, '*', 'k')
 plt.show()
 
 print('first_intervene_time')
@@ -287,7 +336,7 @@ print('levene-first intervenetime', p)
 multicomp_result = multicomp.MultiComparison(summary_df['first_intervene_time'], summary_df['experiment_type'])
 calcMeanAndDev(summary_df, 'first_intervene_time', total_list)
 print(multicomp_result.tukeyhsd().summary())
-# addAnotation(plt, 1, 3, 8, 0.5, 0, '*', 'k')
+addAnotation(plt, 2, 3, 20, 0.5, 0, '*', 'k')
 # axes.set_ylim([0, 9])
 plt.show()
 
@@ -309,10 +358,10 @@ print('levene-first first_intervene_distance', p)
 multicomp_result = multicomp.MultiComparison(summary_df['first_intervene_distance'], summary_df['experiment_type'])
 calcMeanAndDev(summary_df, 'first_intervene_distance', total_list)
 print(multicomp_result.tukeyhsd().summary())
-addAnotation(plt, 0, 2, 73, 1.0, 0, '*', 'k')
-addAnotation(plt, 0, 3, 73, 1.0, 5, '*', 'k')
-addAnotation(plt, 1, 2, 73, 1.0, 10, '*', 'k')
-addAnotation(plt, 1, 3, 73, 1.0, 15, '*', 'k')
+# addAnotation(plt, 0, 2, 73, 1.0, 0, '*', 'k')
+# addAnotation(plt, 0, 3, 73, 1.0, 5, '*', 'k')
+# addAnotation(plt, 1, 2, 73, 1.0, 10, '*', 'k')
+# addAnotation(plt, 1, 3, 73, 1.0, 15, '*', 'k')
 axes.set_ylim([0, 95])
 plt.show()
 
@@ -333,24 +382,25 @@ _, p = stats.levene(summary_df.query('experiment_type == "baseline"').max_vel, s
 print('levene-first max_vel', p)
 gamesHowellTest(summary_df, 'max_vel', 'experiment_type')
 # multicomp_result = multicomp.MultiComparison(summary_df['max_vel'], summary_df['experiment_type'])
-# addAnotation(plt, 0, 2, 45, 1, 0, '*', 'k')
-# addAnotation(plt, 0, 3, 45, 1, 3, '*', 'k')
-addAnotation(plt, 1, 2, 55, 1, 0, '*', 'k')
-addAnotation(plt, 1, 3, 55, 1, 3, '*', 'k')
+addAnotation(plt, 0, 2, 56, 1, 0, '*', 'k')
+addAnotation(plt, 0, 3, 56, 1, 3, '*', 'k')
+addAnotation(plt, 1, 2, 56, 1, 6, '*', 'k')
+addAnotation(plt, 1, 3, 56, 1, 9, '*', 'k')
 calcMeanAndDev(summary_df, 'max_vel', total_list)
 print(multicomp_result.tukeyhsd().summary())
-axes.set_ylim([0, 60])
+axes.set_ylim([0, 80])
 plt.show()
 
 print('min_vel')
 axes = sns.boxplot(x='experiment_type', y='min_vel', data=summary_df, showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
-multicomp_result = multicomp.MultiComparison(summary_df['min_vel'], summary_df['experiment_type'])
 _, p = stats.levene(summary_df.query('experiment_type == "baseline"').min_vel, summary_df.query('experiment_type == "control"').min_vel, summary_df.query('experiment_type == "button"').min_vel, summary_df.query('experiment_type == "touch"').min_vel, center='median')
 print('levene-first min_vel', p)
-addAnotation(plt, 0, 2, 40, 1.0, 0, '*', 'k')
+# addAnotation(plt, 0, 2, 40, 1.0, 0, '*', 'k')
 # addAnotation(plt, 0, 2, 11, 0.5, 0, '**', 'k')
 calcMeanAndDev(summary_df, 'min_vel', total_list)
-print(multicomp_result.tukeyhsd().summary())
+# multicomp_result = multicomp.MultiComparison(summary_df['min_vel'], summary_df['experiment_type'])
+# print(multicomp_result.tukeyhsd().summary())
+print(gamesHowellTest(summary_df, 'min_vel', 'experiment_type'))
 axes.set_ylim([0, 60])
 plt.show()
 
@@ -358,16 +408,11 @@ print('std_vel')
 axes = sns.boxplot(x='experiment_type', y='std_vel', data=summary_df, showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
 _, p = stats.levene(summary_df.query('experiment_type == "baseline"').std_vel, summary_df.query('experiment_type == "control"').std_vel, summary_df.query('experiment_type == "button"').std_vel, summary_df.query('experiment_type == "touch"').std_vel, center='median')
 print('levene-first std_vel', p)
-addAnotation(plt, 0, 2, 4, 0.1, 0, '*', 'k')
-addAnotation(plt, 0, 3, 4, 0.1, 0.25, '*', 'k')
-addAnotation(plt, 1, 2, 4, 0.1, 0.5, '*', 'k')
-addAnotation(plt, 1, 3, 4, 0.1, 0.75, '*', 'k')
 calcMeanAndDev(summary_df, 'std_vel', total_list)
-# multicomp_result = multicomp.MultiComparison(summary_df['std_vel'], summary_df['experiment_type'])
-# print(multicomp_result.tukeyhsd().summary())
-print(gamesHowellTest(summary_df, 'std_vel', 'experiment_type'))
-
-axes.set_ylim([0, 5])
+multicomp_result = multicomp.MultiComparison(summary_df['std_vel'], summary_df['experiment_type'])
+print(multicomp_result.tukeyhsd().summary())
+# print(gamesHowellTest(summary_df, 'std_vel', 'experiment_type'))
+axes.set_ylim([0, 7])
 plt.show()
 
 print('avoid_unnecessary_intervention_rate')
@@ -441,24 +486,25 @@ axes.set_ylim([4,1])
 addAnotation(plt, 0, 2, 2, -0.1, 0, '*', 'k')
 addAnotation(plt, 0, 3, 2, -0.1, 0.3, '*', 'k')
 addAnotation(plt, 1, 2, 2, -0.1, 0.6, '*', 'k')
+addAnotation(plt, 1, 3, 2, -0.1, 0.9, '*', 'k')
 plt.show()
 
-sns.barplot(x='experiment_type', y='count', data=face_df)
-print('face count')
-print(
-np.mean(face_df.query('experiment_type == "control"')['count']),
-np.mean(face_df.query('experiment_type == "button"')['count']),
-np.mean(face_df.query('experiment_type == "touch"')['count']),
-)
-print(
-np.std(face_df.query('experiment_type == "control"')['count']),
-np.std(face_df.query('experiment_type == "button"')['count']),
-np.std(face_df.query('experiment_type == "touch"')['count']),
-)
+# sns.barplot(x='experiment_type', y='count', data=face_df)
+# print('face count')
+# print(
+# np.mean(face_df.query('experiment_type == "control"')['count']),
+# np.mean(face_df.query('experiment_type == "button"')['count']),
+# np.mean(face_df.query('experiment_type == "touch"')['count']),
+# )
+# print(
+# np.std(face_df.query('experiment_type == "control"')['count']),
+# np.std(face_df.query('experiment_type == "button"')['count']),
+# np.std(face_df.query('experiment_type == "touch"')['count']),
+# )
 
-multicomp_result = multicomp.MultiComparison(face_df['count'], face_df['experiment_type'])
-print(multicomp_result.tukeyhsd().summary())
-plt.show()
+# multicomp_result = multicomp.MultiComparison(face_df['count'], face_df['experiment_type'])
+# print(multicomp_result.tukeyhsd().summary())
+# plt.show()
 
 #### nasa-tlx ####
 for item in ['mental', 'physical', 'temporal', 'performance', 'effort', 'frustration', 'entire']:
@@ -479,9 +525,9 @@ addAnotation(plt, 0.7, 1.1, 8.0, 0.1, 0, '*', 'k')
 addAnotation(plt, 0.7, 1.3, 8.0, 0.1, 0.5, '*', 'k')
 addAnotation(plt, 0.9, 1.1, 8.0, 0.1, -0.5, '*', 'k')
 addAnotation(plt, 0.9, 1.3, 8.0, 0.1, -1.0, '*', 'k')
-addAnotation(plt, 5.7, 6.1, 8.0, 0.1, 0, '*', 'k')
-addAnotation(plt, 5.7, 6.3, 8.0, 0.1, 0.5, '*', 'k')
-addAnotation(plt, 5.9, 6.1, 8.0, 0.1, 1.0, '*', 'k')
+# addAnotation(plt, 5.7, 6.1, 8.0, 0.1, 0, '*', 'k')
+# addAnotation(plt, 5.7, 6.3, 8.0, 0.1, 0.5, '*', 'k')
+# addAnotation(plt, 5.9, 6.1, 8.0, 0.1, 1.0, '*', 'k')
 axes.set_ylim([0, 10])
 
 plt.show()
