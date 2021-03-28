@@ -14,6 +14,7 @@ import statsmodels.api as sm
 from statsmodels.formula.api import ols
 from statsmodels.sandbox.stats import multicomp
 from statsmodels.stats.multitest import multipletests
+from scipy.stats import f_oneway
 import pickle
 
 # gamesHowellTest
@@ -340,6 +341,29 @@ addAnotation(plt, 2, 3, 20, 0.5, 0, '*', 'k')
 # axes.set_ylim([0, 9])
 plt.show()
 
+print('first intervene time anova')
+print('anova result', f_oneway(
+    summary_df[summary_df.subject == 'ando'].first_intervene_time.iloc[:,1:5].values.tolist()[0],
+    summary_df[summary_df.subjects == 'aso'].iloc[:,1:5].values.tolist()[0],
+    summary_df[summary_df.subjects == 'hikosaka'].iloc[:,1:5].values.tolist()[0],
+    summary_df[summary_df.subjects == 'ichiki'].iloc[:,1:5].values.tolist()[0],
+    summary_df[summary_df.subjects == 'ienaga'].iloc[:,1:5].values.tolist()[0],
+    summary_df[summary_df.subjects == 'ikai'].iloc[:,1:5].values.tolist()[0],
+    summary_df[summary_df.subjects == 'isobe'].iloc[:,1:5].values.tolist()[0],
+    summary_df[summary_df.subjects == 'ito'].iloc[:,1:5].values.tolist()[0],
+    summary_df[summary_df.subjects == 'kato'].iloc[:,1:5].values.tolist()[0],
+    summary_df[summary_df.subjects == 'matsubara'].iloc[:,1:5].values.tolist()[0],
+    summary_df[summary_df.subjects == 'nakakuki'].iloc[:,1:5].values.tolist()[0],
+    summary_df[summary_df.subjects == 'nakatani'].iloc[:,1:5].values.tolist()[0],
+    summary_df[summary_df.subjects == 'negi'].iloc[:,1:5].values.tolist()[0],
+    summary_df[summary_df.subjects == 'otake'].iloc[:,1:5].values.tolist()[0],
+    summary_df[summary_df.subjects == 'sumiya'].iloc[:,1:5].values.tolist()[0],
+    summary_df[summary_df.subjects == 'taga'].iloc[:,1:5].values.tolist()[0],
+    summary_df[summary_df.subjects == 'yamamoto'].iloc[:,1:5].values.tolist()[0],
+    summary_df[summary_df.subjects == 'yasuhara'].iloc[:,1:5].values.tolist()[0]
+    ))
+
+
 print('last_intervene_time')
 axes = sns.boxplot(x='experiment_type', y='last_intervene_time', data=summary_df, showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
 _, p = stats.levene(summary_df.query('experiment_type == "baseline"').last_intervene_time, summary_df.query('experiment_type == "control"').last_intervene_time, summary_df.query('experiment_type == "button"').last_intervene_time, summary_df.query('experiment_type == "touch"').last_intervene_time, center='median')
@@ -415,7 +439,7 @@ print(multicomp_result.tukeyhsd().summary())
 axes.set_ylim([0, 7])
 plt.show()
 
-print('avoid_unnecessary_intervention_rate')
+print('accuracy')
 melted_df = pd.melt(accuracy_df, id_vars=accuracy_df.columns.values[:1], var_name='experiment_type', value_name='avoid_unnecessary_intervention_rate')
 axes = sns.barplot(x='experiment_type', y='avoid_unnecessary_intervention_rate', data=melted_df)
 multicomp_result = multicomp.MultiComparison(melted_df['avoid_unnecessary_intervention_rate'], melted_df['experiment_type'])
@@ -425,6 +449,28 @@ calcMeanAndDev(melted_df, 'avoid_unnecessary_intervention_rate', total_list)
 print(multicomp_result.tukeyhsd().summary())
 axes.set_ylim([0, 1])
 plt.show()
+
+print('accuracy_anova')
+print('anova result', f_oneway(
+    accuracy_df[accuracy_df.subjects == 'ando'].iloc[:,1:5].values.tolist()[0],
+    accuracy_df[accuracy_df.subjects == 'aso'].iloc[:,1:5].values.tolist()[0],
+    accuracy_df[accuracy_df.subjects == 'hikosaka'].iloc[:,1:5].values.tolist()[0],
+    accuracy_df[accuracy_df.subjects == 'ichiki'].iloc[:,1:5].values.tolist()[0],
+    accuracy_df[accuracy_df.subjects == 'ienaga'].iloc[:,1:5].values.tolist()[0],
+    accuracy_df[accuracy_df.subjects == 'ikai'].iloc[:,1:5].values.tolist()[0],
+    accuracy_df[accuracy_df.subjects == 'isobe'].iloc[:,1:5].values.tolist()[0],
+    accuracy_df[accuracy_df.subjects == 'ito'].iloc[:,1:5].values.tolist()[0],
+    accuracy_df[accuracy_df.subjects == 'kato'].iloc[:,1:5].values.tolist()[0],
+    accuracy_df[accuracy_df.subjects == 'matsubara'].iloc[:,1:5].values.tolist()[0],
+    accuracy_df[accuracy_df.subjects == 'nakakuki'].iloc[:,1:5].values.tolist()[0],
+    accuracy_df[accuracy_df.subjects == 'nakatani'].iloc[:,1:5].values.tolist()[0],
+    accuracy_df[accuracy_df.subjects == 'negi'].iloc[:,1:5].values.tolist()[0],
+    accuracy_df[accuracy_df.subjects == 'otake'].iloc[:,1:5].values.tolist()[0],
+    accuracy_df[accuracy_df.subjects == 'sumiya'].iloc[:,1:5].values.tolist()[0],
+    accuracy_df[accuracy_df.subjects == 'taga'].iloc[:,1:5].values.tolist()[0],
+    accuracy_df[accuracy_df.subjects == 'yamamoto'].iloc[:,1:5].values.tolist()[0],
+    accuracy_df[accuracy_df.subjects == 'yasuhara'].iloc[:,1:5].values.tolist()[0]
+    ))
 
 print('avoid_decceleration_rate')
 melted_df = pd.melt(avoid_deceleration_df, id_vars=avoid_deceleration_df.columns.values[:1], var_name='experiment_type', value_name='decceleration_rate')
@@ -439,6 +485,28 @@ calcMeanAndDev(melted_df, 'decceleration_rate', total_list)
 print(multicomp_result.tukeyhsd().summary())
 axes.set_ylim([0, 1])
 plt.show()
+
+print('deceleration anova')
+print('anova result', f_oneway(
+    avoid_deceleration_df[avoid_deceleration_df.subjects == 'ando'].iloc[:,1:5].values.tolist()[0],
+    avoid_deceleration_df[avoid_deceleration_df.subjects == 'aso'].iloc[:,1:5].values.tolist()[0],
+    avoid_deceleration_df[avoid_deceleration_df.subjects == 'hikosaka'].iloc[:,1:5].values.tolist()[0],
+    avoid_deceleration_df[avoid_deceleration_df.subjects == 'ichiki'].iloc[:,1:5].values.tolist()[0],
+    avoid_deceleration_df[avoid_deceleration_df.subjects == 'ienaga'].iloc[:,1:5].values.tolist()[0],
+    avoid_deceleration_df[avoid_deceleration_df.subjects == 'ikai'].iloc[:,1:5].values.tolist()[0],
+    avoid_deceleration_df[avoid_deceleration_df.subjects == 'isobe'].iloc[:,1:5].values.tolist()[0],
+    avoid_deceleration_df[avoid_deceleration_df.subjects == 'ito'].iloc[:,1:5].values.tolist()[0],
+    avoid_deceleration_df[avoid_deceleration_df.subjects == 'kato'].iloc[:,1:5].values.tolist()[0],
+    avoid_deceleration_df[avoid_deceleration_df.subjects == 'matsubara'].iloc[:,1:5].values.tolist()[0],
+    avoid_deceleration_df[avoid_deceleration_df.subjects == 'nakakuki'].iloc[:,1:5].values.tolist()[0],
+    avoid_deceleration_df[avoid_deceleration_df.subjects == 'nakatani'].iloc[:,1:5].values.tolist()[0],
+    avoid_deceleration_df[avoid_deceleration_df.subjects == 'negi'].iloc[:,1:5].values.tolist()[0],
+    avoid_deceleration_df[avoid_deceleration_df.subjects == 'otake'].iloc[:,1:5].values.tolist()[0],
+    avoid_deceleration_df[avoid_deceleration_df.subjects == 'sumiya'].iloc[:,1:5].values.tolist()[0],
+    avoid_deceleration_df[avoid_deceleration_df.subjects == 'taga'].iloc[:,1:5].values.tolist()[0],
+    avoid_deceleration_df[avoid_deceleration_df.subjects == 'yamamoto'].iloc[:,1:5].values.tolist()[0],
+    avoid_deceleration_df[avoid_deceleration_df.subjects == 'yasuhara'].iloc[:,1:5].values.tolist()[0]
+    ))
 
 # print('intervene_count')
 # melted_df = pd.melt(summary_intervene_count_df, id_vars=summary_intervene_count_df.columns.values[:1], var_name='experiment_type', value_name='intervene_count_average')
