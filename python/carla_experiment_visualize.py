@@ -199,24 +199,26 @@ pickle_files = [
 ]
 
 out_file='/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results/total.csv'
-total_list = [['item', 'name', 'baseline', 'control', 'button', 'touch']]
+total_list = [['item', 'name']]
 
 fig = plt.figure()
 
 
 # speed
-# ax_dict_vel = {'baseline': fig.add_subplot(2,2,1), 'control': fig.add_subplot(2,2,2), 'button': fig.add_subplot(2,2,3), 'touch': fig.add_subplot(2,2,4)}
-# sns.set_palette('YlGnBu',4)
+ax_dict_vel = {'baseline': fig.add_subplot(2,2,1), 'control': fig.add_subplot(2,2,2), 'button': fig.add_subplot(2,2,3), 'touch': fig.add_subplot(2,2,4)}
+sns.set(context='paper', style='whitegrid')
+sns.set_palette('YlGnBu',4)
+## colorlize for each subject
+color = {'baseline':'#d5e7ba', 'control': '#7dbeb5', 'button': '#388fad', 'touch': '#335290'}
+# color = {'pose':'#335290ff', 'static':'#335290ff'}
+# cmap = plt.get_cmap("tab10")
 
 # speed and intervene
 grid = fig.add_gridspec(ncols=1, nrows=2, height_ratios=[3,1])
 # # ax_dict_vel = {'baseline': fig.add_subplot(grid[0,0]), 'control': fig.add_subplot(grid[0,1]), 'button': fig.add_subplot(grid[2,0]), 'touch': fig.add_subplot(grid[2,1])}
-# # ax_dict_intervene = {'baseline': fig.add_subplot(grid[1,0]), 'control': fig.add_subplot(grid[1,1]), 'button': fig.add_subplot(grid[3,0]), 'touch': fig.add_subplot(grid[3,1])}
-ax_vel = fig.add_subplot(grid[0])
-ax_intervene = fig.add_subplot(grid[1])
-## colorlize for each subject
-# cmap = plt.get_cmap("tab10")
-color = {'pose':'#335290ff', 'static':'#335290ff'}
+# ax_dict_intervene = {'baseline': fig.add_subplot(grid[1,0]), 'control': fig.add_subplot(grid[1,1]), 'button': fig.add_subplot(grid[3,0]), 'touch': fig.add_subplot(grid[3,1])}
+# ax_vel = fig.add_subplot(grid[0])
+# ax_intervene = fig.add_subplot(grid[1])
 
 vel_df = None
 intervene_df = None
@@ -254,29 +256,31 @@ for index, pickle_file in enumerate(pickle_files):
                 buf_df = pd.concat([buf_df, pd.DataFrame(np.array([[profile.get('experiment_type')]] * len(buf_arr)), columns=['experiment_type'])], axis=1)
                 intervene_df = pd.concat([intervene_df, buf_df], axis=0)
 
-sns.lineplot(data=vel_df, x="mileage", y="velocity", hue="experiment_type", ax=ax_vel)
-ax_vel.invert_xaxis()
-ax_vel.set_xlim([50, -20])
-ax_vel.set_ylim([0, 60])
-ax_vel.set_xlabel('distance from obstacle [m]', fontsize=15)
-# ax_vel.set_xlabel('', fontsize=15)
-ax_vel.set_ylabel('velocity [km/h]', fontsize=15)
+# sns.histplot(data=vel_df, x="velocity", hue="experiment_type", multiple="stack", ax=ax_vel)
+# ax_vel.set_xlabel('Velocity', fontsize=15)
+# ax_vel.set_yticks([])
+# ax_vel.set_ylabel('Count of Velocity')
 
-print(intervene_df.mileage)
-sns.histplot(data=intervene_df, x='mileage', ax=ax_intervene,  binwidth=1.0, hue='experiment_type', alpha=0.2)
-ax_intervene.invert_xaxis()
-ax_intervene.set_xlim([50, -20])
-ax_intervene.set_xlabel('distance from obstacle [m]', fontsize=15)
-ax_intervene.set_ylabel('intervene \ncount', fontsize=15)
-# for title, axes in ax_dict_vel.items():
-#     axes.legend([label_handle_pose, label_handle_static], ['pose', 'static'])
-#     axes.invert_xaxis()
-#     axes.set_xlim([50, -20])
-#     axes.set_ylim([0, 60])
-#     axes.set_xticks([])
-#     axes.set_ylabel("velocity [m/s]", fontsize=15)
-#     # axes.set_xlabel("Mileage [m]", fontsize=15)
-#     # axes.set_title(title, fontsize=15, y=-0.3)
+## plot in one figure
+# sns.lineplot(data=vel_df, x="mileage", y="velocity", hue="experiment_type", ax=ax_vel, ci=95)
+# ax_vel.invert_xaxis()
+# ax_vel.set_xlim([50, -20])
+# ax_vel.set_ylim([0, 60])
+# ax_vel.set_xlabel('distance from obstacle [m]', fontsize=15)
+# ax_vel.set_xlabel('', fontsize=15)
+# ax_vel.set_ylabel('velocity [km/h]', fontsize=15)
+
+# hist plot of velocit count
+
+for title, axes in ax_dict_vel.items():
+
+    sns.histplot(data=vel_df[vel_df.experiment_type == title], x='velocity', ax=axes, color=color.get(title), kde=True)
+    axes.set_ylim([0, 1250])
+    axes.set_xlim([0, 60])
+    axes.set_yticks([])
+    axes.set_ylabel("Count of Velocity", fontsize=15)
+    axes.set_xlabel('Velocity Distribution [km/h]',  fontsize=15)
+    axes.set_title(title,  fontsize=15, y=-0.25)
 
 # speed and intervene
 # for title, axes in ax_dict_intervene.items():
@@ -291,8 +295,6 @@ ax_intervene.set_ylabel('intervene \ncount', fontsize=15)
 
 plt.show()
 
-exit()
-
 # print('average_vel' ,sum(total_vel)/ len(total_vel))
 # print('average_vel_mileage' ,sum(total_vel_mileage)/ len(total_vel_mileage))
 
@@ -300,20 +302,20 @@ exit()
 ## visualize and analyze summarized data ##
 ###########################################
 
-summary_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results2/summary.csv')
-avoid_deceleration_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results2/deceleration_20km.csv')
-# summary_intervene_count_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results2/intervene_count.csv')
-# face_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results2/face.csv')
-nasa_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results2/nasa-tlx.csv')
+summary_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results/summary.csv')
+# avoid_deceleration_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results/deceleration_20km.csv')
+avoid_deceleration_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results/deceleration_40km.csv')
+# summary_intervene_count_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results/intervene_count.csv')
+# face_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results/face.csv')
+nasa_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results/nasa-tlx.csv')
 accuracy_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results/accuracy_summary.csv')
-# accuracy_raw_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results2/accuracy.csv')
-time_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results2/time.csv')
-rank_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results2/rank.csv')
+# accuracy_raw_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results/accuracy.csv')
+time_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results/time.csv')
+rank_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results/rank.csv')
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
 # hatches = ['/', '+', 'x', '.']
-sns.set_palette('YlGnBu',4)
 
 
 print('time')
@@ -343,24 +345,24 @@ plt.show()
 
 print('first intervene time anova')
 print('anova result', f_oneway(
-    summary_df[summary_df.subject == 'ando'].first_intervene_time.iloc[:,1:5].values.tolist()[0],
-    summary_df[summary_df.subjects == 'aso'].iloc[:,1:5].values.tolist()[0],
-    summary_df[summary_df.subjects == 'hikosaka'].iloc[:,1:5].values.tolist()[0],
-    summary_df[summary_df.subjects == 'ichiki'].iloc[:,1:5].values.tolist()[0],
-    summary_df[summary_df.subjects == 'ienaga'].iloc[:,1:5].values.tolist()[0],
-    summary_df[summary_df.subjects == 'ikai'].iloc[:,1:5].values.tolist()[0],
-    summary_df[summary_df.subjects == 'isobe'].iloc[:,1:5].values.tolist()[0],
-    summary_df[summary_df.subjects == 'ito'].iloc[:,1:5].values.tolist()[0],
-    summary_df[summary_df.subjects == 'kato'].iloc[:,1:5].values.tolist()[0],
-    summary_df[summary_df.subjects == 'matsubara'].iloc[:,1:5].values.tolist()[0],
-    summary_df[summary_df.subjects == 'nakakuki'].iloc[:,1:5].values.tolist()[0],
-    summary_df[summary_df.subjects == 'nakatani'].iloc[:,1:5].values.tolist()[0],
-    summary_df[summary_df.subjects == 'negi'].iloc[:,1:5].values.tolist()[0],
-    summary_df[summary_df.subjects == 'otake'].iloc[:,1:5].values.tolist()[0],
-    summary_df[summary_df.subjects == 'sumiya'].iloc[:,1:5].values.tolist()[0],
-    summary_df[summary_df.subjects == 'taga'].iloc[:,1:5].values.tolist()[0],
-    summary_df[summary_df.subjects == 'yamamoto'].iloc[:,1:5].values.tolist()[0],
-    summary_df[summary_df.subjects == 'yasuhara'].iloc[:,1:5].values.tolist()[0]
+    summary_df[summary_df.subject == 'ando'].first_intervene_time.tolist(),
+    summary_df[summary_df.subject == 'aso'].first_intervene_time.tolist(),
+    summary_df[summary_df.subject == 'hikosaka'].first_intervene_time.tolist(),
+    summary_df[summary_df.subject == 'ichiki'].first_intervene_time.tolist(),
+    summary_df[summary_df.subject == 'ienaga'].first_intervene_time.tolist(),
+    summary_df[summary_df.subject == 'ikai'].first_intervene_time.tolist(),
+    summary_df[summary_df.subject == 'isobe'].first_intervene_time.tolist(),
+    summary_df[summary_df.subject == 'ito'].first_intervene_time.tolist(),
+    summary_df[summary_df.subject == 'kato'].first_intervene_time.tolist(),
+    summary_df[summary_df.subject == 'matsubara'].first_intervene_time.tolist(),
+    summary_df[summary_df.subject == 'nakakuki'].first_intervene_time.tolist(),
+    summary_df[summary_df.subject == 'nakatani'].first_intervene_time.tolist(),
+    summary_df[summary_df.subject == 'negi'].first_intervene_time.tolist(),
+    summary_df[summary_df.subject == 'otake'].first_intervene_time.tolist(),
+    summary_df[summary_df.subject == 'sumiya'].first_intervene_time.tolist(),
+    summary_df[summary_df.subject == 'taga'].first_intervene_time.tolist(),
+    summary_df[summary_df.subject == 'yamamoto'].first_intervene_time.tolist(),
+    summary_df[summary_df.subject == 'yasuhara'].first_intervene_time.tolist()
     ))
 
 
@@ -416,7 +418,6 @@ axes.set_ylim([0, 80])
 plt.show()
 
 print('min_vel')
-axes = sns.boxplot(x='experiment_type', y='min_vel', data=summary_df, showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
 _, p = stats.levene(summary_df.query('experiment_type == "baseline"').min_vel, summary_df.query('experiment_type == "control"').min_vel, summary_df.query('experiment_type == "button"').min_vel, summary_df.query('experiment_type == "touch"').min_vel, center='median')
 print('levene-first min_vel', p)
 # addAnotation(plt, 0, 2, 40, 1.0, 0, '*', 'k')
@@ -425,8 +426,75 @@ calcMeanAndDev(summary_df, 'min_vel', total_list)
 # multicomp_result = multicomp.MultiComparison(summary_df['min_vel'], summary_df['experiment_type'])
 # print(multicomp_result.tukeyhsd().summary())
 print(gamesHowellTest(summary_df, 'min_vel', 'experiment_type'))
-axes.set_ylim([0, 60])
+# axes = sns.boxplot(x='experiment_type', y='min_vel', data=summary_df, showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
+# axes.set_ylim([0, 60])
+
+
+for i, type in enumerate(['baseline', 'control', 'button', 'touch']):
+
+    min_vel_df = pd.DataFrame({
+        "Count":[sum(summary_df.query('experiment_type == @type').min_vel>-1.0) / summary_df.query('experiment_type == @type').min_vel.count(),
+                 sum(summary_df.query('experiment_type == @type').min_vel>5.0) / summary_df.query('experiment_type == @type').min_vel.count(),
+                 sum(summary_df.query('experiment_type == @type').min_vel>10.0) / summary_df.query('experiment_type == @type').min_vel.count(),
+                 sum(summary_df.query('experiment_type == @type').min_vel>15.0) / summary_df.query('experiment_type == @type').min_vel.count(),
+                 sum(summary_df.query('experiment_type == @type').min_vel>20.0) / summary_df.query('experiment_type == @type').min_vel.count(),
+                 sum(summary_df.query('experiment_type == @type').min_vel>25.0) / summary_df.query('experiment_type == @type').min_vel.count(),
+                 sum(summary_df.query('experiment_type == @type').min_vel>30.0) / summary_df.query('experiment_type == @type').min_vel.count(),
+                 sum(summary_df.query('experiment_type == @type').min_vel>35.0) / summary_df.query('experiment_type == @type').min_vel.count(),
+                 sum(summary_df.query('experiment_type == @type').min_vel>40.0) / summary_df.query('experiment_type == @type').min_vel.count(),
+                 sum(summary_df.query('experiment_type == @type').min_vel>45.0) / summary_df.query('experiment_type == @type').min_vel.count(),
+                 sum(summary_df.query('experiment_type == @type').min_vel>50.0) / summary_df.query('experiment_type == @type').min_vel.count()
+                 ],
+        "Velocity": [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+    })
+
+    # subplot
+    # ax = plt.subplot(2,2,i+1)
+    axes = sns.lineplot(data=min_vel_df, x='Velocity', y='Count', color=color.get(type), label=type, marker='o')
+    axes.set_ylim(0, 1)
+    axes.set_xlim([0,50])
+    axes.set_xlabel('Velocity [km/h]', fontsize=15)
+    axes.set_ylabel('Rate of the Higher Velocity', fontsize=15)
+    # axes.legend()
+    # axes.set_yticks([])
 plt.show()
+
+# subplot
+ax1 = plt.subplot(2,2,1)
+axes = sns.histplot(data=summary_df[summary_df.experiment_type=='baseline'], x='min_vel', binwidth=3.0, kde=True, ax=ax1, color=color.get('baseline'))
+axes.set_ylim(0, 14)
+axes.set_xlim([0, 50])
+axes.set_xlabel('Velocity Distribution [km/h]', fontsize=15)
+axes.set_ylabel('Count of Minimum Velocity', fontsize=15)
+axes.set_title('baseline', y=-0.25, fontsize=15)
+axes.set_yticks([])
+ax2 = plt.subplot(2,2,2)
+axes = sns.histplot(data=summary_df[summary_df.experiment_type=='control'], x='min_vel', binwidth=3.0, kde=True, ax=ax2, color=color.get('control'))
+axes.set_ylim(0, 14)
+axes.set_xlim([0, 50])
+axes.set_yticks([])
+axes.set_xlabel('Velocity Distribution [km/h]', fontsize=15)
+axes.set_ylabel('Count of Minimum Velocity', fontsize=15)
+axes.set_title('control', y=-0.25, fontsize=15)
+ax3 = plt.subplot(2,2,3)
+axes = sns.histplot(data=summary_df[summary_df.experiment_type=='button'], x='min_vel', binwidth=3.0, kde=True, ax=ax3, color=color.get('button'))
+axes.set_ylim(0, 14)
+axes.set_xlim([0, 50])
+axes.set_yticks([])
+axes.set_xlabel('Velocity Distribution [km/h]', fontsize=15)
+axes.set_ylabel('Count of Minimum Velocity', fontsize=15)
+axes.set_title('Button', y=-0.25, fontsize=15)
+ax4 = plt.subplot(2,2,4)
+axes = sns.histplot(data=summary_df[summary_df.experiment_type=='touch'], x='min_vel', binwidth=3.0, kde=True, ax=ax4, color=color.get('touch'))
+axes.set_ylim(0, 14)
+axes.set_xlim([0, 50])
+axes.set_yticks([])
+axes.set_xlabel('Velocity Distributionh [km/h]', fontsize=15)
+axes.set_ylabel('Count of Minimum Velocity', fontsize=15)
+axes.set_title('touch', y=-0.25, fontsize=15)
+plt.show()
+
+# exit()
 
 print('std_vel')
 axes = sns.boxplot(x='experiment_type', y='std_vel', data=summary_df, showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
@@ -484,6 +552,25 @@ multicomp_result = multicomp.MultiComparison(melted_df['decceleration_rate'], me
 calcMeanAndDev(melted_df, 'decceleration_rate', total_list)
 print(multicomp_result.tukeyhsd().summary())
 axes.set_ylim([0, 1])
+plt.show()
+
+
+print('coefficient of accuracy  and intervene time')
+accuracy_mean = [accuracy_df.baseline.mean(), accuracy_df.control.mean(), accuracy_df.button.mean(), accuracy_df.touch.mean()]
+accuracy_stderr = [accuracy_df.baseline.sem(), accuracy_df.control.sem(), accuracy_df.button.sem(), accuracy_df.touch.sem()]
+
+intervene_time_mean = [summary_df[summary_df.experiment_type == 'baseline'].first_intervene_time.mean(), summary_df[summary_df.experiment_type == 'control'].first_intervene_time.mean(), summary_df[summary_df.experiment_type == 'button'].first_intervene_time.mean(), summary_df[summary_df.experiment_type == 'touch'].first_intervene_time.mean()]
+intervene_time_stderr = [summary_df[summary_df.experiment_type == 'baseline'].first_intervene_time.sem(), summary_df[summary_df.experiment_type == 'control'].first_intervene_time.sem(), summary_df[summary_df.experiment_type == 'button'].first_intervene_time.sem(), summary_df[summary_df.experiment_type == 'touch'].first_intervene_time.sem()]
+_, axes = plt.subplots()
+axes.errorbar(accuracy_mean[0], intervene_time_mean[0], xerr=accuracy_stderr[0], yerr=intervene_time_stderr[0], marker='o', capsize=5, color=color.get('baseline'), label='baseline')
+axes.errorbar(accuracy_mean[1], intervene_time_mean[1], xerr=accuracy_stderr[1], yerr=intervene_time_stderr[0], marker='o', capsize=5, color=color.get('control'), label='control')
+axes.errorbar(accuracy_mean[2], intervene_time_mean[2], xerr=accuracy_stderr[2], yerr=intervene_time_stderr[0], marker='o', capsize=5, color=color.get('button'), label='button')
+axes.errorbar(accuracy_mean[3], intervene_time_mean[3], xerr=accuracy_stderr[3], yerr=intervene_time_stderr[0], marker='o', capsize=5, color=color.get('touch'), label='touch')
+axes.set_xlim(0, 1)
+axes.set_ylim(0, 8)
+axes.set_xlabel('Accuracy', fontsize=15)
+axes.set_ylabel('Intervene Time [s]', fontsize=15)
+axes.legend(loc='lower left', fontsize=15)
 plt.show()
 
 print('deceleration anova')
@@ -549,12 +636,16 @@ _, p = stats.levene(melted_df.query('experiment_type == "baseline"').ranking, me
 print('levene-first rank', p)
 multicomp_result = multicomp.MultiComparison(melted_df['ranking'], melted_df['experiment_type'])
 print(multicomp_result.tukeyhsd().summary())
-axes = sns.boxplot(x='experiment_type', y='ranking', data=melted_df, showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
-axes.set_ylim([4,1])
-addAnotation(plt, 0, 2, 2, -0.1, 0, '*', 'k')
-addAnotation(plt, 0, 3, 2, -0.1, 0.3, '*', 'k')
-addAnotation(plt, 1, 2, 2, -0.1, 0.6, '*', 'k')
-addAnotation(plt, 1, 3, 2, -0.1, 0.9, '*', 'k')
+
+axes = sns.pointplot(x='experiment_type', y='ranking', data=melted_df, hue='experiment_type', capsize=0.1)
+# axes = sns.boxplot(x='experiment_type', y='ranking', data=melted_df, showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
+axes.set_ylabel('Preference Rating', fontsize=15)
+axes.set_ylim([4,0.5])
+axes.set_yticks([4,3,2,1])
+addAnotation(plt, 0, 2, 1, -0.05, 0, '*', 'k')
+addAnotation(plt, 0, 3, 1, -0.05, -0.1, '*', 'k')
+addAnotation(plt, 1, 2, 1, -0.05, -0.2, '*', 'k')
+addAnotation(plt, 1, 3, 1, -0.05, -0.3, '*', 'k')
 plt.show()
 
 # sns.barplot(x='experiment_type', y='count', data=face_df)
@@ -585,18 +676,21 @@ for item in ['mental', 'physical', 'temporal', 'performance', 'effort', 'frustra
 
 melted_df = pd.melt(nasa_df, id_vars=nasa_df.columns.values[:2], var_name="args", value_name="value")
 # plot = sns.boxplot(x='args', y="value", hue="experiment_type", data=melted_df,showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
-plot = sns.barplot(x='args', y="value", hue="experiment_type", data=melted_df)
-plot.legend(loc='lower left', bbox_to_anchor=(1.01, 0))
-addAnotation(plt, -0.3, 0.1, 8.0, 0.1, 0, '*', 'k')
-addAnotation(plt, -0.3, 0.3, 8.0, 0.1, 0.5, '*', 'k')
-addAnotation(plt, 0.7, 1.1, 8.0, 0.1, 0, '*', 'k')
-addAnotation(plt, 0.7, 1.3, 8.0, 0.1, 0.5, '*', 'k')
-addAnotation(plt, 0.9, 1.1, 8.0, 0.1, -0.5, '*', 'k')
-addAnotation(plt, 0.9, 1.3, 8.0, 0.1, -1.0, '*', 'k')
-# addAnotation(plt, 5.7, 6.1, 8.0, 0.1, 0, '*', 'k')
-# addAnotation(plt, 5.7, 6.3, 8.0, 0.1, 0.5, '*', 'k')
-# addAnotation(plt, 5.9, 6.1, 8.0, 0.1, 1.0, '*', 'k')
+axes = sns.barplot(x='args', y="value", hue="experiment_type", data=melted_df)
+
+# axes.legend(loc='lower left', bbox_to_anchor=(1.01, 0))
+addAnotation(axes, -0.3, 0.1, 8.0, 0.1, 0, '*', 'k')
+addAnotation(axes, -0.3, 0.3, 8.0, 0.1, 0.5, '*', 'k')
+addAnotation(axes, 0.7, 1.1, 8.0, 0.1, 0, '*', 'k')
+addAnotation(axes, 0.7, 1.3, 8.0, 0.1, 0.5, '*', 'k')
+addAnotation(axes, 0.9, 1.1, 8.0, 0.1, -0.5, '*', 'k')
+addAnotation(axes, 0.9, 1.3, 8.0, 0.1, -1.0, '*', 'k')
+# addAnotation(axes, 5.7, 6.1, 8.0, 0.1, 0, '*', 'k')
+# addAnotation(axes, 5.7, 6.3, 8.0, 0.1, 0.5, '*', 'k')
+# addAnotation(axes, 5.9, 6.1, 8.0, 0.1, 1.0, '*', 'k')
 axes.set_ylim([0, 10])
+axes.set_ylabel('Workload Rating', fontsize=15)
+axes.set_xlabel('Scale', fontsize=15)
 
 plt.show()
 
