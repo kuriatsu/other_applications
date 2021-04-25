@@ -29,31 +29,16 @@ def getdata(filename):
 
     wave_file.close()
 
-    data = convert_data_to_ndarray(bin_data, sampwidth)
-
-    return data, nchannels, sampwidth, framerate, nframes
-
-
-def convert_data_to_ndarray(bin_data, sampwidth):
-    """
-    args
-    bin_data: binary sound data
-    sample_bites_width: 1 point(sample) is represented in ... 2->16bit 4->32bit
-
-    return
-    data: bites is converted to array data
-    """
-
     if sampwidth == 2:
         data = np.frombuffer(bin_data, dtype='int16')
 
     elif sampwidth == 4:
         data = np.frombuffer(bin_data, dtype='int32')
 
-    return data
+
+    return data, nchannels, sampwidth, framerate, nframes
 
 
-# def plot_wav_graph(ndarray_data):
 
 
 class kuri_spectrogram():
@@ -68,17 +53,11 @@ class kuri_spectrogram():
 
         self.window_length = 512
         self.shift_step = 2
-        self.shift_length = self.window_length / self.shift_step
+        self.shift_length = self.window_length // self.shift_step
 
-        # cut data and store it in matrix
-        self.data_matrix= self.align_data()
-        print(self.data_matrix.shape, len(self.data_matrix))
-
-        # calcurate sound spectrogram
-        self.ffted_data = self.fft(self.multiply_data_by_window(window_type))
+        self.window_type = window_type
 
         # plot spectrogram
-        self.plot_spectrogram()
 
 
     def align_data(self):
@@ -119,64 +98,76 @@ class kuri_spectrogram():
         # print(np.arange(self.window_length).reshape(self.window_length, 1))
 
 
-    def multiply_data_by_window(self, window_type):
-        '''multiply sound data by window
+    def getWindow(self, length):
 
-        return: windowed data matrix
-        '''
         # window array
-        window = np.arange(self.window_length, dtype='float64')
+        window = np.arange(length, dtype='float64')
 
         # select window type
-        if window_type == 'hamming':
-            window = 0.54 - 0.46 * np.cos(2 * np.pi * window / self.window_length)
+        if self.window_type == 'hamming':
+            window = 0.54 - 0.46 * np.cos(2 * np.pi * window / length)
 
-        elif window_type == 'hanning':
-            window = 0.5 - 0.5 * np.cos(2 * np.pi * window / self.window_length)
+        elif self.window_type == 'hanning':
+            window = 0.5 - 0.5 * np.cos(2 * np.pi * window / length)
 
-        elif window_type == 'blackman':
-            window = 0.42 - 0.5 * np.cos(2 * np.pi * window / self.window_length) + 0.08 * np.cos(4 * np.pi * window / self.window_length)
+        elif self.window_type == 'blackman':
+            window = 0.42 - 0.5 * np.cos(2 * np.pi * window / length) + 0.08 * np.cos(4 * np.pi * window / length)
 
         else: print('I do not know ',format(window_type))
 
-        return self.data_matrix * window
+        return window
 
 
-    def fft(self, input):
+    def stft(self):
         '''calcurate fft
-
-        return: ffted data matrix
         '''
 
-        # fft and normalization
-        ffted_data = np.abs(np.fft.rfft(input)) * 2 / self.shift_length
+        data_matrix = self.align_data()
+        window = self.getWindow(self.window_length)
+
+        windowed_matrix = data_matrix * window
+        print(np.fft.rfft(windowed_matrix).shape)
+
+        # fft and normalization, cut latter half because FFT result is mirroring
+        # ffted_matrix = np.fft.rfft(windowed_matrix)[:, :int(self.window_length // 2)]
+        ffted_matrix = np.abs(np.fft.rfft(windowed_matrix)) * 2 / self.shift_length
 
         # Do not need to double DC component
-        ffted_data[:, 0] = ffted_data[:, 0] / 2
+        ffted_matrix[:, 0] = ffted_matrix[:, 0] / 2
+        print(ffted_matrix.shape)
 
-        return ffted_data
+        return np.real(ffted_matrix).astype('float64')
 
 
-    def plot_spectrogram(self):
+    def plot_spectrogram(self, matrix, ax):
         '''plot spectrogram
 
 
         '''
         sound_time = float(self.frame_length / self.framerate)
 
-        plot_data = np.rot90(np.log(self.ffted_data), k=1)
+        plot_data = np.rot90(np.log(matrix), k=1)
 
-        plt.subplot(211)
-        plt.imshow(plot_data, extent=[0, sound_time, 0, self.framerate/2], aspect='auto')
+        im = ax.imshow(plot_data, extent=[0, sound_time, 0, self.framerate/2], aspect='auto')
         # plt.specgram(self.data_array, Fs=self.framerate)
-        plt.colorbar()
+        # im.colorbar()
 
 
-    def ifft(self):
+    def plot_wav_graph(self, data, ax):
+        ax.plot(data)
 
-        iffted_data = np.fft.ifft(self.ffted_data) * self.window_length
+    def isft(self, ffted_matrix):
 
+        matrix = np.concatenate([ffted_matrix, ffted_matrix[::-1, :]], 1)
+        print(ffted_matrix, ffted_matrix[:, ::-1])
+        iffted_data = np.fft.ifft(matrix) * self.getWindow(self.window_length)
 
+        iffted_data = np.real(iffted_data).astype('float64')
+        recover_data = np.zeros(int(matrix.shape[1] * self.shift_length) - self.window_length, dtype='float64')
+        for i in range(matrix.shape[0]):
+            recover_data[i:i+self.window_length] += iffted_data[i,:]
+
+        return recover_data
 
 if __name__ == "__main__":
 
@@ -184,6 +175,17 @@ if __name__ == "__main__":
     filename = args[1]
     window_type = args[2]
 
+    fig = plt.figure()
+
     spectrogram = kuri_spectrogram(getdata(filename), window_type)
-    # spectrogram.align_data()
+    result = spectrogram.stft()
+    ax = fig.add_subplot(311)
+    spectrogram.plot_spectrogram(result, ax)
+
+    recover_data = spectrogram.isft(result)
+    ax = fig.add_subplot(312)
+    spectrogram.plot_wav_graph(recover_data, ax)
+
     plt.show()
+    print(recover_data)
+    # spectrogram.align_data()
