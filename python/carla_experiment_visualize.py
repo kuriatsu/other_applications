@@ -152,38 +152,38 @@ def saveCsv(data, filename):
 ############################
 pickle_files = [
 
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/aso/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/ichiki/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/ienaga/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/matsubara/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/ikai/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/nakakuki/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/yamamoto/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/ando/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/negi/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/kato1/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/kato2/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/sumiya/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/ito/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/isobe/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/yasuhara/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/nakatani/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/otake1/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/otake2/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/taga/Town01.pickle',
-    '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/hikosaka/Town01.pickle',
+    # '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/aso/Town01.pickle',
+    # '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/ichiki/Town01.pickle',
+    # '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/ienaga/Town01.pickle',
+    # '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/matsubara/Town01.pickle',
+    # '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/ikai/Town01.pickle',
+    # '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/nakakuki/Town01.pickle',
+    # '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/yamamoto/Town01.pickle',
+    # '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/ando/Town01.pickle',
+    # '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/negi/Town01.pickle',
+    # '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/kato1/Town01.pickle',
+    # '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/kato2/Town01.pickle',
+    # '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/sumiya/Town01.pickle',
+    # '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/ito/Town01.pickle',
+    # '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/isobe/Town01.pickle',
+    # '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/yasuhara/Town01.pickle',
+    # '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/nakatani/Town01.pickle',
+    # '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/otake1/Town01.pickle',
+    # '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/otake2/Town01.pickle',
+    # '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/taga/Town01.pickle',
+    # '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/hikosaka/Town01.pickle',
 
-    # '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/okawa/Town01.pickle',
-    # '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/hayashi/Town01.pickle',
-    # '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/teranishi/Town01.pickle',
-    # '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/kuroyanagi/Town01.pickle',
-    # '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/yokoyama/Town01.pickle',
-    # '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/inuzuka/Town01.pickle',
-    # '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/kanayama/Town01.pickle',
-    # '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/sakashita/Town01.pickle',
-    # '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/saji/Town01.pickle',
-    # '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/sakai/Town01.pickle',
-    # '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/yoshioka/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/okawa/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/hayashi/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/teranishi/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/kuroyanagi/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/yokoyama/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/inuzuka/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/kanayama/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/sakashita/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/saji/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/sakai/Town01.pickle',
+    '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/yoshioka/Town01.pickle',
 
     # '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/ichiki/Town01.pickle',
     # '/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment/miyazaki/Town01.pickle',
@@ -506,18 +506,29 @@ calcMeanAndDev(summary_df, 'std_vel', total_list)
 multicomp_result = multicomp.MultiComparison(summary_df['std_vel'], summary_df['experiment_type'])
 print(multicomp_result.tukeyhsd().summary())
 # print(gamesHowellTest(summary_df, 'std_vel', 'experiment_type'))
+addAnotation(plt, 0, 2, 5, 0.1, 0, '*', 'k')
+addAnotation(plt, 0, 3, 5, 0.1, 0.3, '*', 'k')
+addAnotation(plt, 1, 2, 5, 0.1, 0.6, '*', 'k')
+addAnotation(plt, 1, 3, 5, 0.1, 0.9, '*', 'k')
 axes.set_ylim([0, 7])
+axes.set_xlabel('Intervention method', fontsize=15)
+axes.set_ylabel('Variance in vehicle speed\nduring intervention [km/h]', fontsize=15)
+axes.tick_params(axis='x', labelsize=12)
 plt.show()
 
 print('accuracy')
-melted_df = pd.melt(accuracy_df, id_vars=accuracy_df.columns.values[:1], var_name='experiment_type', value_name='avoid_unnecessary_intervention_rate')
-axes = sns.barplot(x='experiment_type', y='avoid_unnecessary_intervention_rate', data=melted_df)
-multicomp_result = multicomp.MultiComparison(melted_df['avoid_unnecessary_intervention_rate'], melted_df['experiment_type'])
-_, p = stats.levene(melted_df.query('experiment_type == "baseline"').avoid_unnecessary_intervention_rate, melted_df.query('experiment_type == "control"').avoid_unnecessary_intervention_rate, melted_df.query('experiment_type == "button"').avoid_unnecessary_intervention_rate, melted_df.query('experiment_type == "touch"').avoid_unnecessary_intervention_rate, center='median')
-print('levene-first avoid_unnecessary_intervention_rate', p)
-calcMeanAndDev(melted_df, 'avoid_unnecessary_intervention_rate', total_list)
+melted_df = pd.melt(accuracy_df, id_vars=accuracy_df.columns.values[:1], var_name='experiment_type', value_name='accuracy')
+axes = sns.barplot(x='experiment_type', y='accuracy', data=melted_df)
+multicomp_result = multicomp.MultiComparison(melted_df['accuracy'], melted_df['experiment_type'])
+_, p = stats.levene(melted_df.query('experiment_type == "baseline"').accuracy, melted_df.query('experiment_type == "control"').accuracy, melted_df.query('experiment_type == "button"').accuracy, melted_df.query('experiment_type == "touch"').accuracy, center='median')
+print('levene-first accuracy', p)
+calcMeanAndDev(melted_df, 'accuracy', total_list)
 print(multicomp_result.tukeyhsd().summary())
 axes.set_ylim([0, 1])
+axes.set_xlabel('Intervention method', fontsize=15)
+axes.set_ylabel('Intervention accuracy', fontsize=15)
+axes.tick_params(axis='x', labelsize=12)
+axes.tick_params(axis='y', labelsize=12)
 plt.show()
 
 print('accuracy_anova')
@@ -543,19 +554,23 @@ print('accuracy_anova')
 #     accuracy_df[accuracy_df.subjects == 'yasuhara'].iloc[:,1:5].values.tolist()[0]
 #     ))
 
-# print('avoid_decceleration_rate')
-# melted_df = pd.melt(avoid_deceleration_df, id_vars=avoid_deceleration_df.columns.values[:1], var_name='experiment_type', value_name='decceleration_rate')
-# axes = sns.barplot(x='experiment_type', y='decceleration_rate', data=melted_df)
-# # addAnotation(plt, 0, 1, 0.9, 0.01, 0, '*', 'k')
-# # addAnotation(plt, 0, 2, 0.9, 0.01, 0.03, '*', 'k')
-# # addAnotation(plt, 0, 3, 0.9, 0.01, 0.06, '*', 'k')
-# _, p = stats.levene(melted_df.query('experiment_type == "baseline"').decceleration_rate, melted_df.query('experiment_type == "control"').decceleration_rate, melted_df.query('experiment_type == "button"').decceleration_rate, melted_df.query('experiment_type == "touch"').decceleration_rate, center='median')
-# print('levene-first decceleration_rate', p)
-# multicomp_result = multicomp.MultiComparison(melted_df['decceleration_rate'], melted_df['experiment_type'])
-# calcMeanAndDev(melted_df, 'decceleration_rate', total_list)
-# print(multicomp_result.tukeyhsd().summary())
-# axes.set_ylim([0, 1])
-# plt.show()
+print('decceleration_rate')
+melted_df = pd.melt(avoid_deceleration_df, id_vars=avoid_deceleration_df.columns.values[:1], var_name='experiment_type', value_name='deceleration_rate')
+axes = sns.barplot(x='experiment_type', y='deceleration_rate', data=melted_df)
+addAnotation(plt, 0, 1, 0.9, 0.01, 0, '*', 'k')
+addAnotation(plt, 0, 2, 0.9, 0.01, 0.03, '*', 'k')
+addAnotation(plt, 0, 3, 0.9, 0.01, 0.06, '*', 'k')
+_, p = stats.levene(melted_df.query('experiment_type == "baseline"').deceleration_rate, melted_df.query('experiment_type == "control"').deceleration_rate, melted_df.query('experiment_type == "button"').deceleration_rate, melted_df.query('experiment_type == "touch"').deceleration_rate, center='median')
+print('levene-first decceleration_rate', p)
+multicomp_result = multicomp.MultiComparison(melted_df['deceleration_rate'], melted_df['experiment_type'])
+calcMeanAndDev(melted_df, 'deceleration_rate', total_list)
+print(multicomp_result.tukeyhsd().summary())
+axes.set_xlabel('Intervention method', fontsize=15)
+axes.set_ylabel('Percentage of interventions involving\nunnecessary deceleration to less than 20 km/h', fontsize=15)
+axes.set_ylim([0, 1])
+axes.tick_params(axis='x', labelsize=12)
+axes.tick_params(axis='y', labelsize=12)
+plt.show()
 
 
 print('coefficient of accuracy  and intervene time')
@@ -570,14 +585,15 @@ axes.errorbar(accuracy_mean[1], intervene_time_mean[1], xerr=accuracy_stderr[1],
 axes.errorbar(accuracy_mean[2], intervene_time_mean[2], xerr=accuracy_stderr[2], yerr=intervene_time_stderr[0], marker='o', capsize=5, color=color.get('button'), label='button')
 axes.errorbar(accuracy_mean[3], intervene_time_mean[3], xerr=accuracy_stderr[3], yerr=intervene_time_stderr[0], marker='o', capsize=5, color=color.get('touch'), label='touch')
 axes.set_xlim(0, 1)
-axes.set_ylim(0, 8)
+axes.set_ylim(0, 10)
 axes.set_xlabel('Accuracy', fontsize=15)
 axes.set_ylabel('Intervene Time [s]', fontsize=15)
 axes.legend(loc='lower left', fontsize=15)
+axes.tick_params(axis='x', labelsize=12)
+axes.tick_params(axis='y', labelsize=12)
 plt.show()
 
-print('deceleration anova')
-# 202102exoeriment
+# print('deceleration anova')
 # print('anova result', f_oneway(
 #     avoid_deceleration_df[avoid_deceleration_df.subjects == 'ando'].iloc[:,1:5].values.tolist()[0],
 #     avoid_deceleration_df[avoid_deceleration_df.subjects == 'aso'].iloc[:,1:5].values.tolist()[0],
@@ -656,7 +672,9 @@ axes.set_yticks([4,3,2,1])
 addAnotation(plt, 0, 2, 1, -0.05, 0, '*', 'k')
 addAnotation(plt, 0, 3, 1, -0.05, -0.1, '*', 'k')
 addAnotation(plt, 1, 2, 1, -0.05, -0.2, '*', 'k')
-
+addAnotation(plt, 1, 3, 1, -0.05, -0.3, '*', 'k')
+axes.tick_params(axis='x', labelsize=12)
+axes.tick_params(axis='y', labelsize=12)
 plt.show()
 
 # sns.barplot(x='experiment_type', y='count', data=face_df)
@@ -677,7 +695,7 @@ plt.show()
 # plt.show()
 
 #### nasa-tlx ####
-for item in ['mental', 'physical', 'temporal', 'performance', 'effort', 'frustration', 'entire']:
+for item in ['mental', 'physical', 'temporal', 'performance', 'effort', 'frustration', 'overall']:
     print(item)
     _, p = stats.levene(nasa_df.query('experiment_type == "baseline"')[item], nasa_df.query('experiment_type == "control"')[item], nasa_df.query('experiment_type == "button"')[item], nasa_df.query('experiment_type == "touch"')[item], center='median')
     print('levene-first' + item, p)
@@ -708,11 +726,11 @@ addAnotation(axes, 0.9, 1.3, 8.0, 0.1, -1.0, '*', 'k')
 addAnotation(axes, 5.7, 6.1, 8.0, 0.1, 0, '*', 'k')
 addAnotation(axes, 5.7, 6.3, 8.0, 0.1, 0.5, '*', 'k')
 addAnotation(axes, 5.9, 6.1, 8.0, 0.1, 1.0, '*', 'k')
-
 axes.set_ylim([0, 10])
 axes.set_ylabel('Workload Rating', fontsize=15)
 axes.set_xlabel('Scale', fontsize=15)
-
+axes.tick_params(axis='x', labelsize=12)
+axes.tick_params(axis='y', labelsize=12)
 plt.show()
 
 saveCsv(total_list, out_file)
