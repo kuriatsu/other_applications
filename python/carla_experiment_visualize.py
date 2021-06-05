@@ -302,16 +302,16 @@ plt.show()
 ## visualize and analyze summarized data ##
 ###########################################
 
-summary_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results/summary.csv')
-# avoid_deceleration_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results/deceleration_20km.csv')
-avoid_deceleration_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results/deceleration_40km.csv')
-# summary_intervene_count_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results/intervene_count.csv')
-# face_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results/face.csv')
-nasa_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results/nasa-tlx.csv')
-accuracy_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results/accuracy_summary.csv')
-# accuracy_raw_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results/accuracy.csv')
-time_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results/time.csv')
-rank_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/results/rank.csv')
+summary_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/summary.csv')
+# avoid_deceleration_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/deceleration_20km.csv')
+# avoid_deceleration_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/deceleration_40km.csv')
+# summary_intervene_count_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/intervene_count.csv')
+# face_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/face.csv')
+nasa_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/nasa-tlx.csv')
+accuracy_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/accuracy_summary.csv')
+# accuracy_raw_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/accuracy.csv')
+time_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/time.csv')
+rank_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/results/rank.csv')
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
@@ -343,27 +343,29 @@ addAnotation(plt, 2, 3, 20, 0.5, 0, '*', 'k')
 # axes.set_ylim([0, 9])
 plt.show()
 
+
 print('first intervene time anova')
-print('anova result', f_oneway(
-    summary_df[summary_df.subject == 'ando'].first_intervene_time.tolist(),
-    summary_df[summary_df.subject == 'aso'].first_intervene_time.tolist(),
-    summary_df[summary_df.subject == 'hikosaka'].first_intervene_time.tolist(),
-    summary_df[summary_df.subject == 'ichiki'].first_intervene_time.tolist(),
-    summary_df[summary_df.subject == 'ienaga'].first_intervene_time.tolist(),
-    summary_df[summary_df.subject == 'ikai'].first_intervene_time.tolist(),
-    summary_df[summary_df.subject == 'isobe'].first_intervene_time.tolist(),
-    summary_df[summary_df.subject == 'ito'].first_intervene_time.tolist(),
-    summary_df[summary_df.subject == 'kato'].first_intervene_time.tolist(),
-    summary_df[summary_df.subject == 'matsubara'].first_intervene_time.tolist(),
-    summary_df[summary_df.subject == 'nakakuki'].first_intervene_time.tolist(),
-    summary_df[summary_df.subject == 'nakatani'].first_intervene_time.tolist(),
-    summary_df[summary_df.subject == 'negi'].first_intervene_time.tolist(),
-    summary_df[summary_df.subject == 'otake'].first_intervene_time.tolist(),
-    summary_df[summary_df.subject == 'sumiya'].first_intervene_time.tolist(),
-    summary_df[summary_df.subject == 'taga'].first_intervene_time.tolist(),
-    summary_df[summary_df.subject == 'yamamoto'].first_intervene_time.tolist(),
-    summary_df[summary_df.subject == 'yasuhara'].first_intervene_time.tolist()
-    ))
+# 202102exoeriment
+# print('anova result', f_oneway(
+#     summary_df[summary_df.subject == 'ando'].first_intervene_time.tolist(),
+#     summary_df[summary_df.subject == 'aso'].first_intervene_time.tolist(),
+#     summary_df[summary_df.subject == 'hikosaka'].first_intervene_time.tolist(),
+#     summary_df[summary_df.subject == 'ichiki'].first_intervene_time.tolist(),
+#     summary_df[summary_df.subject == 'ienaga'].first_intervene_time.tolist(),
+#     summary_df[summary_df.subject == 'ikai'].first_intervene_time.tolist(),
+#     summary_df[summary_df.subject == 'isobe'].first_intervene_time.tolist(),
+#     summary_df[summary_df.subject == 'ito'].first_intervene_time.tolist(),
+#     summary_df[summary_df.subject == 'kato'].first_intervene_time.tolist(),
+#     summary_df[summary_df.subject == 'matsubara'].first_intervene_time.tolist(),
+#     summary_df[summary_df.subject == 'nakakuki'].first_intervene_time.tolist(),
+#     summary_df[summary_df.subject == 'nakatani'].first_intervene_time.tolist(),
+#     summary_df[summary_df.subject == 'negi'].first_intervene_time.tolist(),
+#     summary_df[summary_df.subject == 'otake'].first_intervene_time.tolist(),
+#     summary_df[summary_df.subject == 'sumiya'].first_intervene_time.tolist(),
+#     summary_df[summary_df.subject == 'taga'].first_intervene_time.tolist(),
+#     summary_df[summary_df.subject == 'yamamoto'].first_intervene_time.tolist(),
+#     summary_df[summary_df.subject == 'yasuhara'].first_intervene_time.tolist()
+#     ))
 
 
 print('last_intervene_time')
@@ -519,40 +521,41 @@ axes.set_ylim([0, 1])
 plt.show()
 
 print('accuracy_anova')
-print('anova result', f_oneway(
-    accuracy_df[accuracy_df.subjects == 'ando'].iloc[:,1:5].values.tolist()[0],
-    accuracy_df[accuracy_df.subjects == 'aso'].iloc[:,1:5].values.tolist()[0],
-    accuracy_df[accuracy_df.subjects == 'hikosaka'].iloc[:,1:5].values.tolist()[0],
-    accuracy_df[accuracy_df.subjects == 'ichiki'].iloc[:,1:5].values.tolist()[0],
-    accuracy_df[accuracy_df.subjects == 'ienaga'].iloc[:,1:5].values.tolist()[0],
-    accuracy_df[accuracy_df.subjects == 'ikai'].iloc[:,1:5].values.tolist()[0],
-    accuracy_df[accuracy_df.subjects == 'isobe'].iloc[:,1:5].values.tolist()[0],
-    accuracy_df[accuracy_df.subjects == 'ito'].iloc[:,1:5].values.tolist()[0],
-    accuracy_df[accuracy_df.subjects == 'kato'].iloc[:,1:5].values.tolist()[0],
-    accuracy_df[accuracy_df.subjects == 'matsubara'].iloc[:,1:5].values.tolist()[0],
-    accuracy_df[accuracy_df.subjects == 'nakakuki'].iloc[:,1:5].values.tolist()[0],
-    accuracy_df[accuracy_df.subjects == 'nakatani'].iloc[:,1:5].values.tolist()[0],
-    accuracy_df[accuracy_df.subjects == 'negi'].iloc[:,1:5].values.tolist()[0],
-    accuracy_df[accuracy_df.subjects == 'otake'].iloc[:,1:5].values.tolist()[0],
-    accuracy_df[accuracy_df.subjects == 'sumiya'].iloc[:,1:5].values.tolist()[0],
-    accuracy_df[accuracy_df.subjects == 'taga'].iloc[:,1:5].values.tolist()[0],
-    accuracy_df[accuracy_df.subjects == 'yamamoto'].iloc[:,1:5].values.tolist()[0],
-    accuracy_df[accuracy_df.subjects == 'yasuhara'].iloc[:,1:5].values.tolist()[0]
-    ))
+# 202102exoeriment
+# print('anova result', f_oneway(
+#     accuracy_df[accuracy_df.subjects == 'ando'].iloc[:,1:5].values.tolist()[0],
+#     accuracy_df[accuracy_df.subjects == 'aso'].iloc[:,1:5].values.tolist()[0],
+#     accuracy_df[accuracy_df.subjects == 'hikosaka'].iloc[:,1:5].values.tolist()[0],
+#     accuracy_df[accuracy_df.subjects == 'ichiki'].iloc[:,1:5].values.tolist()[0],
+#     accuracy_df[accuracy_df.subjects == 'ienaga'].iloc[:,1:5].values.tolist()[0],
+#     accuracy_df[accuracy_df.subjects == 'ikai'].iloc[:,1:5].values.tolist()[0],
+#     accuracy_df[accuracy_df.subjects == 'isobe'].iloc[:,1:5].values.tolist()[0],
+#     accuracy_df[accuracy_df.subjects == 'ito'].iloc[:,1:5].values.tolist()[0],
+#     accuracy_df[accuracy_df.subjects == 'kato'].iloc[:,1:5].values.tolist()[0],
+#     accuracy_df[accuracy_df.subjects == 'matsubara'].iloc[:,1:5].values.tolist()[0],
+#     accuracy_df[accuracy_df.subjects == 'nakakuki'].iloc[:,1:5].values.tolist()[0],
+#     accuracy_df[accuracy_df.subjects == 'nakatani'].iloc[:,1:5].values.tolist()[0],
+#     accuracy_df[accuracy_df.subjects == 'negi'].iloc[:,1:5].values.tolist()[0],
+#     accuracy_df[accuracy_df.subjects == 'otake'].iloc[:,1:5].values.tolist()[0],
+#     accuracy_df[accuracy_df.subjects == 'sumiya'].iloc[:,1:5].values.tolist()[0],
+#     accuracy_df[accuracy_df.subjects == 'taga'].iloc[:,1:5].values.tolist()[0],
+#     accuracy_df[accuracy_df.subjects == 'yamamoto'].iloc[:,1:5].values.tolist()[0],
+#     accuracy_df[accuracy_df.subjects == 'yasuhara'].iloc[:,1:5].values.tolist()[0]
+#     ))
 
-print('avoid_decceleration_rate')
-melted_df = pd.melt(avoid_deceleration_df, id_vars=avoid_deceleration_df.columns.values[:1], var_name='experiment_type', value_name='decceleration_rate')
-axes = sns.barplot(x='experiment_type', y='decceleration_rate', data=melted_df)
-# addAnotation(plt, 0, 1, 0.9, 0.01, 0, '*', 'k')
-# addAnotation(plt, 0, 2, 0.9, 0.01, 0.03, '*', 'k')
-# addAnotation(plt, 0, 3, 0.9, 0.01, 0.06, '*', 'k')
-_, p = stats.levene(melted_df.query('experiment_type == "baseline"').decceleration_rate, melted_df.query('experiment_type == "control"').decceleration_rate, melted_df.query('experiment_type == "button"').decceleration_rate, melted_df.query('experiment_type == "touch"').decceleration_rate, center='median')
-print('levene-first decceleration_rate', p)
-multicomp_result = multicomp.MultiComparison(melted_df['decceleration_rate'], melted_df['experiment_type'])
-calcMeanAndDev(melted_df, 'decceleration_rate', total_list)
-print(multicomp_result.tukeyhsd().summary())
-axes.set_ylim([0, 1])
-plt.show()
+# print('avoid_decceleration_rate')
+# melted_df = pd.melt(avoid_deceleration_df, id_vars=avoid_deceleration_df.columns.values[:1], var_name='experiment_type', value_name='decceleration_rate')
+# axes = sns.barplot(x='experiment_type', y='decceleration_rate', data=melted_df)
+# # addAnotation(plt, 0, 1, 0.9, 0.01, 0, '*', 'k')
+# # addAnotation(plt, 0, 2, 0.9, 0.01, 0.03, '*', 'k')
+# # addAnotation(plt, 0, 3, 0.9, 0.01, 0.06, '*', 'k')
+# _, p = stats.levene(melted_df.query('experiment_type == "baseline"').decceleration_rate, melted_df.query('experiment_type == "control"').decceleration_rate, melted_df.query('experiment_type == "button"').decceleration_rate, melted_df.query('experiment_type == "touch"').decceleration_rate, center='median')
+# print('levene-first decceleration_rate', p)
+# multicomp_result = multicomp.MultiComparison(melted_df['decceleration_rate'], melted_df['experiment_type'])
+# calcMeanAndDev(melted_df, 'decceleration_rate', total_list)
+# print(multicomp_result.tukeyhsd().summary())
+# axes.set_ylim([0, 1])
+# plt.show()
 
 
 print('coefficient of accuracy  and intervene time')
@@ -574,26 +577,27 @@ axes.legend(loc='lower left', fontsize=15)
 plt.show()
 
 print('deceleration anova')
-print('anova result', f_oneway(
-    avoid_deceleration_df[avoid_deceleration_df.subjects == 'ando'].iloc[:,1:5].values.tolist()[0],
-    avoid_deceleration_df[avoid_deceleration_df.subjects == 'aso'].iloc[:,1:5].values.tolist()[0],
-    avoid_deceleration_df[avoid_deceleration_df.subjects == 'hikosaka'].iloc[:,1:5].values.tolist()[0],
-    avoid_deceleration_df[avoid_deceleration_df.subjects == 'ichiki'].iloc[:,1:5].values.tolist()[0],
-    avoid_deceleration_df[avoid_deceleration_df.subjects == 'ienaga'].iloc[:,1:5].values.tolist()[0],
-    avoid_deceleration_df[avoid_deceleration_df.subjects == 'ikai'].iloc[:,1:5].values.tolist()[0],
-    avoid_deceleration_df[avoid_deceleration_df.subjects == 'isobe'].iloc[:,1:5].values.tolist()[0],
-    avoid_deceleration_df[avoid_deceleration_df.subjects == 'ito'].iloc[:,1:5].values.tolist()[0],
-    avoid_deceleration_df[avoid_deceleration_df.subjects == 'kato'].iloc[:,1:5].values.tolist()[0],
-    avoid_deceleration_df[avoid_deceleration_df.subjects == 'matsubara'].iloc[:,1:5].values.tolist()[0],
-    avoid_deceleration_df[avoid_deceleration_df.subjects == 'nakakuki'].iloc[:,1:5].values.tolist()[0],
-    avoid_deceleration_df[avoid_deceleration_df.subjects == 'nakatani'].iloc[:,1:5].values.tolist()[0],
-    avoid_deceleration_df[avoid_deceleration_df.subjects == 'negi'].iloc[:,1:5].values.tolist()[0],
-    avoid_deceleration_df[avoid_deceleration_df.subjects == 'otake'].iloc[:,1:5].values.tolist()[0],
-    avoid_deceleration_df[avoid_deceleration_df.subjects == 'sumiya'].iloc[:,1:5].values.tolist()[0],
-    avoid_deceleration_df[avoid_deceleration_df.subjects == 'taga'].iloc[:,1:5].values.tolist()[0],
-    avoid_deceleration_df[avoid_deceleration_df.subjects == 'yamamoto'].iloc[:,1:5].values.tolist()[0],
-    avoid_deceleration_df[avoid_deceleration_df.subjects == 'yasuhara'].iloc[:,1:5].values.tolist()[0]
-    ))
+# 202102exoeriment
+# print('anova result', f_oneway(
+#     avoid_deceleration_df[avoid_deceleration_df.subjects == 'ando'].iloc[:,1:5].values.tolist()[0],
+#     avoid_deceleration_df[avoid_deceleration_df.subjects == 'aso'].iloc[:,1:5].values.tolist()[0],
+#     avoid_deceleration_df[avoid_deceleration_df.subjects == 'hikosaka'].iloc[:,1:5].values.tolist()[0],
+#     avoid_deceleration_df[avoid_deceleration_df.subjects == 'ichiki'].iloc[:,1:5].values.tolist()[0],
+#     avoid_deceleration_df[avoid_deceleration_df.subjects == 'ienaga'].iloc[:,1:5].values.tolist()[0],
+#     avoid_deceleration_df[avoid_deceleration_df.subjects == 'ikai'].iloc[:,1:5].values.tolist()[0],
+#     avoid_deceleration_df[avoid_deceleration_df.subjects == 'isobe'].iloc[:,1:5].values.tolist()[0],
+#     avoid_deceleration_df[avoid_deceleration_df.subjects == 'ito'].iloc[:,1:5].values.tolist()[0],
+#     avoid_deceleration_df[avoid_deceleration_df.subjects == 'kato'].iloc[:,1:5].values.tolist()[0],
+#     avoid_deceleration_df[avoid_deceleration_df.subjects == 'matsubara'].iloc[:,1:5].values.tolist()[0],
+#     avoid_deceleration_df[avoid_deceleration_df.subjects == 'nakakuki'].iloc[:,1:5].values.tolist()[0],
+#     avoid_deceleration_df[avoid_deceleration_df.subjects == 'nakatani'].iloc[:,1:5].values.tolist()[0],
+#     avoid_deceleration_df[avoid_deceleration_df.subjects == 'negi'].iloc[:,1:5].values.tolist()[0],
+#     avoid_deceleration_df[avoid_deceleration_df.subjects == 'otake'].iloc[:,1:5].values.tolist()[0],
+#     avoid_deceleration_df[avoid_deceleration_df.subjects == 'sumiya'].iloc[:,1:5].values.tolist()[0],
+#     avoid_deceleration_df[avoid_deceleration_df.subjects == 'taga'].iloc[:,1:5].values.tolist()[0],
+#     avoid_deceleration_df[avoid_deceleration_df.subjects == 'yamamoto'].iloc[:,1:5].values.tolist()[0],
+#     avoid_deceleration_df[avoid_deceleration_df.subjects == 'yasuhara'].iloc[:,1:5].values.tolist()[0]
+#     ))
 
 # print('intervene_count')
 # melted_df = pd.melt(summary_intervene_count_df, id_vars=summary_intervene_count_df.columns.values[:1], var_name='experiment_type', value_name='intervene_count_average')
@@ -642,10 +646,17 @@ axes = sns.pointplot(x='experiment_type', y='ranking', data=melted_df, hue='expe
 axes.set_ylabel('Preference Rating', fontsize=15)
 axes.set_ylim([4,0.5])
 axes.set_yticks([4,3,2,1])
+# 202102experiment
+# addAnotation(plt, 0, 2, 1, -0.05, 0, '*', 'k')
+# addAnotation(plt, 0, 3, 1, -0.05, -0.1, '*', 'k')
+# addAnotation(plt, 1, 2, 1, -0.05, -0.2, '*', 'k')
+# addAnotation(plt, 1, 3, 1, -0.05, -0.3, '*', 'k')
+
+# 202012exoeriment2
 addAnotation(plt, 0, 2, 1, -0.05, 0, '*', 'k')
 addAnotation(plt, 0, 3, 1, -0.05, -0.1, '*', 'k')
 addAnotation(plt, 1, 2, 1, -0.05, -0.2, '*', 'k')
-addAnotation(plt, 1, 3, 1, -0.05, -0.3, '*', 'k')
+
 plt.show()
 
 # sns.barplot(x='experiment_type', y='count', data=face_df)
@@ -679,15 +690,25 @@ melted_df = pd.melt(nasa_df, id_vars=nasa_df.columns.values[:2], var_name="args"
 axes = sns.barplot(x='args', y="value", hue="experiment_type", data=melted_df)
 
 # axes.legend(loc='lower left', bbox_to_anchor=(1.01, 0))
+# 202102experiment
+# addAnotation(axes, -0.3, 0.1, 8.0, 0.1, 0, '*', 'k')
+# addAnotation(axes, -0.3, 0.3, 8.0, 0.1, 0.5, '*', 'k')
+# addAnotation(axes, 0.7, 1.1, 8.0, 0.1, 0, '*', 'k')
+# addAnotation(axes, 0.7, 1.3, 8.0, 0.1, 0.5, '*', 'k')
+# addAnotation(axes, 0.9, 1.1, 8.0, 0.1, -0.5, '*', 'k')
+# addAnotation(axes, 0.9, 1.3, 8.0, 0.1, -1.0, '*', 'k')
+
+# 202012experiment2
 addAnotation(axes, -0.3, 0.1, 8.0, 0.1, 0, '*', 'k')
 addAnotation(axes, -0.3, 0.3, 8.0, 0.1, 0.5, '*', 'k')
 addAnotation(axes, 0.7, 1.1, 8.0, 0.1, 0, '*', 'k')
 addAnotation(axes, 0.7, 1.3, 8.0, 0.1, 0.5, '*', 'k')
 addAnotation(axes, 0.9, 1.1, 8.0, 0.1, -0.5, '*', 'k')
 addAnotation(axes, 0.9, 1.3, 8.0, 0.1, -1.0, '*', 'k')
-# addAnotation(axes, 5.7, 6.1, 8.0, 0.1, 0, '*', 'k')
-# addAnotation(axes, 5.7, 6.3, 8.0, 0.1, 0.5, '*', 'k')
-# addAnotation(axes, 5.9, 6.1, 8.0, 0.1, 1.0, '*', 'k')
+addAnotation(axes, 5.7, 6.1, 8.0, 0.1, 0, '*', 'k')
+addAnotation(axes, 5.7, 6.3, 8.0, 0.1, 0.5, '*', 'k')
+addAnotation(axes, 5.9, 6.1, 8.0, 0.1, 1.0, '*', 'k')
+
 axes.set_ylim([0, 10])
 axes.set_ylabel('Workload Rating', fontsize=15)
 axes.set_xlabel('Scale', fontsize=15)
