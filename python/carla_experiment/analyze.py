@@ -136,6 +136,7 @@ for subject in subjects:
         rate = buf.sum() / len(pose_df[pose_df.experiment_type==experiment])
         stop_rate.at[subject, experiment] = rate
 
+<<<<<<< HEAD
 axes = sns.boxplot(data=stop_rate, showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
 plt.show()
 
@@ -155,6 +156,17 @@ print('levene-first last_intervene_time', p)
 if p > 0.05:
     multicomp_result = multicomp.MultiComparison(np.array(summary_df.cv, dtype="float64"), melted_df.experiment_type)
     print(multicomp_result.tukeyhsd().summary())
+=======
+axes = sns.boxplot(data=intervene_speed, showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
+plt.show()
+
+_, p = stats.levene(intervene_speed.baseline, intervene_speed.control, intervene_speed.button, intervene_speed.touch, center='median')
+print('levene-first last_intervene_time', p)
+if p > 0.05:
+    melted_df = pd.melt(intervene_speed, var_name='experiment_type', value_name='intervene_vel')
+    multicomp_result = multicomp.MultiComparison(np.array(melted_df['intervene_vel'], dtype="float64"), melted_df['experiment_type'])
+    print(multicomp_result.tukeyhsd().summary())
+>>>>>>> 5695184e4e0ebd3311e797460bafde8802007641
 
 ################################################################
 ################################################################
@@ -168,6 +180,7 @@ for subject in subjects:
         intervene_acc.at[subject, experiment] = rate
 
 axes = sns.boxplot(data=intervene_acc, showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
+<<<<<<< HEAD
 plt.show()
 _, p = stats.levene(intervene_acc.baseline, intervene_acc.control, intervene_acc.button, intervene_acc.touch, center='median')
 print('levene-first last_intervene_time', p)
@@ -193,6 +206,16 @@ plt.show()
 melted_df = pd.melt(intervene_speed, var_name='experiment_type', value_name='intervene_vel')
 multicomp_result = multicomp.MultiComparison(np.array(melted_df['intervene_vel'], dtype="float64"), melted_df['experiment_type'])
 print(multicomp_result.tukeyhsd().summary())
+=======
+plt.show()
+
+_, p = stats.levene(intervene_acc.baseline, intervene_acc.control, intervene_acc.button, intervene_acc.touch, center='median')
+print('levene-first last_intervene_time', p)
+if p > 0.05:
+    melted_df = pd.melt(intervene_acc, var_name='experiment_type', value_name='intervene_vel')
+    multicomp_result = multicomp.MultiComparison(np.array(melted_df['intervene_vel'], dtype="float64"), melted_df['experiment_type'])
+    print(multicomp_result.tukeyhsd().summary())
+>>>>>>> 5695184e4e0ebd3311e797460bafde8802007641
 
 print("accuracy vs avoid decel")
 _, axes = plt.subplots()
@@ -227,7 +250,6 @@ sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[40],color="turq
 sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[30],color="gold")
 sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[20],color="lightsalmon")
 sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[10],color="orangered")
-intervene_speed_rate
 
 ################################################################
 ################################################################
