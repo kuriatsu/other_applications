@@ -22,6 +22,7 @@ def summarizeData(extracted_data):
         'max_vel',
         'min_vel',
         'std_vel',
+        'ave_vel',
         'max_acc',
         'min_acc',
         'intervene_vel',
@@ -45,6 +46,7 @@ def summarizeData(extracted_data):
         min_vel = None
         max_vel = None
         std_vel = None
+        ave_vel = None
         intervene_vel = None
         face_turn_count = None
         max_acc = None
@@ -82,6 +84,8 @@ def summarizeData(extracted_data):
             max_vel = np.amax(arr_data[np.where(arr_data[acc_start_index:acc_end_index, 2]>0.0), 1]) * 3.6
             min_vel = np.amin(arr_data[np.where(arr_data[acc_start_index:acc_end_index, 2]>0.0), 1]) * 3.6
             std_vel = np.std(arr_data[acc_start_index:acc_end_index, 1])
+            ave_vel = np.mean(arr_data[acc_start_index:acc_end_index, 1])
+
         # face turn count
         last_face_direction = arr_data[0, 6]
         face_turn_count = 0
@@ -109,6 +113,7 @@ def summarizeData(extracted_data):
             max_vel,
             min_vel,
             std_vel,
+            ave_vel,
             max_acc,
             min_acc,
             intervene_vel,
