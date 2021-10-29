@@ -94,15 +94,20 @@ def addAnotation(plt_obj, x1, x2, y, hight, h_offset, text, color):
     plt_obj.plot([x1, x1, x2, x2], [y+h_offset, y+hight+h_offset, y+hight+h_offset, y+h_offset], lw=1.5, c=color)
     plt_obj.text((x1+x2)*0.5, y+hight+h_offset, text, ha='center', va='bottom', color=color)
 
-
 def saveCsv(data, filename):
     with open(filename, 'w') as f:
         writer = csv.writer(f)
         writer.writerows(data)
 
+sns.set_palette('YlGnBu',4)
+sns.set(context='paper', style='whitegrid')
+color = {'baseline':'#d5e7ba', 'control': '#7dbeb5', 'button': '#388fad', 'touch': '#335290'}
+color_list = ['#d5e7ba', '#7dbeb5', '#388fad', '#335290']
+sns.set_palette(sns.color_palette(color_list))
+
 summary_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/summary.csv')
-nasa_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/result/nasa-tlx.csv')
-rank_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202012experiment2/result/rank.csv')
+nasa_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/nasa-tlx.csv')
+rank_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/rank.csv')
 subjects=[
     'ando',
     'aso',
@@ -125,48 +130,21 @@ subjects=[
     ]
 experiments = ['baseline', 'control', 'button', 'touch']
 
-################################################################
-################################################################
-print('stop rate')
-stop_rate = pd.DataFrame(index=subjects, columns=experiments)
-for subject in subjects:
-    pose_df = summary_df[(summary_df.subject == subject) & (summary_df.actor_action == "cross")]
-    for experiment in experiments:
-        buf = pose_df[pose_df.experiment_type==experiment].intervene_vel < 10.0
-        rate = buf.sum() / len(pose_df[pose_df.experiment_type==experiment])
-        stop_rate.at[subject, experiment] = rate
 
-<<<<<<< HEAD
-axes = sns.boxplot(data=stop_rate, showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
-plt.show()
 
-_, p = stats.levene(stop_rate.baseline, stop_rate.control, stop_rate.button, stop_rate.touch, center='median')
-print('levene-first last_intervene_time', p)
-if p > 0.05:
-    melted_df = pd.melt(stop_rate, var_name='experiment_type', value_name='intervene_vel')
-    multicomp_result = multicomp.MultiComparison(np.array(melted_df['intervene_vel'], dtype="float64"), melted_df['experiment_type'])
-    print(multicomp_result.tukeyhsd().summary())
 ################################################################
 ################################################################
 
 print('counter variance')
-summary_df.at["cv"] = summary_df.at["std_vel"] / summary_df.at["mean_vel"]
-_, p = stats.levene(summary_df[summary_df[('experiment_type'] == 'baseline')].cv, summary_df[summary_df[('experiment_type'] == 'control')].cv, summary_df[summary_df[('experiment_type'] == 'button')].cv, summary_df[summary_df[('experiment_type'] == 'touch')].cv, center='median')
-print('levene-first last_intervene_time', p)
-if p > 0.05:
-    multicomp_result = multicomp.MultiComparison(np.array(summary_df.cv, dtype="float64"), melted_df.experiment_type)
-    print(multicomp_result.tukeyhsd().summary())
-=======
-axes = sns.boxplot(data=intervene_speed, showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
+summary_df["cv"] = summary_df.std_vel / summary_df.mean_vel
+_, p = stats.levene(summary_df[summary_df.experiment_type == 'baseline'].cv.dropna(), summary_df[summary_df.experiment_type == 'control'].cv.dropna(), summary_df[summary_df.experiment_type == 'button'].cv.dropna(), summary_df[summary_df.experiment_type == 'touch'].cv.dropna(), center='median')
+axes = sns.boxplot(data=summary_df, x='experiment_type', y='cv', showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
 plt.show()
-
-_, p = stats.levene(intervene_speed.baseline, intervene_speed.control, intervene_speed.button, intervene_speed.touch, center='median')
-print('levene-first last_intervene_time', p)
+print('levene-first cv', p)
 if p > 0.05:
-    melted_df = pd.melt(intervene_speed, var_name='experiment_type', value_name='intervene_vel')
-    multicomp_result = multicomp.MultiComparison(np.array(melted_df['intervene_vel'], dtype="float64"), melted_df['experiment_type'])
+    multicomp_result = multicomp.MultiComparison(np.array(summary_df.dropna(how='any').cv, dtype="float64"), summary_df.dropna(how='any').experiment_type)
     print(multicomp_result.tukeyhsd().summary())
->>>>>>> 5695184e4e0ebd3311e797460bafde8802007641
+
 
 ################################################################
 ################################################################
@@ -180,7 +158,6 @@ for subject in subjects:
         intervene_acc.at[subject, experiment] = rate
 
 axes = sns.boxplot(data=intervene_acc, showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
-<<<<<<< HEAD
 plt.show()
 _, p = stats.levene(intervene_acc.baseline, intervene_acc.control, intervene_acc.button, intervene_acc.touch, center='median')
 print('levene-first last_intervene_time', p)
@@ -206,26 +183,16 @@ plt.show()
 melted_df = pd.melt(intervene_speed, var_name='experiment_type', value_name='intervene_vel')
 multicomp_result = multicomp.MultiComparison(np.array(melted_df['intervene_vel'], dtype="float64"), melted_df['experiment_type'])
 print(multicomp_result.tukeyhsd().summary())
-=======
-plt.show()
-
-_, p = stats.levene(intervene_acc.baseline, intervene_acc.control, intervene_acc.button, intervene_acc.touch, center='median')
-print('levene-first last_intervene_time', p)
-if p > 0.05:
-    melted_df = pd.melt(intervene_acc, var_name='experiment_type', value_name='intervene_vel')
-    multicomp_result = multicomp.MultiComparison(np.array(melted_df['intervene_vel'], dtype="float64"), melted_df['experiment_type'])
-    print(multicomp_result.tukeyhsd().summary())
->>>>>>> 5695184e4e0ebd3311e797460bafde8802007641
 
 print("accuracy vs avoid decel")
 _, axes = plt.subplots()
 for experiment in experiments:
     axes.errorbar(intervene_acc.mean()[experiment], intervene_speed.mean()[experiment], xerr=intervene_acc.sem()[experiment], yerr=intervene_speed.sem()[experiment], marker='o', capsize=5, label=experiment)
 
-axes.set_xlim(0, 0.5)
-axes.set_ylim(0, 0.5)
-axes.set_xlabel('Miss Intervention Rate', fontsize=15)
-axes.set_ylabel('Avoid deceleration Rate', fontsize=15)
+axes.set_xlim(0, 1.0)
+axes.set_ylim(0, 1.0)
+axes.set_xlabel('Unnecessary intervention rate', fontsize=15)
+axes.set_ylabel('Avoid deceleration rate', fontsize=15)
 axes.legend(loc='upper right', fontsize=15)
 axes.tick_params(axis='x', labelsize=12)
 axes.tick_params(axis='y', labelsize=12)
@@ -265,27 +232,70 @@ for i, row in pose_df.iterrows():
 for i, row in intervene_speed_rate.iteritems():
     intervene_speed_rate.at[:, i] = row / intervene_speed_rate[50]
 
-sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[50],color="teal")
-sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[40],color="turquoise")
-sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[30],color="gold")
-sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[20],color="lightsalmon")
-sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[10],color="orangered")
+axes = sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[50],color="teal", label='40-50km/h')
+axes = sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[40],color="turquoise", label='30-40km/h')
+axes = sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[30],color="gold", label='20-30km/h')
+axes = sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[20],color="lightsalmon", label='10-20km/h')
+axes = sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[10],color="orangered", label='0-10km/h')
+axes.set_ylabel('Minimum velocity rate while intervenition', fontsize=15)
+axes.set_xlabel('Intervention method', fontsize=15)
+axes.legend(bbox_to_anchor=(1.0, 1.0), loc='upper left')
+plt.show()
 
 print('min vel')
-axes = sns.boxplot(data=summary_df, showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
-plt.show()
-_, p = stats.levene(summary_df[summary_df[('experiment_type'] == 'baseline')].min_vel, summary_df[summary_df[('experiment_type'] == 'control')].min_vel, summary_df[summary_df[('experiment_type'] == 'button')].min_vel, summary_df[summary_df[('experiment_type'] == 'touch')].min_vel, center='median')
-print('levene-first last_intervene_time', p)
+_, p = stats.levene(summary_df[summary_df.experiment_type == 'baseline'].min_vel, summary_df[summary_df.experiment_type == 'control'].min_vel, summary_df[summary_df.experiment_type == 'button'].min_vel, summary_df[summary_df.experiment_type == 'touch'].min_vel, center='median')
+print('levene-first min vel', p)
 if p > 0.05:
     multicomp_result = multicomp.MultiComparison(np.array(summary_df.min_vel, dtype="float64"), melted_df.experiment_type)
     print(multicomp_result.tukeyhsd().summary())
 
 print('max vel')
-_, p = stats.levene(summary_df[summary_df[('experiment_type'] == 'baseline')].max_vel, summary_df[summary_df[('experiment_type'] == 'control')].max_vel, summary_df[summary_df[('experiment_type'] == 'button')].max_vel, summary_df[summary_df[('experiment_type'] == 'touch')].max_vel, center='median')
-print('levene-first last_intervene_time', p)
+_, p = stats.levene(summary_df[summary_df.experiment_type == 'baseline'].max_vel, summary_df[summary_df.experiment_type == 'control'].max_vel, summary_df[summary_df.experiment_type == 'button'].max_vel, summary_df[summary_df.experiment_type == 'touch'].max_vel, center='median')
+print('levene-first max vel', p)
 if p > 0.05:
     multicomp_result = multicomp.MultiComparison(np.array(summary_df.max_vel, dtype="float64"), melted_df.experiment_type)
     print(multicomp_result.tukeyhsd().summary())
 
 ################################################################
 ################################################################
+
+print('stop rate')
+stop_rate = pd.DataFrame(index=subjects, columns=experiments)
+for subject in subjects:
+    pose_df = summary_df[(summary_df.subject == subject) & (summary_df.actor_action == "cross")]
+    for experiment in experiments:
+        buf = pose_df[pose_df.experiment_type==experiment].min_vel < 20.0
+        rate = buf.sum() / len(pose_df[pose_df.experiment_type==experiment])
+        stop_rate.at[subject, experiment] = rate
+
+axes = sns.boxplot(data=stop_rate, showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
+plt.show()
+
+_, p = stats.levene(stop_rate.baseline, stop_rate.control, stop_rate.button, stop_rate.touch, center='median')
+print('levene-first stop rate', p)
+if p > 0.05:
+    melted_df = pd.melt(stop_rate, var_name='experiment_type', value_name='intervene_vel')
+    multicomp_result = multicomp.MultiComparison(np.array(melted_df['intervene_vel'], dtype="float64"), melted_df['experiment_type'])
+    print(multicomp_result.tukeyhsd().summary())
+
+################################################################
+################################################################
+
+print('keep rate')
+stop_rate = pd.DataFrame(index=subjects, columns=experiments)
+for subject in subjects:
+    pose_df = summary_df[(summary_df.subject == subject) & (summary_df.actor_action == "pose")]
+    for experiment in experiments:
+        buf = pose_df[pose_df.experiment_type==experiment].min_vel > 30.0
+        rate = buf.sum() / len(pose_df[pose_df.experiment_type==experiment])
+        stop_rate.at[subject, experiment] = rate
+
+axes = sns.boxplot(data=stop_rate, showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
+plt.show()
+
+_, p = stats.levene(stop_rate.baseline, stop_rate.control, stop_rate.button, stop_rate.touch, center='median')
+print('levene-first keep rate', p)
+if p > 0.05:
+    melted_df = pd.melt(stop_rate, var_name='experiment_type', value_name='intervene_vel')
+    multicomp_result = multicomp.MultiComparison(np.array(melted_df['intervene_vel'], dtype="float64"), melted_df['experiment_type'])
+    print(multicomp_result.tukeyhsd().summary())
