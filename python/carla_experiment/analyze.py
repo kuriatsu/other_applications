@@ -108,29 +108,8 @@ sns.set_palette(sns.color_palette(color_list))
 summary_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/summary.csv')
 nasa_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/nasa-tlx.csv')
 rank_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/rank.csv')
-subjects=[
-    'ando',
-    'aso',
-    'hikosaka',
-    'ichiki',
-    'ienaga',
-    'ikai',
-    'isobe',
-    'ito',
-    'kato',
-    'matsubara',
-    'nakakuki',
-    'nakatani',
-    'negi',
-    'otake',
-    'sumiya',
-    'taga',
-    'yamamoto',
-    'yasuhara',
-    ]
-experiments = ['baseline', 'control', 'button', 'touch']
-
-
+subjects = summary_df.subject.drop_duplicates()
+experiments = summary_df.experiment_type.drop_duplicates()
 
 ################################################################
 ################################################################
@@ -198,9 +177,9 @@ axes.tick_params(axis='x', labelsize=12)
 axes.tick_params(axis='y', labelsize=12)
 plt.show()
 ################################################################
+print("intervene vel range stacked bar plot")
 ################################################################
 
-print("intervene vel range stacked bar plot")
 intervene_speed_rate = pd.DataFrame(index=experiments, columns=[10, 20, 30, 40, 50])
 intervene_speed_rate.fillna(0, inplace=True)
 pose_df = summary_df[summary_df.actor_action == "pose"]
@@ -219,8 +198,9 @@ sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[20],color="ligh
 sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[10],color="orangered")
 
 ################################################################
-################################################################
 print("min vel range stacked bar plot")
+################################################################
+
 intervene_speed_rate = pd.DataFrame(index=experiments, columns=[10, 20, 30, 40, 50])
 intervene_speed_rate.fillna(0, inplace=True)
 pose_df = summary_df[summary_df.actor_action == "pose"]
@@ -237,7 +217,7 @@ axes = sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[40],colo
 axes = sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[30],color="gold", label='20-30km/h')
 axes = sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[20],color="lightsalmon", label='10-20km/h')
 axes = sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[10],color="orangered", label='0-10km/h')
-axes.set_ylabel('Minimum velocity rate while intervenition', fontsize=15)
+axes.set_ylabel('Rate of driving with minimum velocity while intervenition', fontsize=15)
 axes.set_xlabel('Intervention method', fontsize=15)
 axes.legend(bbox_to_anchor=(1.0, 1.0), loc='upper left')
 plt.show()
@@ -256,10 +236,32 @@ if p > 0.05:
     multicomp_result = multicomp.MultiComparison(np.array(summary_df.max_vel, dtype="float64"), melted_df.experiment_type)
     print(multicomp_result.tukeyhsd().summary())
 
+
 ################################################################
+print('min_vel rerative to baseline plot')
 ################################################################
 
+intervene_speed_rate = pd.DataFrame(columns=['subjects', 'experiment_type', 'range', 'rate'], index = [])
+
+for subject in subjects:
+    for experiment in experiments:
+        for thres in [10.0, 20.0, 30.0, 40.0, 50.0]:
+            rate = len(summary_df[(summary_df.subject == subject) & (summary_df.experiment_type == experiment) & (summary_df.actor_action == 'pose') & (summary_df.min_vel < thres)]) / len(summary_df[(summary_df.subject == subject) & (summary_df.experiment_type == experiment) & (summary_df.actor_action == 'pose')])
+            buf_df = pd.Series([subject, experiment, thres, rate], index=intervene_speed_rate.columns)
+            intervene_speed_rate = intervene_speed_rate.append(buf_df, ignore_index=True)
+
+intervene_speed_rate_summary = pd.DataFrame(columns=['experiment_type', 'range', 'mean', 'std_err'], index = [])
+for experiment in experiments:
+    for thres in [10.0, 20.0, 30.0, 40.0, 50.0]:
+        mean = intervene_speed_rate[(intervene_speed_rate.experiment_type == experiment) & (intervene_speed_rate.range == thres)].rate.mean()
+        std_err = intervene_speed_rate[(intervene_speed_rate.experiment_type == experiment) & (intervene_speed_rate.range == thres)].rate.sem()
+        buf_df = pd.Series([experiment, thres, mean, std_err], index=intervene_speed_rate_summary.columns)
+        intervene_speed_rate_summary = intervene_speed_rate_summary.append(buf_df, ignore_index=True)
+
+################################################################
 print('stop rate')
+################################################################
+
 stop_rate = pd.DataFrame(index=subjects, columns=experiments)
 for subject in subjects:
     pose_df = summary_df[(summary_df.subject == subject) & (summary_df.actor_action == "cross")]
@@ -279,9 +281,9 @@ if p > 0.05:
     print(multicomp_result.tukeyhsd().summary())
 
 ################################################################
+print('keep rate')
 ################################################################
 
-print('keep rate')
 stop_rate = pd.DataFrame(index=subjects, columns=experiments)
 for subject in subjects:
     pose_df = summary_df[(summary_df.subject == subject) & (summary_df.actor_action == "pose")]
