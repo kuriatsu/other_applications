@@ -14,6 +14,7 @@ import statsmodels.api as sm
 from statsmodels.formula.api import ols
 from statsmodels.sandbox.stats import multicomp
 from statsmodels.stats.multitest import multipletests
+from statsmodels.stats.contingency_tables import cochrans_q
 from scipy.stats import f_oneway
 import pickle
 
@@ -203,6 +204,7 @@ print("min vel range stacked bar plot")
 
 intervene_speed_rate = pd.DataFrame(index=experiments, columns=[10, 20, 30, 40, 50])
 intervene_speed_rate.fillna(0, inplace=True)
+
 pose_df = summary_df[summary_df.actor_action == "pose"]
 for i, row in pose_df.iterrows():
     for thres in [10, 20, 30, 40, 50]:
@@ -241,22 +243,43 @@ if p > 0.05:
 print('min_vel rerative to baseline plot')
 ################################################################
 
-intervene_speed_rate = pd.DataFrame(columns=['subjects', 'experiment_type', 'range', 'rate'], index = [])
+intervene_speed_rate = pd.DataFrame(columns=['experiment_type', 'range', 'rate'], index = [])
+# intervene_speed_rate = pd.DataFrame(columns=['subjects', 'experiment_type', 'range', 'rate'], index = [])
 
-for subject in subjects:
-    for experiment in experiments:
-        for thres in [10.0, 20.0, 30.0, 40.0, 50.0]:
-            rate = len(summary_df[(summary_df.subject == subject) & (summary_df.experiment_type == experiment) & (summary_df.actor_action == 'pose') & (summary_df.min_vel < thres)]) / len(summary_df[(summary_df.subject == subject) & (summary_df.experiment_type == experiment) & (summary_df.actor_action == 'pose')])
-            buf_df = pd.Series([subject, experiment, thres, rate], index=intervene_speed_rate.columns)
-            intervene_speed_rate = intervene_speed_rate.append(buf_df, ignore_index=True)
+# for subject in subjects:
+for experiment in experiments:
+    for thres in [-1.0, 5.0, 10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0]:
+        rate = len(summary_df[(summary_df.experiment_type == experiment) & (summary_df.actor_action == 'pose') & (summary_df.min_vel > 45.0)].min_vel) / len(summary_df[(summary_df.experiment_type == experiment) & (summary_df.actor_action == 'pose')].min_vel)
+        buf_df = pd.Series([experiment, thres, rate], index=intervene_speed_rate.columns)
+        intervene_speed_rate = intervene_speed_rate.append(buf_df, ignore_index=True)
 
 intervene_speed_rate_summary = pd.DataFrame(columns=['experiment_type', 'range', 'mean', 'std_err'], index = [])
 for experiment in experiments:
-    for thres in [10.0, 20.0, 30.0, 40.0, 50.0]:
+    for thres in [0.0, 5.0, 10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0]:
         mean = intervene_speed_rate[(intervene_speed_rate.experiment_type == experiment) & (intervene_speed_rate.range == thres)].rate.mean()
         std_err = intervene_speed_rate[(intervene_speed_rate.experiment_type == experiment) & (intervene_speed_rate.range == thres)].rate.sem()
         buf_df = pd.Series([experiment, thres, mean, std_err], index=intervene_speed_rate_summary.columns)
         intervene_speed_rate_summary = intervene_speed_rate_summary.append(buf_df, ignore_index=True)
+
+for i, range in enumerate(intervene_speed_rate.range):
+    if range == -1.0:
+        intervene_speed_rate.at[i, "range"] = 0.0
+intervene_speed_rate.at[intervene_speed_rate.range == -1.0].range = 0.0
+axes = sns.pointplot(x='range', y='rate', data=intervene_speed_rate, hue='experiment_type')
+
+# for experiment in experiments:
+#     for thres in [10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0]:
+#         row = intervene_speed_rate_summary[(intervene_speed_rate_summary.range == thres) & (intervene_speed_rate_summary.experiment_type == experiment)]
+#         axes.errorbar(thres, row['mean'], yerr=row['std_err'], marker='o', capsize=5, label=experiment)
+
+axes.set_xlim([0, 50])
+axes.set_ylim(0, 1)
+axes.set_xlabel('Accuracy', fontsize=15)
+axes.set_ylabel('Intervene Time [s]', fontsize=15)
+# axes.legend(loc='lower left', fontsize=15)
+axes.tick_params(axis='x', labelsize=12)
+axes.tick_params(axis='y', labelsize=12)
+plt.show()
 
 ################################################################
 print('stop rate')
