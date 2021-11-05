@@ -129,13 +129,14 @@ if p > 0.05:
 ################################################################
 ################################################################
 print('intervene accuracy')
-intervene_acc = pd.DataFrame(index=subjects, columns=experiments)
-for subject in subjects:
-    cross_df = summary_df[(summary_df.subject == subject) & (summary_df.actor_action == "cross")]
-    for experiment in experiments:
-        buf = cross_df[cross_df.experiment_type==experiment].intervene_vel.isnull()
-        rate = 1.0 - buf.sum() / len(cross_df[cross_df.experiment_type==experiment])
-        intervene_acc.at[subject, experiment] = rate
+intervene_accuracy = {'baseline':[], 'control':[], 'button':[], 'touch':[]}
+for label, experiment in experiments.iteritems():
+    buf = summary_df[(summary_df.experiment_type==experiment) & (summary_df.actor_action=='cross')].intervene_vel.isnull().values
+    pose_df = summary_df[(summary_df.experiment_type==experiment) & (summary_df.actor_action=='pose')]
+    buf = np.append(buf, (pose_df.intervene_vel > 1.0) | pose_df.intervene_vel.isnull())
+    print(experiment, len(buf))
+    padd_len = len(intervene_accuracy) - len(pose_df)
+    intervene_accuracy[experiment] = buf
 
 axes = sns.boxplot(data=intervene_acc, showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
 plt.show()
