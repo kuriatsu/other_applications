@@ -336,18 +336,152 @@ axes.legend(bbox_to_anchor=(1.0, 1.0), loc='upper left')
 plt.show()
 
 print('min vel')
-_, p = stats.levene(summary_df[summary_df.experiment_type == 'baseline'].min_vel, summary_df[summary_df.experiment_type == 'control'].min_vel, summary_df[summary_df.experiment_type == 'button'].min_vel, summary_df[summary_df.experiment_type == 'touch'].min_vel, center='median')
-print('levene-first min vel', p)
-if p > 0.05:
-    multicomp_result = multicomp.MultiComparison(np.array(summary_df.min_vel, dtype="float64"), melted_df.experiment_type)
-    print(multicomp_result.tukeyhsd().summary())
 
+pose_df = summary_df[summary_df.actor_action == 'pose']
+for experiment in experiments:
+    print(experiment, pose_df[pose_df.experiment_type==experiment].min_vel.mean())
+
+axes = sns.boxplot(data=pose_df, x='experiment_type', y='min_vel', showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"}, order=experiments)
+axes.set_ylabel('Minimum velocity [km/h]', fontsize=15)
+axes.set_xlabel('Intervention method', fontsize=15)
+axes.legend(bbox_to_anchor=(1.0, 1.0), loc='upper left')
+plt.show()
+
+_, norm_p = stats.shapiro(pose_df.min_vel.dropna())
+_, var_p = stats.levene(
+    pose_df[pose_df.experiment_type == 'baseline'].min_vel.dropna(),
+    pose_df[pose_df.experiment_type == 'control'].min_vel.dropna(),
+    pose_df[pose_df.experiment_type == 'button'].min_vel.dropna(),
+    pose_df[pose_df.experiment_type == 'touch'].min_vel.dropna(),
+    center='median'
+    )
+
+if norm_p < 0.05 or var_p < 0.05:
+    print('steel-dwass\n', sp.posthoc_dscf(pose_df, val_col='min_vel', group_col='experiment_type'))
+else:
+    multicomp_result = multicomp.MultiComparison(np.array(pose_df.dropna(how='any').min_vel, dtype="float64"), pose_df.dropna(how='any').experiment_type)
+    print('levene', multicomp_result.tukeyhsd().summary())
+
+_, norm_p = stats.shapiro(pose_df.min_vel.dropna())
+_, var_p = stats.levene(
+    pose_df[pose_df.subject == 'ando'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'aso'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'hikosaka'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'ichiki'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'ienaga'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'ikai'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'isobe'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'ito'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'kato'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'matsubara'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'nakakuki'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'nakatani'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'negi'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'otake'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'sumiya'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'taga'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'yamamoto'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'yasuhara'].min_vel.dropna(),
+    center='median'
+    )
+
+_, anova_p = stats.kruskal(
+    pose_df[pose_df.subject == 'ando'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'aso'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'hikosaka'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'ichiki'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'ienaga'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'ikai'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'isobe'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'ito'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'kato'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'matsubara'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'nakakuki'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'nakatani'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'negi'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'otake'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'sumiya'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'taga'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'yamamoto'].min_vel.dropna(),
+    pose_df[pose_df.subject == 'yasuhara'].min_vel.dropna(),
+)
+
+if anova_p < 0.05:
+    if norm_p < 0.05 or var_p < 0.05:
+        print('steel-dwass\n', sp.posthoc_dscf(pose_df, val_col='min_vel', group_col='subject'))
+    else:
+        multicomp_result = multicomp.MultiComparison(np.array(pose_df.dropna(how='any').min_vel, dtype="float64"), pose_df.dropna(how='any').subject)
+        print('levene', multicomp_result.tukeyhsd().summary())
+
+################################################################
 print('max vel')
-_, p = stats.levene(summary_df[summary_df.experiment_type == 'baseline'].max_vel, summary_df[summary_df.experiment_type == 'control'].max_vel, summary_df[summary_df.experiment_type == 'button'].max_vel, summary_df[summary_df.experiment_type == 'touch'].max_vel, center='median')
-print('levene-first max vel', p)
-if p > 0.05:
-    multicomp_result = multicomp.MultiComparison(np.array(summary_df.max_vel, dtype="float64"), melted_df.experiment_type)
-    print(multicomp_result.tukeyhsd().summary())
+################################################################
+pose_df = summary_df[summary_df.actor_action == 'pose']
+_, norm_p = stats.shapiro(pose_df.max_vel.dropna())
+_, var_p = stats.levene(
+    pose_df[pose_df.experiment_type == 'baseline'].max_vel.dropna(),
+    pose_df[pose_df.experiment_type == 'control'].max_vel.dropna(),
+    pose_df[pose_df.experiment_type == 'button'].max_vel.dropna(),
+    pose_df[pose_df.experiment_type == 'touch'].max_vel.dropna(),
+    center='median'
+    )
+
+if norm_p < 0.05 or var_p < 0.05:
+    print('steel-dwass\n', sp.posthoc_dscf(pose_df, val_col='max_vel', group_col='experiment_type'))
+else:
+    multicomp_result = multicomp.MultiComparison(np.array(pose_df.dropna(how='any').max_vel, dtype="float64"), pose_df.dropna(how='any').experiment_type)
+    print('levene', multicomp_result.tukeyhsd().summary())
+
+_, norm_p = stats.shapiro(pose_df.max_vel.dropna())
+_, var_p = stats.levene(
+    pose_df[pose_df.subject == 'ando'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'aso'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'hikosaka'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'ichiki'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'ienaga'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'ikai'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'isobe'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'ito'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'kato'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'matsubara'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'nakakuki'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'nakatani'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'negi'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'otake'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'sumiya'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'taga'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'yamamoto'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'yasuhara'].max_vel.dropna(),
+    center='median'
+    )
+
+_, anova_p = stats.kruskal(
+    pose_df[pose_df.subject == 'ando'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'aso'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'hikosaka'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'ichiki'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'ienaga'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'ikai'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'isobe'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'ito'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'kato'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'matsubara'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'nakakuki'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'nakatani'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'negi'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'otake'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'sumiya'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'taga'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'yamamoto'].max_vel.dropna(),
+    pose_df[pose_df.subject == 'yasuhara'].max_vel.dropna(),
+)
+
+if anova_p < 0.05:
+    if norm_p < 0.05 or var_p < 0.05:
+        print('steel-dwass\n', sp.posthoc_dscf(pose_df, val_col='max_vel', group_col='subject'))
+    else:
+        multicomp_result = multicomp.MultiComparison(np.array(pose_df.dropna(how='any').max_vel, dtype="float64"), pose_df.dropna(how='any').subject)
+        print('levene', multicomp_result.tukeyhsd().summary())
 
 
 ################################################################
