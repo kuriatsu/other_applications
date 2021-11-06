@@ -16,6 +16,7 @@ from statsmodels.sandbox.stats import multicomp
 from statsmodels.stats.multitest import multipletests
 from statsmodels.stats.contingency_tables import cochrans_q
 from scipy.stats import f_oneway
+import scikit_posthocs as sp
 import pickle
 
 # gamesHowellTest
@@ -117,30 +118,40 @@ experiments = summary_df.experiment_type.drop_duplicates()
 
 print('counter variance')
 summary_df["cv"] = summary_df.std_vel / summary_df.mean_vel
-_, p = stats.levene(summary_df[summary_df.experiment_type == 'baseline'].cv.dropna(), summary_df[summary_df.experiment_type == 'control'].cv.dropna(), summary_df[summary_df.experiment_type == 'button'].cv.dropna(), summary_df[summary_df.experiment_type == 'touch'].cv.dropna(), center='median')
+
+_, norm_p = stats.shapiro(summary_df.cv.dropna())
+_, var_p = stats.levene(summary_df[summary_df.experiment_type == 'baseline'].cv.dropna(), summary_df[summary_df.experiment_type == 'control'].cv.dropna(), summary_df[summary_df.experiment_type == 'button'].cv.dropna(), summary_df[summary_df.experiment_type == 'touch'].cv.dropna(), center='median')
+if norm_p < 0.05 or var_p < 0.05:
+    print('steel-dwass', sp.posthoc_dscf(summary_df, val_col='cv', group_col='experiment_type'))
+else:
+
+    multicomp_result = multicomp.MultiComparison(np.array(summary_df.dropna(how='any').cv, dtype="float64"), summary_df.dropna(how='any').experiment_type)
+    print('levene', multicomp_result.tukeyhsd().summary())
+
 axes = sns.boxplot(data=summary_df, x='experiment_type', y='cv', showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
 plt.show()
-print('levene-first cv', p)
-if p > 0.05:
-    multicomp_result = multicomp.MultiComparison(np.array(summary_df.dropna(how='any').cv, dtype="float64"), summary_df.dropna(how='any').experiment_type)
-    print(multicomp_result.tukeyhsd().summary())
 
 
-################################################################
 ################################################################
 print('intervene accuracy')
-intervene_accuracy = {'baseline':[], 'control':[], 'button':[], 'touch':[]}
-for label, experiment in experiments.iteritems():
-    buf = summary_df[(summary_df.experiment_type==experiment) & (summary_df.actor_action=='cross')].intervene_vel.isnull().values
-    pose_df = summary_df[(summary_df.experiment_type==experiment) & (summary_df.actor_action=='pose')]
-    buf = np.append(buf, (pose_df.intervene_vel > 1.0) | pose_df.intervene_vel.isnull())
-    print(experiment, len(buf))
-    padd_len = len(intervene_accuracy) - len(pose_df)
-    intervene_accuracy[experiment] = buf
+################################################################
+accuracy = pd.DataFrame(columns=['experiment', 'result'])
+for index, row in summary_df.iterrows():
+    if row.actor_action == 'cross':
+        buf = pd.DataFrame([(row.experiment_type, np.isnan(row.intervene_vel)) ], columns=['experiment', 'result'])
+        accuracy = accuracy.append(buf, ignore_index=True)
+    elif row.actor_action == 'pose':
+        if np.isnan(row.intervene_vel):
+            buf = pd.DataFrame([(row.experiment_type, False)], columns=['experiment', 'result'])
+            accuracy = accuracy.append(buf, ignore_index=True)
+        else:
+            buf = pd.DataFrame([(row.experiment_type, (row.intervene_vel > 1.0))], columns=['experiment', 'result'])
+            accuracy = accuracy.append(buf, ignore_index=True)
 
-axes = sns.boxplot(data=intervene_acc, showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
-plt.show()
-_, p = stats.levene(intervene_acc.baseline, intervene_acc.control, intervene_acc.button, intervene_acc.touch, center='median')
+accuracy_cross = pd.crosstab(accuracy.experiment, accuracy.result)
+stats.chi2_contingency(accuracy_cross)
+
+_, p = stats.levene(summary_df.baseline, summary_df.control, summary_df.button, summary_df.touch, center='median')
 print('levene-first last_intervene_time', p)
 if p > 0.05:
     melted_df = pd.melt(intervene_acc, var_name='experiment_type', value_name='intervene_vel')
