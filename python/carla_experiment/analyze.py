@@ -12,6 +12,7 @@ from scipy import stats
 # from scipy import stats
 import statsmodels.api as sm
 from statsmodels.formula.api import ols
+import statsmodels.stats.anova as stats_anova
 from statsmodels.sandbox.stats import multicomp
 from statsmodels.stats.multitest import multipletests
 from statsmodels.stats.contingency_tables import cochrans_q
@@ -101,9 +102,8 @@ def saveCsv(data, filename):
         writer = csv.writer(f)
         writer.writerows(data)
 
-sns.set_palette('YlGnBu',4)
 sns.set(context='paper', style='whitegrid')
-color = {'BASELINE':'#d5e7ba', 'CONTROL': '#7dbeb5', 'BUTTON': '#388fad', 'TOUCH': '#335290'}
+color = {'BASELINE':'#add8e6', 'CONTROL': '#7dbeb5', 'BUTTON': '#388fad', 'TOUCH': '#335290'}
 sns.set_palette(sns.color_palette(color.values()))
 
 summary_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/summary.csv')
@@ -166,32 +166,40 @@ _, norm_p3 = stats.shapiro(inttype_accuracy.BUTTON)
 _, norm_p4 = stats.shapiro(inttype_accuracy.TOUCH)
 _, var_p = stats.levene(inttype_accuracy.BASELINE, inttype_accuracy.CONTROL, inttype_accuracy.BUTTON, inttype_accuracy.TOUCH, center='median')
 if norm_p1 < 0.05 or norm_p2 < 0.05 or norm_p3 < 0.05 or norm_p4 < 0.05:
-    _, anova = stats.friedmanchisquare(inttype_accuracy.BASELINE, inttype_accuracy.CONTROL, inttype_accuracy.BUTTON, inttype_accuracy.TOUCH)
+    _, anova_p = stats.friedmanchisquare(inttype_accuracy.BASELINE, inttype_accuracy.CONTROL, inttype_accuracy.BUTTON, inttype_accuracy.TOUCH)
     if anova_p < 0.05:
-        sp.posthoc_conover_friedman(inttype_accuracy)
+        print("conover test anova_result:", anova_p, sp.posthoc_conover_friedman(inttype_accuracy))
 else:
-    _, anova_p = stats.anova.AnovaRM(inttype_accuracy.BASELINE, inttype_accuracy.CONTROL, inttype_accuracy.BUTTON, inttype_accuracy.TOUCH)
+    _, anova_p = stats_anova.AnovaRM(inttype_accuracy.BASELINE, inttype_accuracy.CONTROL, inttype_accuracy.BUTTON, inttype_accuracy.TOUCH)
+    print("reperted anova: ", anova_p)
+    melted_df = pd.melt(inttype_accuracy, var_name="experiment_type", value_name="accuracy")
     if var_p < 0.05 and anova_p < 0.05:
-        gamesHowellTest()
+        gamesHowellTest(melted_df, "first_intervene_time", "accuracy")
     elif var_p >= 0.05 and anova_p < 0.05:
-        multicomp_result = multicomp.MultiComparison(np.array(pose_df.dropna(how='any').first_intervene_time, dtype="float64"), pose_df.dropna(how='any').experiment_type)
-        print('levene', multicomp_result.allpairtest().summary())
+        multicomp_result = multicomp.MultiComparison(np.array(melted_df.dropna(how='any').accuracy, dtype="float64"), melted_df.dropna(how='any').experiment_type)
+        print(multicomp_result.tukeyhsd().summary())
 
-subject_accuracy = pd.DataFrame(columns=['subject', 'result'])
-for index, row in summary_df.iterrows():
-    if row.actor_action == 'cross':
-        buf = pd.DataFrame([(row.subject, np.isnan(row.intervene_vel)) ], columns=['subject', 'result'])
-        subject_accuracy = subject_accuracy.append(buf, ignore_index=True)
-    elif row.actor_action == 'pose':
-        if np.isnan(row.intervene_vel):
-            buf = pd.DataFrame([(row.subject, False)], columns=['subject', 'result'])
-            subject_accuracy = subject_accuracy.append(buf, ignore_index=True)
-        else:
-            buf = pd.DataFrame([(row.subject, (row.intervene_vel > 1.0))], columns=['subject', 'result'])
-            subject_accuracy = subject_accuracy.append(buf, ignore_index=True)
-
-subject_accuracy_cross = pd.crosstab(subject_accuracy.subject, subject_accuracy.result)
-stats.chi2_contingency(subject_accuracy_cross)
+subject_accuracy = inttype_accuracy.T
+_, anova_p = stats.friedmanchisquare(
+    subject_accuracy.ando,
+    subject_accuracy.aso,
+    subject_accuracy.hikosaka,
+    subject_accuracy.ichiki,
+    subject_accuracy.ienaga,
+    subject_accuracy.ikai,
+    subject_accuracy.isobe,
+    subject_accuracy.ito,
+    subject_accuracy.kato,
+    subject_accuracy.matsubara,
+    subject_accuracy.nakakuki,
+    subject_accuracy.nakatani,
+    subject_accuracy.negi,
+    subject_accuracy.otake,
+    subject_accuracy.sumiya,
+    subject_accuracy.taga,
+    subject_accuracy.yamamoto,
+    subject_accuracy.yasuhara,
+    )
 
 
 ################################################################
@@ -201,7 +209,7 @@ intervene_time = pd.DataFrame(columns=experiments, index=subjects)
 for subject in subjects:
     for experiment in experiments:
         df = summary_df[(summary_df.subject == subject) & (summary_df.experiment_type == experiment)]
-        time = df[(df.actor_action == "cross")].first_intervene_time.dropna().mean()
+        time = df[(df.actor_action == "pose") & (df.intervene_vel > 1.0)].first_intervene_time.dropna().mean()
         intervene_time.at[subject, experiment] = time
 
 _, norm_p1 = stats.shapiro(intervene_time.BASELINE)
@@ -210,16 +218,16 @@ _, norm_p3 = stats.shapiro(intervene_time.BUTTON)
 _, norm_p4 = stats.shapiro(intervene_time.TOUCH)
 _, var_p = stats.levene(intervene_time.BASELINE, intervene_time.CONTROL, intervene_time.BUTTON, intervene_time.TOUCH, center='median')
 if norm_p1 < 0.05 or norm_p2 < 0.05 or norm_p3 < 0.05 or norm_p4 < 0.05:
-    _, anova = stats.friedmanchisquare(intervene_time.BASELINE, intervene_time.CONTROL, intervene_time.BUTTON, intervene_time.TOUCH)
+    _, anova_p = stats.friedmanchisquare(intervene_time.BASELINE, intervene_time.CONTROL, intervene_time.BUTTON, intervene_time.TOUCH)
+    print("anova(friedman test)", anova_p)
     if anova_p < 0.05:
-        sp.posthoc_conover_friedman(intervene_time)
+        print(sp.posthoc_conover_friedman(intervene_time))
 else:
-    _, anova_p = stats.anova.AnovaRM(intervene_time.BASELINE, intervene_time.CONTROL, intervene_time.BUTTON, intervene_time.TOUCH)
-    if var_p < 0.05 and anova_p < 0.05:
-        gamesHowellTest()
-    elif var_p >= 0.05 and anova_p < 0.05:
-        multicomp_result = multicomp.MultiComparison(np.array(intervene_time.dropna(how='any').first_intervene_time, dtype="float64"), pose_df.dropna(how='any').experiment_type)
-        print('levene', multicomp_result.allpairtest().summary())
+    melted_df = pd.melt(intervene_time.reset_index(), id_vars="subject", var_name="experiment_type", value_name="first_intervene_time")
+    anova_result = stats_anova.AnovaRM(melted_df, "first_intervene_time", "subject", ["experiment_type"])
+    print("reperted anova: ", anova_result.fit())
+    multicomp_result = multicomp.MultiComparison(np.array(melted_df.dropna(how='any').first_intervene_time, dtype="float64"), melted_df.dropna(how='any').experiment_type)
+    print(multicomp_result.tukeyhsd().summary())
 
 # pose_df = summary_df[summary_df.actor_action == 'pose']
 # _, norm_p = stats.shapiro(pose_df.first_intervene_time.dropna())
@@ -231,104 +239,82 @@ else:
 #     print('levene', multicomp_result.tukeyhsd().summary())
 #
 
-pose_df = summary_df[summary_df.actor_action == 'pose']
-_, norm_p = stats.shapiro(pose_df.first_intervene_time.dropna())
-_, var_p = stats.levene(
-    pose_df[pose_df.subject == 'ando'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'aso'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'hikosaka'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'ichiki'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'ienaga'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'ikai'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'isobe'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'ito'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'kato'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'matsubara'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'nakakuki'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'nakatani'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'negi'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'otake'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'sumiya'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'taga'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'yamamoto'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'yasuhara'].first_intervene_time.dropna(),
-    center='median'
+subject_time = intervene_time.T
+_, anova_p = stats.friedmanchisquare(
+    subject_time.ando,
+    subject_time.aso,
+    subject_time.hikosaka,
+    subject_time.ichiki,
+    subject_time.ienaga,
+    subject_time.ikai,
+    subject_time.isobe,
+    subject_time.ito,
+    subject_time.kato,
+    subject_time.matsubara,
+    subject_time.nakakuki,
+    subject_time.nakatani,
+    subject_time.negi,
+    subject_time.otake,
+    subject_time.sumiya,
+    subject_time.taga,
+    subject_time.yamamoto,
+    subject_time.yasuhara,
     )
-
-_, anova_p = stats.kruskal(
-    pose_df[pose_df.subject == 'ando'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'aso'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'hikosaka'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'ichiki'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'ienaga'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'ikai'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'isobe'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'ito'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'kato'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'matsubara'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'nakakuki'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'nakatani'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'negi'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'otake'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'sumiya'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'taga'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'yamamoto'].first_intervene_time.dropna(),
-    pose_df[pose_df.subject == 'yasuhara'].first_intervene_time.dropna(),
-)
-
-if anova_p < 0.05:
-    if norm_p < 0.05 or var_p < 0.05:
-        print('steel-dwass\n', sp.posthoc_dscf(pose_df, val_col='first_intervene_time', group_col='subject'))
-    else:
-        multicomp_result = multicomp.MultiComparison(np.array(pose_df.dropna(how='any').first_intervene_time, dtype="float64"), pose_df.dropna(how='any').subject)
-        print('levene', multicomp_result.tukeyhsd().summary())
 
 ################################################################
 print("avoid decel rate")
 ################################################################
-avoid_decel_df = pd.DataFrame(columns=['experiment', 'result'])
-for index, row in summary_df[summary_df.actor_action == 'pose'].iterrows():
-    if row.actor_action == 'pose':
-        if np.isnan(row.intervene_vel):
-            buf = pd.DataFrame([(row.experiment_type, False)], columns=['experiment', 'result'])
-            avoid_decel_df = avoid_decel_df.append(buf, ignore_index=True)
-        else:
-            buf = pd.DataFrame([(row.experiment_type, (row.intervene_vel > 40.0))], columns=['experiment', 'result'])
-            avoid_decel_df = avoid_decel_df.append(buf, ignore_index=True)
-
-avoid_decel_cross = pd.crosstab(avoid_decel_df.experiment, avoid_decel_df.result)
-stats.chi2_contingency(avoid_decel_cross)
+# avoid_decel_df = pd.DataFrame(columns=['experiment', 'result'])
+# for index, row in summary_df[summary_df.actor_action == 'pose'].iterrows():
+#     if row.actor_action == 'pose':
+#         if np.isnan(row.intervene_vel):
+#             buf = pd.DataFrame([(row.experiment_type, False)], columns=['experiment', 'result'])
+#             avoid_decel_df = avoid_decel_df.append(buf, ignore_index=True)
+#         else:
+#             buf = pd.DataFrame([(row.experiment_type, (row.intervene_vel > 40.0))], columns=['experiment', 'result'])
+#             avoid_decel_df = avoid_decel_df.append(buf, ignore_index=True)
+#
+# avoid_decel_cross = pd.crosstab(avoid_decel_df.experiment, avoid_decel_df.result)
+# stats.chi2_contingency(avoid_decel_cross)
 
 ################################################################
 print("accuracy vs intervene_time")
 ################################################################
-accuracy_list = [
-    inttype_accuracy_cross.at['baseline', True] / (inttype_accuracy_cross.at['baseline', True] + inttype_accuracy_cross.at['baseline', False]),
-    inttype_accuracy_cross.at['control', True] / (inttype_accuracy_cross.at['control', True] + inttype_accuracy_cross.at['control', False]),
-    inttype_accuracy_cross.at['button', True] / (inttype_accuracy_cross.at['button', True] + inttype_accuracy_cross.at['button', False]),
-    inttype_accuracy_cross.at['touch', True] / (inttype_accuracy_cross.at['touch', True] + inttype_accuracy_cross.at['touch', False])
+accuracy_mean_list = [
+    inttype_accuracy.BASELINE.mean(),
+    inttype_accuracy.CONTROL.mean(),
+    inttype_accuracy.BUTTON.mean(),
+    inttype_accuracy.TOUCH.mean(),
 ]
+
+accuracy_sem_list = [
+    inttype_accuracy.BASELINE.sem(),
+    inttype_accuracy.CONTROL.sem(),
+    inttype_accuracy.BUTTON.sem(),
+    inttype_accuracy.TOUCH.sem(),
+]
+
 intervene_time_mean_list = [
-    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'baseline')].first_intervene_time.mean(),
-    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'control')].first_intervene_time.mean(),
-    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'button')].first_intervene_time.mean(),
-    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'touch')].first_intervene_time.mean(),
+    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'BASELINE') & (summary_df.intervene_vel > 1.0)].first_intervene_time.mean(),
+    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'CONTROL') & (summary_df.intervene_vel > 1.0)].first_intervene_time.mean(),
+    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'BUTTON') & (summary_df.intervene_vel > 1.0)].first_intervene_time.mean(),
+    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'TOUCH') & (summary_df.intervene_vel > 1.0)].first_intervene_time.mean(),
 ]
 intervene_time_sem_list = [
-    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'baseline')].first_intervene_time.sem(),
-    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'control')].first_intervene_time.sem(),
-    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'button')].first_intervene_time.sem(),
-    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'touch')].first_intervene_time.sem(),
+    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'BASELINE') & (summary_df.intervene_vel > 1.0)].first_intervene_time.sem(),
+    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'CONTROL') & (summary_df.intervene_vel > 1.0)].first_intervene_time.sem(),
+    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'BUTTON') & (summary_df.intervene_vel > 1.0)].first_intervene_time.sem(),
+    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'TOUCH') & (summary_df.intervene_vel > 1.0)].first_intervene_time.sem(),
 ]
 _, axes = plt.subplots()
 for i, experiment in enumerate(experiments):
-    axes.errorbar(accuracy_list[i], intervene_time_mean_list[i], yerr=intervene_time_sem_list[i], marker='o', capsize=5, label=experiment)
+    axes.errorbar(accuracy_mean_list[i], intervene_time_mean_list[i], xerr=accuracy_sem_list[i], yerr=intervene_time_sem_list[i], marker='o', capsize=5, label=experiment)
 
 axes.set_xlim(0, 1.0)
-# axes.set_ylim(0, 1.0)
+axes.set_ylim(0, 6.0)
 axes.set_xlabel('Intervention accuracy', fontsize=15)
 axes.set_ylabel('Intervention time [s]', fontsize=15)
-axes.legend(loc='lower left', fontsize=15)
+axes.legend(loc='lower left', fontsize=12)
 axes.tick_params(axis='x', labelsize=12)
 axes.tick_params(axis='y', labelsize=12)
 plt.show()
@@ -392,142 +378,132 @@ axes.set_xlabel('Intervention method', fontsize=15)
 axes.legend(bbox_to_anchor=(1.0, 1.0), loc='upper left')
 plt.show()
 
-_, norm_p = stats.shapiro(pose_df.min_vel.dropna())
-_, var_p = stats.levene(
-    pose_df[pose_df.experiment_type == 'baseline'].min_vel.dropna(),
-    pose_df[pose_df.experiment_type == 'control'].min_vel.dropna(),
-    pose_df[pose_df.experiment_type == 'button'].min_vel.dropna(),
-    pose_df[pose_df.experiment_type == 'touch'].min_vel.dropna(),
-    center='median'
-    )
+for i, type in enumerate(experiments):
+    min_vel_df = pd.DataFrame({
+        "Count":[sum(summary_df[(summary_df.experiment_type == type) & (summary_df.actor_action == "pose")].min_vel>-1.0) / summary_df[(summary_df.experiment_type == type) & (summary_df.actor_action == "pose")].min_vel.count(),
+                 sum(summary_df[(summary_df.experiment_type == type) & (summary_df.actor_action == "pose")].min_vel>5.0) / summary_df[(summary_df.experiment_type == type) & (summary_df.actor_action == "pose")].min_vel.count(),
+                 sum(summary_df[(summary_df.experiment_type == type) & (summary_df.actor_action == "pose")].min_vel>10.0) / summary_df[(summary_df.experiment_type == type) & (summary_df.actor_action == "pose")].min_vel.count(),
+                 sum(summary_df[(summary_df.experiment_type == type) & (summary_df.actor_action == "pose")].min_vel>15.0) / summary_df[(summary_df.experiment_type == type) & (summary_df.actor_action == "pose")].min_vel.count(),
+                 sum(summary_df[(summary_df.experiment_type == type) & (summary_df.actor_action == "pose")].min_vel>20.0) / summary_df[(summary_df.experiment_type == type) & (summary_df.actor_action == "pose")].min_vel.count(),
+                 sum(summary_df[(summary_df.experiment_type == type) & (summary_df.actor_action == "pose")].min_vel>25.0) / summary_df[(summary_df.experiment_type == type) & (summary_df.actor_action == "pose")].min_vel.count(),
+                 sum(summary_df[(summary_df.experiment_type == type) & (summary_df.actor_action == "pose")].min_vel>30.0) / summary_df[(summary_df.experiment_type == type) & (summary_df.actor_action == "pose")].min_vel.count(),
+                 sum(summary_df[(summary_df.experiment_type == type) & (summary_df.actor_action == "pose")].min_vel>35.0) / summary_df[(summary_df.experiment_type == type) & (summary_df.actor_action == "pose")].min_vel.count(),
+                 sum(summary_df[(summary_df.experiment_type == type) & (summary_df.actor_action == "pose")].min_vel>40.0) / summary_df[(summary_df.experiment_type == type) & (summary_df.actor_action == "pose")].min_vel.count(),
+                 sum(summary_df[(summary_df.experiment_type == type) & (summary_df.actor_action == "pose")].min_vel>45.0) / summary_df[(summary_df.experiment_type == type) & (summary_df.actor_action == "pose")].min_vel.count(),
+                 sum(summary_df[(summary_df.experiment_type == type) & (summary_df.actor_action == "pose")].min_vel>50.0) / summary_df[(summary_df.experiment_type == type) & (summary_df.actor_action == "pose")].min_vel.count()
+                 ],
+        "Velocity": [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+    })
 
-if norm_p < 0.05 or var_p < 0.05:
-    print('steel-dwass\n', sp.posthoc_dscf(pose_df, val_col='min_vel', group_col='experiment_type'))
+    axes = sns.lineplot(data=min_vel_df, x='Velocity', y='Count', color=color.get(type), label=type, marker='o')
+    axes.set_ylim(0, 1)
+    axes.set_xlim([0,50])
+    axes.set_xlabel('Velocity [km/h]', fontsize=15)
+    axes.set_ylabel('Rate', fontsize=15)
+axes.legend(loc='lower left', fontsize=12)
+plt.show()
+
+
+min_vel_df = pd.DataFrame(columns=experiments, index=subjects)
+for subject in subjects:
+    for experiment in experiments:
+        df = summary_df[(summary_df.subject == subject) & (summary_df.experiment_type == experiment)]
+        time = df[(df.actor_action == "pose")].min_vel.dropna().mean()
+        min_vel_df.at[subject, experiment] = time
+
+_, norm_p1 = stats.shapiro(min_vel_df.BASELINE)
+_, norm_p2 = stats.shapiro(min_vel_df.CONTROL)
+_, norm_p3 = stats.shapiro(min_vel_df.BUTTON)
+_, norm_p4 = stats.shapiro(min_vel_df.TOUCH)
+_, var_p = stats.levene(min_vel_df.BASELINE, min_vel_df.CONTROL, min_vel_df.BUTTON, min_vel_df.TOUCH, center='median')
+if norm_p1 < 0.05 or norm_p2 < 0.05 or norm_p3 < 0.05 or norm_p4 < 0.05:
+    _, anova_p = stats.friedmanchisquare(min_vel_df.BASELINE, min_vel_df.CONTROL, min_vel_df.BUTTON, min_vel_df.TOUCH)
+    print("anova(friedman test)", anova_p)
+    if anova_p < 0.05:
+        print(sp.posthoc_conover_friedman(min_vel_df))
 else:
-    multicomp_result = multicomp.MultiComparison(np.array(pose_df.dropna(how='any').min_vel, dtype="float64"), pose_df.dropna(how='any').experiment_type)
-    print('levene', multicomp_result.tukeyhsd().summary())
+    _, anova_p = stats_anova.AnovaRM(min_vel_df.BASELINE, min_vel_df.CONTROL, min_vel_df.BUTTON, min_vel_df.TOUCH)
+    print("reperted anova: ", anova_p)
+    melted_df = pd.melt(min_vel_df, var_name="experiment_type", value_name="first_intervene_time")
+    if var_p < 0.05 and anova_p < 0.05:
+        gamesHowellTest(melted_df, "first_intervene_time", "experiment_type")
+    elif var_p >= 0.05 and anova_p < 0.05:
+        multicomp_result = multicomp.MultiComparison(np.array(melted_df.dropna(how='any').first_intervene_time, dtype="float64"), melted_df.dropna(how='any').experiment_type)
+        print(multicomp_result.tukeyhsd().summary())
 
-_, norm_p = stats.shapiro(pose_df.min_vel.dropna())
-_, var_p = stats.levene(
-    pose_df[pose_df.subject == 'ando'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'aso'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'hikosaka'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'ichiki'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'ienaga'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'ikai'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'isobe'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'ito'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'kato'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'matsubara'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'nakakuki'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'nakatani'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'negi'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'otake'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'sumiya'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'taga'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'yamamoto'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'yasuhara'].min_vel.dropna(),
-    center='median'
+subject_vel = min_vel_df.T
+_, anova_p = stats.friedmanchisquare(
+    subject_vel.ando,
+    subject_vel.aso,
+    subject_vel.hikosaka,
+    subject_vel.ichiki,
+    subject_vel.ienaga,
+    subject_vel.ikai,
+    subject_vel.isobe,
+    subject_vel.ito,
+    subject_vel.kato,
+    subject_vel.matsubara,
+    subject_vel.nakakuki,
+    subject_vel.nakatani,
+    subject_vel.negi,
+    subject_vel.otake,
+    subject_vel.sumiya,
+    subject_vel.taga,
+    subject_vel.yamamoto,
+    subject_vel.yasuhara,
     )
-
-_, anova_p = stats.kruskal(
-    pose_df[pose_df.subject == 'ando'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'aso'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'hikosaka'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'ichiki'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'ienaga'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'ikai'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'isobe'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'ito'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'kato'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'matsubara'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'nakakuki'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'nakatani'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'negi'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'otake'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'sumiya'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'taga'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'yamamoto'].min_vel.dropna(),
-    pose_df[pose_df.subject == 'yasuhara'].min_vel.dropna(),
-)
-
-if anova_p < 0.05:
-    if norm_p < 0.05 or var_p < 0.05:
-        print('steel-dwass\n', sp.posthoc_dscf(pose_df, val_col='min_vel', group_col='subject'))
-    else:
-        multicomp_result = multicomp.MultiComparison(np.array(pose_df.dropna(how='any').min_vel, dtype="float64"), pose_df.dropna(how='any').subject)
-        print('levene', multicomp_result.tukeyhsd().summary())
 
 ################################################################
 print('max vel')
 ################################################################
-pose_df = summary_df[summary_df.actor_action == 'pose']
-_, norm_p = stats.shapiro(pose_df.max_vel.dropna())
-_, var_p = stats.levene(
-    pose_df[pose_df.experiment_type == 'baseline'].max_vel.dropna(),
-    pose_df[pose_df.experiment_type == 'control'].max_vel.dropna(),
-    pose_df[pose_df.experiment_type == 'button'].max_vel.dropna(),
-    pose_df[pose_df.experiment_type == 'touch'].max_vel.dropna(),
-    center='median'
-    )
+max_vel_df = pd.DataFrame(columns=experiments, index=subjects)
+for subject in subjects:
+    for experiment in experiments:
+        df = summary_df[(summary_df.subject == subject) & (summary_df.experiment_type == experiment)]
+        time = df[(df.actor_action == "pose")].max_vel.dropna().mean()
+        max_vel_df.at[subject, experiment] = time
 
-if norm_p < 0.05 or var_p < 0.05:
-    print('steel-dwass\n', sp.posthoc_dscf(pose_df, val_col='max_vel', group_col='experiment_type'))
+_, norm_p1 = stats.shapiro(max_vel_df.BASELINE)
+_, norm_p2 = stats.shapiro(max_vel_df.CONTROL)
+_, norm_p3 = stats.shapiro(max_vel_df.BUTTON)
+_, norm_p4 = stats.shapiro(max_vel_df.TOUCH)
+_, var_p = stats.levene(max_vel_df.BASELINE, max_vel_df.CONTROL, max_vel_df.BUTTON, max_vel_df.TOUCH, center='median')
+if norm_p1 < 0.05 or norm_p2 < 0.05 or norm_p3 < 0.05 or norm_p4 < 0.05:
+    _, anova_p = stats.friedmanchisquare(max_vel_df.BASELINE, max_vel_df.CONTROL, max_vel_df.BUTTON, max_vel_df.TOUCH)
+    print("anova(friedman test)", anova_p)
+    if anova_p < 0.05:
+        print(sp.posthoc_conover_friedman(max_vel_df))
 else:
-    multicomp_result = multicomp.MultiComparison(np.array(pose_df.dropna(how='any').max_vel, dtype="float64"), pose_df.dropna(how='any').experiment_type)
-    print('levene', multicomp_result.tukeyhsd().summary())
+    _, anova_p = stats_anova.AnovaRM(max_vel_df.BASELINE, max_vel_df.CONTROL, max_vel_df.BUTTON, max_vel_df.TOUCH)
+    print("reperted anova: ", anova_p)
+    melted_df = pd.melt(max_vel_df, var_name="experiment_type", value_name="first_intervene_time")
+    if var_p < 0.05 and anova_p < 0.05:
+        gamesHowellTest(melted_df, "first_intervene_time", "experiment_type")
+    elif var_p >= 0.05 and anova_p < 0.05:
+        multicomp_result = multicomp.MultiComparison(np.array(melted_df.dropna(how='any').first_intervene_time, dtype="float64"), melted_df.dropna(how='any').experiment_type)
+        print(multicomp_result.tukeyhsd().summary())
 
-_, norm_p = stats.shapiro(pose_df.max_vel.dropna())
-_, var_p = stats.levene(
-    pose_df[pose_df.subject == 'ando'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'aso'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'hikosaka'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'ichiki'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'ienaga'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'ikai'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'isobe'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'ito'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'kato'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'matsubara'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'nakakuki'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'nakatani'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'negi'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'otake'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'sumiya'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'taga'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'yamamoto'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'yasuhara'].max_vel.dropna(),
-    center='median'
+subject_vel = max_vel_df.T
+_, anova_p = stats.friedmanchisquare(
+    subject_vel.ando,
+    subject_vel.aso,
+    subject_vel.hikosaka,
+    subject_vel.ichiki,
+    subject_vel.ienaga,
+    subject_vel.ikai,
+    subject_vel.isobe,
+    subject_vel.ito,
+    subject_vel.kato,
+    subject_vel.matsubara,
+    subject_vel.nakakuki,
+    subject_vel.nakatani,
+    subject_vel.negi,
+    subject_vel.otake,
+    subject_vel.sumiya,
+    subject_vel.taga,
+    subject_vel.yamamoto,
+    subject_vel.yasuhara,
     )
-
-_, anova_p = stats.kruskal(
-    pose_df[pose_df.subject == 'ando'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'aso'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'hikosaka'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'ichiki'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'ienaga'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'ikai'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'isobe'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'ito'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'kato'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'matsubara'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'nakakuki'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'nakatani'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'negi'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'otake'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'sumiya'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'taga'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'yamamoto'].max_vel.dropna(),
-    pose_df[pose_df.subject == 'yasuhara'].max_vel.dropna(),
-)
-
-if anova_p < 0.05:
-    if norm_p < 0.05 or var_p < 0.05:
-        print('steel-dwass\n', sp.posthoc_dscf(pose_df, val_col='max_vel', group_col='subject'))
-    else:
-        multicomp_result = multicomp.MultiComparison(np.array(pose_df.dropna(how='any').max_vel, dtype="float64"), pose_df.dropna(how='any').subject)
-        print('levene', multicomp_result.tukeyhsd().summary())
-
 
 ################################################################
 print('min_vel rerative to baseline plot')
@@ -562,81 +538,90 @@ print('min_vel rerative to baseline plot')
 print('stop rate')
 ################################################################
 
-stop_rate = pd.DataFrame(index=subjects, columns=experiments)
-for subject in subjects:
-    pose_df = summary_df[(summary_df.subject == subject) & (summary_df.actor_action == "cross")]
-    for experiment in experiments:
-        buf = pose_df[pose_df.experiment_type==experiment].min_vel < 20.0
-        rate = buf.sum() / len(pose_df[pose_df.experiment_type==experiment])
-        stop_rate.at[subject, experiment] = rate
-
-axes = sns.boxplot(data=stop_rate, showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
-plt.show()
-
-_, p = stats.levene(stop_rate.baseline, stop_rate.control, stop_rate.button, stop_rate.touch, center='median')
-print('levene-first stop rate', p)
-if p > 0.05:
-    melted_df = pd.melt(stop_rate, var_name='experiment_type', value_name='intervene_vel')
-    multicomp_result = multicomp.MultiComparison(np.array(melted_df['intervene_vel'], dtype="float64"), melted_df['experiment_type'])
-    print(multicomp_result.tukeyhsd().summary())
+# stop_rate = pd.DataFrame(index=subjects, columns=experiments)
+# for subject in subjects:
+#     pose_df = summary_df[(summary_df.subject == subject) & (summary_df.actor_action == "cross")]
+#     for experiment in experiments:
+#         buf = pose_df[pose_df.experiment_type==experiment].min_vel < 20.0
+#         rate = buf.sum() / len(pose_df[pose_df.experiment_type==experiment])
+#         stop_rate.at[subject, experiment] = rate
+#
+# axes = sns.boxplot(data=stop_rate, showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
+# plt.show()
+#
+# _, p = stats.levene(stop_rate.baseline, stop_rate.control, stop_rate.button, stop_rate.touch, center='median')
+# print('levene-first stop rate', p)
+# if p > 0.05:
+#     melted_df = pd.melt(stop_rate, var_name='experiment_type', value_name='intervene_vel')
+#     multicomp_result = multicomp.MultiComparison(np.array(melted_df['intervene_vel'], dtype="float64"), melted_df['experiment_type'])
+#     print(multicomp_result.tukeyhsd().summary())
 
 ################################################################
 print('keep rate')
 ################################################################
 
-stop_rate = pd.DataFrame(index=subjects, columns=experiments)
-for subject in subjects:
-    pose_df = summary_df[(summary_df.subject == subject) & (summary_df.actor_action == "pose")]
-    for experiment in experiments:
-        buf = pose_df[pose_df.experiment_type==experiment].min_vel > 30.0
-        rate = buf.sum() / len(pose_df[pose_df.experiment_type==experiment])
-        stop_rate.at[subject, experiment] = rate
-
-axes = sns.boxplot(data=stop_rate, showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
-plt.show()
-
-_, p = stats.levene(stop_rate.baseline, stop_rate.control, stop_rate.button, stop_rate.touch, center='median')
-print('levene-first keep rate', p)
-if p > 0.05:
-    melted_df = pd.melt(stop_rate, var_name='experiment_type', value_name='intervene_vel')
-    multicomp_result = multicomp.MultiComparison(np.array(melted_df['intervene_vel'], dtype="float64"), melted_df['experiment_type'])
-    print(multicomp_result.tukeyhsd().summary())
+# stop_rate = pd.DataFrame(index=subjects, columns=experiments)
+# for subject in subjects:
+#     pose_df = summary_df[(summary_df.subject == subject) & (summary_df.actor_action == "pose")]
+#     for experiment in experiments:
+#         buf = pose_df[pose_df.experiment_type==experiment].min_vel > 30.0
+#         rate = buf.sum() / len(pose_df[pose_df.experiment_type==experiment])
+#         stop_rate.at[subject, experiment] = rate
+#
+# axes = sns.boxplot(data=stop_rate, showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
+# plt.show()
+#
+# _, p = stats.levene(stop_rate.baseline, stop_rate.control, stop_rate.button, stop_rate.touch, center='median')
+# print('levene-first keep rate', p)
+# if p > 0.05:
+#     melted_df = pd.melt(stop_rate, var_name='experiment_type', value_name='intervene_vel')
+#     multicomp_result = multicomp.MultiComparison(np.array(melted_df['intervene_vel'], dtype="float64"), melted_df['experiment_type'])
+#     print(multicomp_result.tukeyhsd().summary())
 
 ################################################################
 print('nasa-tlx')
 ################################################################
 #### nasa-tlx ####
-for item in ['mental', 'physical', 'temporal', 'performance', 'effort', 'frustration', 'overall']:
-    _, norm_p = stats.shapiro(nasa_df.max_vel.dropna())
+for item in ['mental', 'physical', 'temporal', 'performance', 'effort', 'frustration', 'entire']:
+    print(item)
+    _, norm_p1 = stats.shapiro(nasa_df[nasa_df.experiment_type == "BASELINE"][item])
+    _, norm_p2 = stats.shapiro(nasa_df[nasa_df.experiment_type == "CONTROL"][item])
+    _, norm_p3 = stats.shapiro(nasa_df[nasa_df.experiment_type == "BUTTON"][item])
+    _, norm_p4 = stats.shapiro(nasa_df[nasa_df.experiment_type == "TOUCH"][item])
     _, var_p = stats.levene(
-        nasa_df.[nasa_df.experiment_type == "baseline")[item],
-        nasa_df.[nasa_df.experiment_type == "control")[item],
-        nasa_df.[nasa_df.experiment_type == "button")[item],
-        nasa_df.[nasa_df.experiment_type == "touch")[item],
+        nasa_df[nasa_df.experiment_type == "BASELINE"][item],
+        nasa_df[nasa_df.experiment_type == "CONTROL"][item],
+        nasa_df[nasa_df.experiment_type == "BUTTON"][item],
+        nasa_df[nasa_df.experiment_type == "TOUCH"][item],
         center='median'
         )
-    if norm_p < 0.05 or var_p < 0.05:
-        print('steel-dwass\n', sp.posthoc_dscf(pose_df, val_col='max_vel', group_col='subject'))
+
+    if norm_p1 < 0.05 or norm_p2 < 0.05 or norm_p3 < 0.05 or norm_p4 < 0.05:
+        _, anova_p = stats.friedmanchisquare(
+            nasa_df[nasa_df.experiment_type == "BASELINE"][item],
+            nasa_df[nasa_df.experiment_type == "CONTROL"][item],
+            nasa_df[nasa_df.experiment_type == "BUTTON"][item],
+            nasa_df[nasa_df.experiment_type == "TOUCH"][item],
+        )
+        print("anova(friedman test)", anova_p)
+        if anova_p < 0.05:
+            print(sp.posthoc_conover(nasa_df, val_col=item, group_col="experiment_type"))
     else:
-        multicomp_result = multicomp.MultiComparison(np.array(pose_df.dropna(how='any').max_vel, dtype="float64"), pose_df.dropna(how='any').subject)
-        print('levene', multicomp_result.tukeyhsd().summary())
+        melted_df = pd.melt(nasa_df, id_vars=["name", "experiment_type"],  var_name="type", value_name="rate")
+        aov = stats_anova.AnovaRM(melted_df[melted_df.type == item], "rate", "name", ["experiment_type"])
+        print("reperted anova: ", aov.fit())
+        multicomp_result = multicomp.MultiComparison(nasa_df[item], nasa_df.experiment_type)
+        print(multicomp_result.tukeyhsd().summary())
+
 
 
 melted_df = pd.melt(nasa_df, id_vars=nasa_df.columns.values[:2], var_name="args", value_name="value")
 # plot = sns.boxplot(x='args', y="value", hue="experiment_type", data=melted_df,showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
 axes = sns.barplot(x='args', y="value", hue="experiment_type", data=melted_df)
-addAnotation(axes, -0.3, 0.1, 8.0, 0.1, 0, '*', 'k')
-addAnotation(axes, -0.3, 0.3, 8.0, 0.1, 0.5, '*', 'k')
-addAnotation(axes, 0.7, 1.1, 8.0, 0.1, 0, '*', 'k')
-addAnotation(axes, 0.7, 1.3, 8.0, 0.1, 0.5, '*', 'k')
-addAnotation(axes, 0.9, 1.1, 8.0, 0.1, -0.5, '*', 'k')
-addAnotation(axes, 0.9, 1.3, 8.0, 0.1, -1.0, '*', 'k')
-addAnotation(axes, 5.7, 6.1, 8.0, 0.1, 0, '*', 'k')
-addAnotation(axes, 5.7, 6.3, 8.0, 0.1, 0.5, '*', 'k')
-addAnotation(axes, 5.9, 6.1, 8.0, 0.1, 1.0, '*', 'k')
 axes.set_ylim([0, 10])
 axes.set_ylabel('Workload Rating', fontsize=15)
 axes.set_xlabel('Scale', fontsize=15)
 axes.tick_params(axis='x', labelsize=12)
 axes.tick_params(axis='y', labelsize=12)
+axes.legend(bbox_to_anchor=(1.0, 1.0), loc='upper left')
 plt.show()
