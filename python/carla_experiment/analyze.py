@@ -106,7 +106,7 @@ sns.set(context='paper', style='whitegrid')
 color = {'BASELINE':'#add8e6', 'CONTROL': '#7dbeb5', 'BUTTON': '#388fad', 'TOUCH': '#335290'}
 sns.set_palette(sns.color_palette(color.values()))
 
-summary_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/summary.csv')
+summary_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/summary_rm_wrong.csv')
 nasa_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/nasa-tlx.csv')
 rank_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/rank.csv')
 subjects = summary_df.subject.drop_duplicates()
@@ -131,8 +131,21 @@ if norm_p < 0.05 or var_p < 0.05:
 else:
     multicomp_result = multicomp.MultiComparison(np.array(summary_df.dropna(how='any').cv, dtype="float64"), summary_df.dropna(how='any').experiment_type)
     print('levene', multicomp_result.tukeyhsd().summary())
-
+print ('----', 'baseline', 'control', 'button', 'touch')
+print('mean',
+    summary_df[summary_df.experiment_type == 'baseline'].cv.dropna().mean(),
+    summary_df[summary_df.experiment_type == 'control'].cv.dropna().mean(),
+    summary_df[summary_df.experiment_type == 'button'].cv.dropna().mean(),
+    summary_df[summary_df.experiment_type == 'touch'].cv.dropna().mean(),
+)
+print('var',
+    summary_df[summary_df.experiment_type == 'baseline'].cv.dropna().std(),
+    summary_df[summary_df.experiment_type == 'control'].cv.dropna().std(),
+    summary_df[summary_df.experiment_type == 'button'].cv.dropna().std(),
+    summary_df[summary_df.experiment_type == 'touch'].cv.dropna().std(),
+    )
 axes = sns.boxplot(data=summary_df, x='experiment_type', y='cv', showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
+axes.figure.savefig('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/counter_variance.svg', format="svg")
 plt.show()
 
 
@@ -144,7 +157,7 @@ for subject in subjects:
     for experiment in experiments:
         df = summary_df[(summary_df.subject == subject) & (summary_df.experiment_type == experiment)]
         collect = df[(df.actor_action == "cross")].intervene_vel.isnull().sum()
-        collect += (df[(df.actor_action == "pose")].dropna().intervene_vel > 1.0).sum()
+        collect += (df[(df.actor_action == "pose")].dropna().min_vel > 10.0).sum()
         inttype_accuracy.at[subject, experiment] = collect / len(df)
 # for index, row in summary_df.iterrows():
 #     if row.actor_action == 'cross':
@@ -165,13 +178,15 @@ _, norm_p2 = stats.shapiro(inttype_accuracy.CONTROL)
 _, norm_p3 = stats.shapiro(inttype_accuracy.BUTTON)
 _, norm_p4 = stats.shapiro(inttype_accuracy.TOUCH)
 _, var_p = stats.levene(inttype_accuracy.BASELINE, inttype_accuracy.CONTROL, inttype_accuracy.BUTTON, inttype_accuracy.TOUCH, center='median')
+
 if norm_p1 < 0.05 or norm_p2 < 0.05 or norm_p3 < 0.05 or norm_p4 < 0.05:
     _, anova_p = stats.friedmanchisquare(inttype_accuracy.BASELINE, inttype_accuracy.CONTROL, inttype_accuracy.BUTTON, inttype_accuracy.TOUCH)
     if anova_p < 0.05:
         print("conover test anova_result:", anova_p, sp.posthoc_conover_friedman(inttype_accuracy))
 else:
-    _, anova_p = stats_anova.AnovaRM(inttype_accuracy.BASELINE, inttype_accuracy.CONTROL, inttype_accuracy.BUTTON, inttype_accuracy.TOUCH)
-    print("reperted anova: ", anova_p)
+    melted_df = pd.melt(inttype_accuracy.reset_index(), id_vars="subject", var_name="experiment_type", value_name="accuracy")
+    anova_result = stats_anova.AnovaRM(melted_df, "accuracy", "subject", ["experiment_type"])
+    print("reperted anova: ", anova_result.fit())
     melted_df = pd.melt(inttype_accuracy, var_name="experiment_type", value_name="accuracy")
     if var_p < 0.05 and anova_p < 0.05:
         gamesHowellTest(melted_df, "first_intervene_time", "accuracy")
@@ -200,7 +215,7 @@ _, anova_p = stats.friedmanchisquare(
     subject_accuracy.yamamoto,
     subject_accuracy.yasuhara,
     )
-
+print("subject wise anova = ", anova_p)
 
 ################################################################
 print('intervene time')
@@ -260,6 +275,8 @@ _, anova_p = stats.friedmanchisquare(
     subject_time.yamamoto,
     subject_time.yasuhara,
     )
+print("subject wise anova=", anova_p)
+
 
 ################################################################
 print("avoid decel rate")
@@ -295,18 +312,35 @@ accuracy_sem_list = [
 ]
 
 intervene_time_mean_list = [
-    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'BASELINE') & (summary_df.intervene_vel > 1.0)].first_intervene_time.mean(),
-    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'CONTROL') & (summary_df.intervene_vel > 1.0)].first_intervene_time.mean(),
-    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'BUTTON') & (summary_df.intervene_vel > 1.0)].first_intervene_time.mean(),
-    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'TOUCH') & (summary_df.intervene_vel > 1.0)].first_intervene_time.mean(),
+    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'BASELINE') & (summary_df.intervene_vel > 1.0)].first_intervene_time.dropna().mean(),
+    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'CONTROL') & (summary_df.intervene_vel > 1.0)].first_intervene_time.dropna().mean(),
+    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'BUTTON') & (summary_df.intervene_vel > 1.0)].first_intervene_time.dropna().mean(),
+    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'TOUCH') & (summary_df.intervene_vel > 1.0)].first_intervene_time.dropna().mean(),
 ]
 intervene_time_sem_list = [
-    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'BASELINE') & (summary_df.intervene_vel > 1.0)].first_intervene_time.sem(),
-    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'CONTROL') & (summary_df.intervene_vel > 1.0)].first_intervene_time.sem(),
-    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'BUTTON') & (summary_df.intervene_vel > 1.0)].first_intervene_time.sem(),
-    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'TOUCH') & (summary_df.intervene_vel > 1.0)].first_intervene_time.sem(),
+    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'BASELINE') & (summary_df.intervene_vel > 1.0)].first_intervene_time.dropna().sem(),
+    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'CONTROL') & (summary_df.intervene_vel > 1.0)].first_intervene_time.dropna().sem(),
+    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'BUTTON') & (summary_df.intervene_vel > 1.0)].first_intervene_time.dropna().sem(),
+    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'TOUCH') & (summary_df.intervene_vel > 1.0)].first_intervene_time.dropna().sem(),
 ]
-_, axes = plt.subplots()
+
+print ('----', 'baseline', 'control', 'button', 'touch')
+print('acc mean', accuracy_mean_list)
+print('time mean', intervene_time_mean_list)
+print('acc var',
+    inttype_accuracy.BASELINE.std(),
+    inttype_accuracy.CONTROL.std(),
+    inttype_accuracy.BUTTON.std(),
+    inttype_accuracy.TOUCH.std(),
+    )
+print('time sd',
+    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'BASELINE') & (summary_df.intervene_vel > 1.0)].first_intervene_time.std(),
+    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'CONTROL') & (summary_df.intervene_vel > 1.0)].first_intervene_time.std(),
+    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'BUTTON') & (summary_df.intervene_vel > 1.0)].first_intervene_time.std(),
+    summary_df[(summary_df.actor_action == 'pose') & (summary_df.experiment_type == 'TOUCH') & (summary_df.intervene_vel > 1.0)].first_intervene_time.std(),
+)
+
+fig, axes = plt.subplots()
 for i, experiment in enumerate(experiments):
     axes.errorbar(accuracy_mean_list[i], intervene_time_mean_list[i], xerr=accuracy_sem_list[i], yerr=intervene_time_sem_list[i], marker='o', capsize=5, label=experiment)
 
@@ -317,6 +351,7 @@ axes.set_ylabel('Intervention time [s]', fontsize=15)
 axes.legend(loc='lower left', fontsize=12)
 axes.tick_params(axis='x', labelsize=12)
 axes.tick_params(axis='y', labelsize=12)
+axes.figure.savefig('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/int_performance.svg', format="svg")
 plt.show()
 
 ################################################################
@@ -334,11 +369,12 @@ for i, row in pose_df.iterrows():
 for i, row in intervene_speed_rate.iteritems():
     intervene_speed_rate.at[:, i] = row / intervene_speed_rate[50]
 
-sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[50],color="teal")
-sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[40],color="turquoise")
-sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[30],color="gold")
-sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[20],color="lightsalmon")
-sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[10],color="orangered")
+axes = sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[50],color="teal")
+axes = sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[40],color="turquoise")
+axes = sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[30],color="gold")
+axes = sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[20],color="lightsalmon")
+axes = sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[10],color="orangered")
+axes.figure.savefig('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/int_vel_bar.svg', format="svg")
 
 ################################################################
 print("min vel range stacked bar plot")
@@ -364,6 +400,7 @@ axes = sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[10],colo
 axes.set_ylabel('Rate of driving with minimum velocity while intervenition', fontsize=15)
 axes.set_xlabel('Intervention method', fontsize=15)
 axes.legend(bbox_to_anchor=(1.0, 1.0), loc='upper left')
+axes.figure.savefig('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/min_vel_bar.svg', format="svg")
 plt.show()
 
 print('min vel')
@@ -371,6 +408,21 @@ print('min vel')
 pose_df = summary_df[summary_df.actor_action == 'pose']
 for experiment in experiments:
     print(experiment, pose_df[pose_df.experiment_type==experiment].min_vel.mean())
+
+print ('----', 'baseline', 'control', 'button', 'touch')
+print('mean', accuracy_mean_list)
+print('acc var',
+    summary_df[(summary_df.experiment_type == 'BASELINE') & (summary_df.actor_action == "pose")].min_vel.mean(),
+    summary_df[(summary_df.experiment_type == 'CONTROL') & (summary_df.actor_action == "pose")].min_vel.mean(),
+    summary_df[(summary_df.experiment_type == "BUTTON") & (summary_df.actor_action == "pose")].min_vel.mean(),
+    summary_df[(summary_df.experiment_type == "TOUCH") & (summary_df.actor_action == "pose")].min_vel.mean(),
+    )
+print('acc sd',
+    summary_df[(summary_df.experiment_type == 'BASELINE') & (summary_df.actor_action == "pose")].min_vel.std(),
+    summary_df[(summary_df.experiment_type == 'CONTROL') & (summary_df.actor_action == "pose")].min_vel.std(),
+    summary_df[(summary_df.experiment_type == "BUTTON") & (summary_df.actor_action == "pose")].min_vel.std(),
+    summary_df[(summary_df.experiment_type == "TOUCH") & (summary_df.actor_action == "pose")].min_vel.std(),
+    )
 
 axes = sns.boxplot(data=pose_df, x='experiment_type', y='min_vel', showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"}, order=experiments)
 axes.set_ylabel('Minimum velocity [km/h]', fontsize=15)
@@ -400,7 +452,9 @@ for i, type in enumerate(experiments):
     axes.set_xlim([0,50])
     axes.set_xlabel('Velocity [km/h]', fontsize=15)
     axes.set_ylabel('Rate', fontsize=15)
+
 axes.legend(loc='lower left', fontsize=12)
+axes.figure.savefig('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/min_vel.svg', format="svg")
 plt.show()
 
 
@@ -422,8 +476,9 @@ if norm_p1 < 0.05 or norm_p2 < 0.05 or norm_p3 < 0.05 or norm_p4 < 0.05:
     if anova_p < 0.05:
         print(sp.posthoc_conover_friedman(min_vel_df))
 else:
-    _, anova_p = stats_anova.AnovaRM(min_vel_df.BASELINE, min_vel_df.CONTROL, min_vel_df.BUTTON, min_vel_df.TOUCH)
-    print("reperted anova: ", anova_p)
+    melted_df = pd.melt(min_vel_df.reset_index(), id_vars="subject", var_name="experiment_type", value_name="min_vel")
+    aov = stats_anova.AnovaRM(melted_df, "min_vel", "subject", ["experiment_type"])
+    print("reperted anova: ", aov.fit())
     melted_df = pd.melt(min_vel_df, var_name="experiment_type", value_name="first_intervene_time")
     if var_p < 0.05 and anova_p < 0.05:
         gamesHowellTest(melted_df, "first_intervene_time", "experiment_type")
@@ -452,6 +507,8 @@ _, anova_p = stats.friedmanchisquare(
     subject_vel.yamamoto,
     subject_vel.yasuhara,
     )
+
+print("subject wise anova = ", anova_p)
 
 ################################################################
 print('max vel')
@@ -504,6 +561,7 @@ _, anova_p = stats.friedmanchisquare(
     subject_vel.yamamoto,
     subject_vel.yasuhara,
     )
+print("subject wise anova = ", anova_p)
 
 ################################################################
 print('min_vel rerative to baseline plot')
@@ -624,4 +682,5 @@ axes.set_xlabel('Scale', fontsize=15)
 axes.tick_params(axis='x', labelsize=12)
 axes.tick_params(axis='y', labelsize=12)
 axes.legend(bbox_to_anchor=(1.0, 1.0), loc='upper left')
+axes.figure.savefig('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/nasa-tlx.svg', format="svg")
 plt.show()
