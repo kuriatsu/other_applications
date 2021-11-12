@@ -157,9 +157,10 @@ for subject in subjects:
     for experiment in experiments:
         df = summary_df[(summary_df.subject == subject) & (summary_df.experiment_type == experiment)]
         collect = df[(df.actor_action == "cross")].intervene_vel.isnull().sum()
-        collect += (df[(df.actor_action == "pose")].dropna().min_vel >20.0).sum()
-        inttype_accuracy.at[subject, experiment] = collect / len(df)
-        # inttype_accuracy.at[subject, experiment] = collect / len(df[(df.actor_action == "cross")])
+        # collect += len(df[(df.actor_action == "pose") & (df.intervene_vel > df.max_vel*0.2)])
+        # collect += (df[(df.actor_action == "pose")].dropna().intervene_vel > 20.0).sum()
+        # inttype_accuracy.at[subject, experiment] = collect / len(df)
+        inttype_accuracy.at[subject, experiment] = collect / len(df[(df.actor_action == "cross")])
 # for index, row in summary_df.iterrows():
 #     if row.actor_action == 'cross':
 #         buf = pd.DataFrame([(row.experiment_type, np.isnan(row.intervene_vel)) ], columns=['experiment', 'result'])
@@ -189,11 +190,10 @@ else:
     anova_result = stats_anova.AnovaRM(melted_df, "accuracy", "subject", ["experiment_type"])
     print("reperted anova: ", anova_result.fit())
     melted_df = pd.melt(inttype_accuracy, var_name="experiment_type", value_name="accuracy")
-    if var_p < 0.05 and anova_p < 0.05:
-        gamesHowellTest(melted_df, "first_intervene_time", "accuracy")
-    elif var_p >= 0.05 and anova_p < 0.05:
-        multicomp_result = multicomp.MultiComparison(np.array(melted_df.dropna(how='any').accuracy, dtype="float64"), melted_df.dropna(how='any').experiment_type)
-        print(multicomp_result.tukeyhsd().summary())
+    print("levene result", var_p)
+    # gamesHowellTest(melted_df, "experiment_type", "accuracy")
+    multicomp_result = multicomp.MultiComparison(np.array(melted_df.dropna(how='any').accuracy, dtype="float64"), melted_df.dropna(how='any').experiment_type)
+    print(multicomp_result.tukeyhsd().summary())
 
 subject_accuracy = inttype_accuracy.T
 _, anova_p = stats.friedmanchisquare(
