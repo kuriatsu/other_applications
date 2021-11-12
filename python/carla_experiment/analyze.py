@@ -157,8 +157,9 @@ for subject in subjects:
     for experiment in experiments:
         df = summary_df[(summary_df.subject == subject) & (summary_df.experiment_type == experiment)]
         collect = df[(df.actor_action == "cross")].intervene_vel.isnull().sum()
-        collect += (df[(df.actor_action == "pose")].dropna().min_vel > 10.0).sum()
+        collect += (df[(df.actor_action == "pose")].dropna().min_vel >20.0).sum()
         inttype_accuracy.at[subject, experiment] = collect / len(df)
+        # inttype_accuracy.at[subject, experiment] = collect / len(df[(df.actor_action == "cross")])
 # for index, row in summary_df.iterrows():
 #     if row.actor_action == 'cross':
 #         buf = pd.DataFrame([(row.experiment_type, np.isnan(row.intervene_vel)) ], columns=['experiment', 'result'])
