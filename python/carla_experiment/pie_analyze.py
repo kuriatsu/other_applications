@@ -31,7 +31,7 @@ for subject in subjects:
 _, norm_p1 = stats.shapiro(accuracy_df.BUTTON)
 _, norm_p2 = stats.shapiro(accuracy_df.TOUCH)
 _, var_p = stats.levene(accuracy_df.BUTTON, accuracy_df.TOUCH, center='median')
-if norm_p1 < 0.05 or norm_p2 < 0.05:
+if norm_p1 < 0.05 or norm_p2 < 0.05 or var_p < 0.05 :
     print('wilcoxon\n', stats.wilcoxon(x=accuracy_df.BUTTON, y=accuracy_df.TOUCH))
 else:
     print('t test\n', stats.ttest_ind(accuracy_df.BUTTON, accuracy_df.TOUCH, equal_var = (var_p < 0.05)))
@@ -75,9 +75,9 @@ intervene_time_sem_list = [
     intervene_time_df.TOUCH.sem(),
 ]
 
-_, axes = plt.subplots()
+fig, axes = plt.subplots()
 for i, experiment in enumerate(["BUTTON", "TOUCH"]):
-    axes.errorbar(accuracy_list[i], intervene_time_mean_list[i], xerr=accuracy_sem_list[i], yerr=intervene_time_sem_list[i], marker='o', capsize=5, label=experiment)
+    axes.errorbar(accuracy_mean_list[i], intervene_time_mean_list[i], xerr=accuracy_sem_list[i], yerr=intervene_time_sem_list[i], marker='o', capsize=5, label=experiment)
 
 x1 = accuracy_mean_list[0]
 x2 = accuracy_mean_list[1]
@@ -92,3 +92,42 @@ axes.legend(loc="lower left", fontsize=12)
 axes.tick_params(axis='x', labelsize=12)
 axes.tick_params(axis='y', labelsize=12)
 plt.show()
+fig.savefig("/home/kuriatsu/Documents/experiment_data/PIE_experiment_june/int_performance.svg", format="svg")
+
+axes = sns.histplot(result_df.prob)
+
+prob_acc_df = pd.DataFrame(columns=["prob","rate", "experiment_type"])
+index=[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0]
+for i in index:
+    button_df = result_df[(result_df.experiment_type=="BUTTON") & (result_df.prob < i) & ((i-0.1) <= result_df.prob)]
+    touch_df = result_df[(result_df.experiment_type=="TOUCH") & (result_df.prob < i) & ((i-0.1) <= result_df.prob)]
+    if i < 0.5:
+        if len(button_df) > 0:
+            buf_df = pd.DataFrame([(i, len(button_df[button_df.intervene_type == "pushed"]) / len(button_df), "BUTTON")], columns=["prob", "rate", "experiment_type"])
+            prob_acc_df = prob_acc_df.append(buf_df, ignore_index=True)
+        else:
+            buf_df = pd.DataFrame([(i, 0, "BUTTON")], columns=["prob", "rate", "experiment_type"])
+            prob_acc_df = prob_acc_df.append(buf_df, ignore_index=True)
+        if len(touch_df) > 0:
+            buf_df = pd.DataFrame([(i, len(touch_df[touch_df.intervene_type == "touched"]) / len(touch_df), "TOUCH")], columns=["prob", "rate", "experiment_type"])
+            prob_acc_df = prob_acc_df.append(buf_df, ignore_index=True)
+        else:
+            buf_df = pd.DataFrame([(i, 0, "TOUCH")], columns=["prob", "rate", "experiment_type"])
+            prob_acc_df = prob_acc_df.append(buf_df, ignore_index=True)
+    else:
+        if len(button_df) > 0:
+            buf_df = pd.DataFrame([(i, len(button_df[button_df.intervene_type == "passed"]) / len(button_df), "BUTTON")], columns=["prob", "rate", "experiment_type"])
+            prob_acc_df = prob_acc_df.append(buf_df, ignore_index=True)
+        else:
+            buf_df = pd.DataFrame([(i, 0, "BUTTON")], columns=["prob", "rate", "experiment_type"])
+            prob_acc_df = prob_acc_df.append(buf_df, ignore_index=True)
+
+        if len(touch_df) > 0:
+            buf_df = pd.DataFrame([(i, len(touch_df[touch_df.intervene_type == "passed"]) / len(touch_df), "TOUCH")], columns=["prob", "rate", "experiment_type"])
+            prob_acc_df = prob_acc_df.append(buf_df, ignore_index=True)
+        else:
+            buf_df = pd.DataFrame([(i, 0, "TOUCH")], columns=["prob", "rate", "experiment_type"])
+            prob_acc_df = prob_acc_df.append(buf_df, ignore_index=True)
+
+# sns.scatterplot(data=prob_acc_df, x="prob", y="rate", hue="experiment_type", ax = axes)
+sns.scatterplot(data=prob_acc_df, x="prob", y="rate", hue="experiment_type")
