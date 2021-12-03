@@ -29,11 +29,27 @@ def summarizeData(extracted_data):
         'face_turn_count',
         ]]
 
+
+    intervene_type = {
+        'baseline' : 'BASELINE',
+        'control' : 'CONTROL',
+        'button' : 'BUTTON',
+        'touch' : 'TOUCH',
+    }
+
+
     for world_id, profile in extracted_data.items():
         if profile.get('experiment_type') is None:
             continue
 
         arr_data = np.array(profile.get('data'))[1:, :] # skip first column
+        if profile.get('experiment_type') in ['baseline', 'control'] and "button" in arr_data[:, 5]:
+            print('skip wrong intervention baseline/control')
+            continue
+        if profile.get('experiment_type') in ['button', 'touch'] and ("throttle" in arr_data[:, 5] or "throttle&brake" in arr_data[:, 5]):
+            print('skip wrong intervention button/touch')
+            continue
+
 
         intervene_start_column_index = None
         intervene_end_column_index = None
@@ -52,13 +68,19 @@ def summarizeData(extracted_data):
         max_acc = None
         min_acc = None
 
-
-
         # intervention index
         intervene_index_list = np.where(arr_data[:, 5] != None)[0]
         if len(intervene_index_list) > 0:
-            intervene_start_column_index = intervene_index_list[0]
-            intervene_end_column_index   = intervene_index_list[-1]
+            # intervene_start_column_index = intervene_index_list[0]
+            # intervene_end_column_index   = intervene_index_list[-1]
+            if profile.get('experiment_type') in ['baseline', 'control']:
+                # print(np.where( (arr_data[:, 5] == 'throttle&brake') | (arr_data[:, 5] == 'throttle') ))
+                intervene_start_column_index = np.where( (arr_data[:, 5] == 'throttle&brake') | (arr_data[:, 5] == 'throttle') )[0][0]
+                intervene_end_column_index   = np.where( (arr_data[:, 5] == 'throttle&brake') | (arr_data[:, 5] == 'throttle') )[0][-1]
+
+            elif profile.get('experiment_type') in ['touch', 'button']:
+                intervene_start_column_index = np.where( (arr_data[:, 5] == 'touch') | (arr_data[:, 5] == 'button') )[0][0]
+                intervene_end_column_index = np.where( (arr_data[:, 5] == 'touch') | (arr_data[:, 5] == 'button') )[0][-1]
 
             first_intervene_time = arr_data[intervene_start_column_index, 0]
             first_intervene_distance = arr_data[intervene_start_column_index, 4]
@@ -105,7 +127,7 @@ def summarizeData(extracted_data):
 
         out_list.append( [
             sys.argv[1],
-            profile.get('experiment_type'),
+            intervene_type[profile.get('experiment_type')],
             world_id,
             profile.get('actor_action'),
             first_intervene_time,
@@ -135,7 +157,7 @@ def saveCsv(filename, data):
 def main():
 
     pickle_file = '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/' + sys.argv[1] + '/Town01.pickle'
-    out_file = '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/' + sys.argv[1] + '/summary.csv'
+    out_file = '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/' + sys.argv[1] + '/summary_rm_wrong.csv'
 
     with open(pickle_file, 'rb') as f:
         extracted_data = pickle.load(f)
