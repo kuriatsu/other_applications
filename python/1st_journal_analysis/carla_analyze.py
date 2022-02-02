@@ -480,11 +480,11 @@ else:
     melted_df = pd.melt(min_vel_df.reset_index(), id_vars="subject", var_name="experiment_type", value_name="min_vel")
     aov = stats_anova.AnovaRM(melted_df, "min_vel", "subject", ["experiment_type"])
     print("reperted anova: ", aov.fit())
-    melted_df = pd.melt(min_vel_df, var_name="experiment_type", value_name="first_intervene_time")
+    melted_df = pd.melt(min_vel_df, var_name="experiment_type", value_name="min_vel")
     if var_p < 0.05 and anova_p < 0.05:
-        gamesHowellTest(melted_df, "first_intervene_time", "experiment_type")
+        gamesHowellTest(melted_df, "min_vel", "experiment_type")
     elif var_p >= 0.05 and anova_p < 0.05:
-        multicomp_result = multicomp.MultiComparison(np.array(melted_df.dropna(how='any').first_intervene_time, dtype="float64"), melted_df.dropna(how='any').experiment_type)
+        multicomp_result = multicomp.MultiComparison(np.array(melted_df.dropna(how='any').min_vel, dtype="float64"), melted_df.dropna(how='any').experiment_type)
         print(multicomp_result.tukeyhsd().summary())
 
 subject_vel = min_vel_df.T

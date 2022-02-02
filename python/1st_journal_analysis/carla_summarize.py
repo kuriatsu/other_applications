@@ -7,6 +7,15 @@ import matplotlib.pyplot as plt
 import csv
 import sys
 
+# actor_data = {
+#     'world_id': target_object.object.id,
+#     'data': offsetMileage(profile_data), <- offset to make [0 = target position]
+#     'experiment_type': experiment_type,
+#     'actor_action' : actor_action
+#     }
+
+# profile_data=[time, ego_vel, ego_mileage, target_ego_dist, wp_dist, intervene_type]
+
 def summarizeData(extracted_data):
 
     out_list = [[
@@ -103,10 +112,11 @@ def summarizeData(extracted_data):
                 if acc < min_acc:
                     min_acc = acc
 
-            max_vel = np.amax(arr_data[np.where(arr_data[acc_start_index:acc_end_index, 2]>0.0), 1]) * 3.6
-            min_vel = np.amin(arr_data[np.where(arr_data[acc_start_index:acc_end_index, 2]>0.0), 1]) * 3.6
+            max_vel = np.amax(arr_data[np.where(arr_data[acc_start_index:acc_end_index, 2]>0.0)+acc_start_index, 1]) * 3.6
+            min_vel = np.amin(arr_data[np.where(arr_data[acc_start_index:acc_end_index, 2]>0.0)+acc_start_index, 1]) * 3.6
             std_vel = np.std(arr_data[acc_start_index:acc_end_index, 1])
             mean_vel = np.mean(arr_data[acc_start_index:acc_end_index, 1])
+            # print(world_id, acc_start_index, acc_end_index, arr_data[acc_start_index:acc_end_index, 1]*3.6, np.where(arr_data[acc_start_index:acc_end_index, 2]>0.0))
 
         else:
             min_vel = np.amin(arr_data[:, 1]) * 3.6
