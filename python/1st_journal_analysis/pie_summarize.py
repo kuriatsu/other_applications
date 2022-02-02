@@ -34,7 +34,7 @@ for file in glob.glob(os.path.join(data_path, "*.csv")):
 
         buf = pd.Series([
             subject,
-            type.upper(),
+            experiment_type,
             row.id,
             row.prob,
             intervene_time,
