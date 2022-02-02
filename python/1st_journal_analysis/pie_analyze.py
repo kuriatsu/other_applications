@@ -8,7 +8,7 @@ import seaborn as sns
 from scipy import stats
 
 
-result_df = pd.read_csv('/home/kuriatsu/Documents/experiment_data/PIE_experiment_june/result.csv',
+result_df = pd.read_csv('/home/kuriatsu/Dropbox/data/PIE_experiment_june/data/summary.csv',
                         dtype={'intervene_speed':'float', 'prob':'float'})
 subjects = result_df.subject.drop_duplicates()
 
@@ -65,6 +65,11 @@ accuracy_sem_list = [
     accuracy_df.TOUCH.sem(),
 ]
 
+accuracy_sem_list = [
+    accuracy_df.BUTTON.std(),
+    accuracy_df.TOUCH.std(),
+]
+
 intervene_time_mean_list = [
     intervene_time_df.BUTTON.mean(),
     intervene_time_df.TOUCH.mean(),
@@ -77,7 +82,7 @@ intervene_time_sem_list = [
 
 _, axes = plt.subplots()
 for i, experiment in enumerate(["BUTTON", "TOUCH"]):
-    axes.errorbar(accuracy_list[i], intervene_time_mean_list[i], xerr=accuracy_sem_list[i], yerr=intervene_time_sem_list[i], marker='o', capsize=5, label=experiment)
+    axes.errorbar(accuracy_mean_list[i], intervene_time_mean_list[i], xerr=accuracy_sem_list[i], yerr=intervene_time_sem_list[i], marker='o', capsize=5, label=experiment)
 
 x1 = accuracy_mean_list[0]
 x2 = accuracy_mean_list[1]
