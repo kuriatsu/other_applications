@@ -9,6 +9,6 @@ touch ${out_dir}/result/summary_rm_wrong.csv
 
 for subject in ${subjects[@]}; do
     echo $subject
-    python3 summarize.py $subject
+    python3 carla_summarize.py $subject
     tail -n +2 ${out_dir}/${subject}/summary_rm_wrong.csv >> ${out_dir}/result/summary_rm_wrong.csv
 done

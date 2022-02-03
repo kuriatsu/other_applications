@@ -8,7 +8,7 @@ import seaborn as sns
 from scipy import stats
 
 
-result_df = pd.read_csv('/home/kuriatsu/Documents/experiment_data/PIE_experiment_june/result.csv',
+result_df = pd.read_csv('/home/kuriatsu/Dropbox/data/PIE_experiment_june/data/summary.csv',
                         dtype={'intervene_speed':'float', 'prob':'float'})
 subjects = result_df.subject.drop_duplicates()
 
@@ -63,6 +63,11 @@ accuracy_mean_list = [
 accuracy_sem_list = [
     accuracy_df.BUTTON.sem(),
     accuracy_df.TOUCH.sem(),
+]
+
+accuracy_sem_list = [
+    accuracy_df.BUTTON.std(),
+    accuracy_df.TOUCH.std(),
 ]
 
 intervene_time_mean_list = [
