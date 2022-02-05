@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
+sns.set(context='paper', style='whitegrid')
+
 # x = speed y=deceleration start position / intervention time (80m recognition range)
 speed_list = np.arange(0.0, 80.0, 0.1)/3.6
 mu = 0.7
@@ -87,6 +89,11 @@ palette = sns.color_palette("mako_r", 3)
 fig, ax = plt.subplots()
 sns.lineplot(data=result, x="vel", y="int_time", hue="G", style="Range[m]", dashes=True, ax=ax, palette=palette)
 ax.set_ylim(0.0, 7.0)
+ax.set_xlim(0.0, 80.0)
 ax.set_xlabel("Velocity [km/h]", fontsize=14)
 ax.set_ylabel("Intervention Time [s]", fontsize=14)
+ax.plot([0, 80], [1.74, 1.74], linewidth=0.8, color="black", linestyle = "dashed")
+ax.text(0, 1.74, "1.74", size=10)
+ax.plot([0, 80], [2.04, 2.04], linewidth=0.8, color="black", linestyle = "dashed")
+ax.text(0, 2.04, "2.04", size=10)
 plt.show()
