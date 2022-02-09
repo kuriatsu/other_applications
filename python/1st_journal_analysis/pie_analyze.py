@@ -17,6 +17,7 @@ color = {'baseline':'#d5e7ba', 'control': '#7dbeb5', 'button': '#388fad', 'touch
 color_list = ['#388fad', '#335290']
 sns.set_palette(sns.color_palette(color_list))
 
+# intervention accuracy
 accuracy_df = pd.DataFrame(columns=["BUTTON", "TOUCH"], index=subjects)
 for subject in subjects:
     button_df = result_df[(result_df.subject == subject) & (result_df.experiment_type == "BUTTON")]
@@ -36,9 +37,85 @@ if norm_p1 < 0.05 or norm_p2 < 0.05:
 else:
     print('t test\n', stats.ttest_ind(accuracy_df.BUTTON, accuracy_df.TOUCH, equal_var = (var_p < 0.05)))
 
+accuracy_df["BUTTON"].mean()
+
+#  how early intervention and acc
+correct_int_remain_time = []
+false_int_remain_time = []
+for row in result_df.itertuples():
+    if (row.intervene_type in ["pushed", "touched"]):
+        if row.prob <= 0.5:
+            correct_int_remain_time.append((row.critical_point - row.intervene_frame)/30)
+        else:
+            false_int_remain_time.append((row.critical_point - row.intervene_frame)/30)
+_, norm_correct = stats.shapiro(correct_int_remain_time)
+_, norm_false = stats.shapiro(false_int_remain_time)
+_, var_p = stats.levene(correct_int_remain_time, false_int_remain_time, center='median')
+
+print('wilcoxon\n', stats.mannwhitneyu(correct_int_remain_time, false_int_remain_time, alternative="two-sided").pvalue)
+print(f"correct_int_remain_time:{sum(correct_int_remain_time)/len(correct_int_remain_time)}, false_int_remain_time:{sum(false_int_remain_time)/len(false_int_remain_time)}")
+sns.histplot(correct_int_remain_time)
+sns.histplot(false_int_remain_time)
+
+#  intervene able time and acc
+correct_int_remain_time = []
+false_int_remain_time = []
+for row in result_df.itertuples():
+    if (row.intervene_type in ["pushed", "touched"]):
+        if row.prob <= 0.5:
+            correct_int_remain_time.append((row.critical_point - row.display_frame)/30)
+        else:
+            false_int_remain_time.append((row.critical_point - row.display_frame)/30)
+_, norm_correct = stats.shapiro(correct_int_remain_time)
+_, norm_false = stats.shapiro(false_int_remain_time)
+_, var_p = stats.levene(correct_int_remain_time, false_int_remain_time, center='median')
+
+print('wilcoxon\n', stats.mannwhitneyu(correct_int_remain_time, false_int_remain_time, alternative="two-sided").pvalue)
+print(f"correct_int_remain_time:{sum(correct_int_remain_time)/len(correct_int_remain_time)}, false_int_remain_time:{sum(false_int_remain_time)/len(false_int_remain_time)}")
+sns.histplot(correct_int_remain_time)
+sns.histplot(false_int_remain_time)
 
 
+# acc vs prob
+correct_int_remain_time = []
+false_int_remain_time = []
+for row in result_df.itertuples():
+    if (row.intervene_type in ["pushed", "touched"] and row.prob <= 0.5) or (row.intervene_type == "passed" and row.prob > 0.5):
+        correct_int_remain_time.append(row.prob)
+    else:
+        false_int_remain_time.append(row.prob)
+_, norm_correct = stats.shapiro(correct_int_remain_time)
+_, norm_false = stats.shapiro(false_int_remain_time)
+_, var_p = stats.levene(correct_int_remain_time, false_int_remain_time, center='median')
+
+print('wilcoxon\n', stats.mannwhitneyu(correct_int_remain_time, false_int_remain_time, alternative="two-sided").pvalue)
+print(f"correct_int_remain_time:{sum(correct_int_remain_time)/len(correct_int_remain_time)}, false_int_remain_time:{sum(false_int_remain_time)/len(false_int_remain_time)}")
+fig, ax = plt.subplots()
+sns.histplot(correct_int_remain_time, ax=ax)
+sns.histplot(false_int_remain_time, ax=ax)
 intervene_time_df = pd.DataFrame(columns=["BUTTON", "TOUCH"], index=subjects)
+
+# acc in prob > 0.5 vs acc in pron <=0.5
+database = pd.DataFrame(columns=["cross", "nocross"])
+for subject in subjects:
+    acc_cross = []
+    acc_nocross = []
+    for row in result_df[result_df.subject == subject].itertuples():
+        if row.prob > 0.5:
+            acc_cross.append(row.intervene_type == "passed")
+        elif row.prob <= 0.5:
+            acc_nocross.append(row.intervene_type in ["pushed", "touched"])
+        # elif 0.2 <= row.prob <= 0.5:
+        #     acc_vague_nocross.append(row.intervene_type in ["pushed", "touched"])
+        # elif 0.5 < row.prob <= 0.8:
+        #     acc_vague_cross.append(row.intervene_type == "passed")
+
+    buf = pd.Series([sum(acc_cross)/len(acc_cross), sum(acc_nocross)/len(acc_nocross)], index=database.columns)
+    database = database.append(buf, ignore_index=True)
+
+print(f"cross-mean:{database.cross.mean()}, cross-std:{database.cross.std()}, nocross-mean:{database.nocross.mean()}, nocross-std:{database.nocross.std()}")
+
+
 for subject in subjects:
     button_df = result_df[(result_df.subject == subject) & (result_df.experiment_type == "BUTTON")]
     push_time = button_df.intervene_speed.dropna().mean()
