@@ -156,11 +156,23 @@ inttype_accuracy = pd.DataFrame(columns=experiments, index=subjects)
 for subject in subjects:
     for experiment in experiments:
         df = summary_df[(summary_df.subject == subject) & (summary_df.experiment_type == experiment)]
-        collect = df[(df.actor_action == "cross")].intervene_vel.isnull().sum()
+
+        # vehcle speed
+        # collect = len(df[((df.actor_action == "cross") & (df.min_vel < 1.0)) | ((df.actor_action == "pose") & (df.min_vel > 1.0))])
+        # inttype_accuracy.at[subject, experiment] = collect / len(df)
+
+        # accident count
+        collect = len(df[((df.actor_action == "cross") & (df.min_vel > 1.0))])
+        inttype_accuracy.at[subject, experiment] = collect / len(df[(df.actor_action == "cross")])
+
+        # only cross intervention
+        # collect = df[(df.actor_action == "cross")].intervene_vel.isnull().sum()
+        # inttype_accuracy.at[subject, experiment] = collect / len(df[(df.actor_action == "cross")])
+
+
         # collect += len(df[(df.actor_action == "pose") & (df.intervene_vel > df.max_vel*0.2)])
         # collect += (df[(df.actor_action == "pose")].dropna().intervene_vel > 20.0).sum()
         # inttype_accuracy.at[subject, experiment] = collect / len(df)
-        inttype_accuracy.at[subject, experiment] = collect / len(df[(df.actor_action == "cross")])
 # for index, row in summary_df.iterrows():
 #     if row.actor_action == 'cross':
 #         buf = pd.DataFrame([(row.experiment_type, np.isnan(row.intervene_vel)) ], columns=['experiment', 'result'])
@@ -172,7 +184,8 @@ for subject in subjects:
 #         else:
 #             buf = pd.DataFrame([(row.experiment_type, (row.intervene_vel > 1.0))], columns=['experiment', 'result'])
 #             inttype_accuracy = inttype_accuracy.append(buf, ignore_index=True)
-
+inttype_accuracy.mean()
+inttype_accuracy.std()
 # inttype_accuracy_cross = pd.crosstab(inttype_accuracy.experiment, inttype_accuracy.result)
 # stats.chi2_contingency(inttype_accuracy_cross)
 _, norm_p1 = stats.shapiro(inttype_accuracy.BASELINE)
