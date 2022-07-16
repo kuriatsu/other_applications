@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
+sns.set(context='paper', style='whitegrid')
+
 # x = speed y=deceleration start position / intervention time (80m recognition range)
 speed_list = np.arange(0.0, 80.0, 0.1)/3.6
 mu = 0.7
@@ -64,6 +66,13 @@ for G in G_list:
         result.append(buf_result)
         sns.lineplot(x=detection_range, y=int_time, ax=ax)
 
+vel = 40.0
+G = 0.3
+safety_margin = 10.0
+stop_distance = (vel/3.6)**2 / (2*9.8*G)
+int_time = 5.0
+detection_distance = stop_distance + safety_margin + vel * (int_time/3.6)
+int_time = (detection_range - stop_distance - safety_margin) / vel - recognition_time
 
 # speed vs intervention time
 vel_list = np.arange(0.0, 80.0, 0.1)
@@ -87,6 +96,11 @@ palette = sns.color_palette("mako_r", 3)
 fig, ax = plt.subplots()
 sns.lineplot(data=result, x="vel", y="int_time", hue="G", style="Range[m]", dashes=True, ax=ax, palette=palette)
 ax.set_ylim(0.0, 7.0)
+ax.set_xlim(0.0, 80.0)
 ax.set_xlabel("Velocity [km/h]", fontsize=14)
-ax.set_ylabel("Intervention Time [s]", fontsize=14)
+ax.set_ylabel("Available Intervention Time [s]", fontsize=14)
+ax.plot([0, 80], [2.0, 2.0], linewidth=0.8, color="black", linestyle = "dashed")
+ax.text(0, 2.0, "2.0", size=10)
+ax.plot([0, 80], [4.0, 4.0], linewidth=0.8, color="black", linestyle = "dashed")
+ax.text(0, 4.0, "4.0", size=10)
 plt.show()

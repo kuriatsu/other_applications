@@ -106,9 +106,14 @@ sns.set(context='paper', style='whitegrid')
 color = {'BASELINE':'#add8e6', 'CONTROL': '#7dbeb5', 'BUTTON': '#388fad', 'TOUCH': '#335290'}
 sns.set_palette(sns.color_palette(color.values()))
 
-summary_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/summary_rm_wrong.csv')
-nasa_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/nasa-tlx.csv')
-rank_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/rank.csv')
+# summary_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/summary_rm_wrong.csv')
+# nasa_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/nasa-tlx.csv')
+# rank_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/rank.csv')
+summary_df = pd.read_csv('/home/kuriatsu/Documents/experiment/carla_202102_result/summary_rm_wrong.csv')
+# summary_df = pd.read_csv('/home/kuriatsu/Documents/experiment/carla_202102_result/summary.csv')
+nasa_df = pd.read_csv('/home/kuriatsu/Documents/experiment/carla_202102_result/nasa-tlx.csv')
+rank_df = pd.read_csv('/home/kuriatsu/Documents/experiment/carla_202102_result/rank.csv')
+
 subjects = summary_df.subject.drop_duplicates()
 experiments = ['BASELINE', 'CONTROL', 'BUTTON', 'TOUCH']
 
@@ -145,7 +150,7 @@ print('var',
     summary_df[summary_df.experiment_type == 'touch'].cv.dropna().std(),
     )
 axes = sns.boxplot(data=summary_df, x='experiment_type', y='cv', showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
-axes.figure.savefig('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/counter_variance.svg', format="svg")
+# axes.figure.savefig('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/counter_variance.svg', format="svg")
 plt.show()
 
 
@@ -162,17 +167,19 @@ for subject in subjects:
         # inttype_accuracy.at[subject, experiment] = collect / len(df)
 
         # accident count
-        collect = len(df[((df.actor_action == "cross") & (df.min_vel > 1.0))])
-        inttype_accuracy.at[subject, experiment] = collect / len(df[(df.actor_action == "cross")])
+        # collect = len(df[((df.actor_action == "cross") & (df.min_vel > 1.0))])
+        # inttype_accuracy.at[subject, experiment] = collect / len(df[(df.actor_action == "cross")])
 
         # only cross intervention
-        # collect = df[(df.actor_action == "cross")].intervene_vel.isnull().sum()
+        collect = df[(df.actor_action == "cross")].intervene_vel.isnull().sum()
         # inttype_accuracy.at[subject, experiment] = collect / len(df[(df.actor_action == "cross")])
 
 
+        # cross + pose intervention
         # collect += len(df[(df.actor_action == "pose") & (df.intervene_vel > df.max_vel*0.2)])
-        # collect += (df[(df.actor_action == "pose")].dropna().intervene_vel > 20.0).sum()
-        # inttype_accuracy.at[subject, experiment] = collect / len(df)
+        collect += (df[(df.actor_action == "pose")].dropna().intervene_vel > 1.0).sum()
+        inttype_accuracy.at[subject, experiment] = collect / len(df)
+
 # for index, row in summary_df.iterrows():
 #     if row.actor_action == 'cross':
 #         buf = pd.DataFrame([(row.experiment_type, np.isnan(row.intervene_vel)) ], columns=['experiment', 'result'])
@@ -184,6 +191,7 @@ for subject in subjects:
 #         else:
 #             buf = pd.DataFrame([(row.experiment_type, (row.intervene_vel > 1.0))], columns=['experiment', 'result'])
 #             inttype_accuracy = inttype_accuracy.append(buf, ignore_index=True)
+
 inttype_accuracy.mean()
 inttype_accuracy.std()
 # inttype_accuracy_cross = pd.crosstab(inttype_accuracy.experiment, inttype_accuracy.result)
@@ -365,7 +373,7 @@ axes.set_ylabel('Intervention time [s]', fontsize=15)
 axes.legend(loc='lower left', fontsize=12)
 axes.tick_params(axis='x', labelsize=12)
 axes.tick_params(axis='y', labelsize=12)
-axes.figure.savefig('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/int_performance.svg', format="svg")
+# axes.figure.savefig('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/int_performance.svg', format="svg")
 plt.show()
 
 ################################################################
@@ -381,14 +389,14 @@ for i, row in pose_df.iterrows():
             intervene_speed_rate.at[row.experiment_type, thres] += 1
 
 for i, row in intervene_speed_rate.iteritems():
-    intervene_speed_rate.at[:, i] = row / intervene_speed_rate[50]
+    intervene_speed_rate[i] = row / intervene_speed_rate[50]
 
 axes = sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[50],color="teal")
 axes = sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[40],color="turquoise")
 axes = sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[30],color="gold")
 axes = sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[20],color="lightsalmon")
 axes = sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[10],color="orangered")
-axes.figure.savefig('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/int_vel_bar.svg', format="svg")
+# axes.figure.savefig('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/int_vel_bar.svg', format="svg")
 
 ################################################################
 print("min vel range stacked bar plot")
@@ -404,7 +412,7 @@ for i, row in pose_df.iterrows():
             intervene_speed_rate.at[row.experiment_type, thres] += 1
 
 for i, row in intervene_speed_rate.iteritems():
-    intervene_speed_rate.at[:, i] = row / intervene_speed_rate[50]
+    intervene_speed_rate[i] = row / intervene_speed_rate[50]
 
 axes = sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[50],color="teal", label='40-50km/h')
 axes = sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[40],color="turquoise", label='30-40km/h')
@@ -414,11 +422,12 @@ axes = sns.barplot(x=intervene_speed_rate.index, y=intervene_speed_rate[10],colo
 axes.set_ylabel('Rate of driving with minimum velocity while intervenition', fontsize=15)
 axes.set_xlabel('Intervention method', fontsize=15)
 axes.legend(bbox_to_anchor=(1.0, 1.0), loc='upper left')
-axes.figure.savefig('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/min_vel_bar.svg', format="svg")
+# axes.figure.savefig('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/min_vel_bar.svg', format="svg")
 plt.show()
 
+##################################
 print('min vel')
-
+#################################
 pose_df = summary_df[summary_df.actor_action == 'pose']
 for experiment in experiments:
     print(experiment, pose_df[pose_df.experiment_type==experiment].min_vel.mean())
@@ -468,7 +477,7 @@ for i, type in enumerate(experiments):
     axes.set_ylabel('Rate', fontsize=15)
 
 axes.legend(loc='lower left', fontsize=12)
-axes.figure.savefig('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/min_vel.svg', format="svg")
+# axes.figure.savefig('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/min_vel.svg', format="svg")
 plt.show()
 
 
@@ -696,5 +705,5 @@ axes.set_xlabel('Scale', fontsize=15)
 axes.tick_params(axis='x', labelsize=12)
 axes.tick_params(axis='y', labelsize=12)
 axes.legend(bbox_to_anchor=(1.0, 1.0), loc='upper left')
-axes.figure.savefig('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/nasa-tlx.svg', format="svg")
+# axes.figure.savefig('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/nasa-tlx.svg', format="svg")
 plt.show()
