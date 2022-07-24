@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import animation
 from IPython.display import HTML
+import matplotlib.cm as cm
 
 # 迷路作成
 fig, ax = plt.subplots()
@@ -60,6 +61,26 @@ def anim_traj(trajectory):
     anim = animation.FuncAnimation(fig, animate, init_func=init, frames=len(trajectory), interval=200, repeat=False)
     return anim
 
+
+def anim_value_func(V):
+    def init():
+        line.set_data([],[])
+        return(line, )
+
+    def animate(i):
+        line, =ax.plot([0.5], [2.5], marker="s", color=cm.jet(V[i][0]), markersize=85)
+        line, =ax.plot([1.5], [2.5], marker="s", color=cm.jet(V[i][1]), markersize=85)
+        line, =ax.plot([2.5], [2.5], marker="s", color=cm.jet(V[i][2]), markersize=85)
+        line, =ax.plot([0.5], [1.5], marker="s", color=cm.jet(V[i][3]), markersize=85)
+        line, =ax.plot([1.5], [1.5], marker="s", color=cm.jet(V[i][4]), markersize=85)
+        line, =ax.plot([2.5], [1.5], marker="s", color=cm.jet(V[i][5]), markersize=85)
+        line, =ax.plot([0.5], [0.5], marker="s", color=cm.jet(V[i][6]), markersize=85)
+        line, =ax.plot([1.5], [0.5], marker="s", color=cm.jet(V[i][7]), markersize=85)
+        line, =ax.plot([2.5], [0.5], marker="s", color=cm.jet(1.0), markersize=85)
+        return (line, )
+
+    anim = animation.FuncAnimation(fig, animate, init_func = init, frames=len(V), interval=200, repeat=False)
+    return anim
 
 ##########################
 # シンプルにランダム探索
@@ -195,7 +216,7 @@ HTML(anim.to_html5_video())
 ####################
 # 価値反復法
 ####################
-def goal_maze_Q(Q, epsilon, eta, gamma, pi_0):
+def goal_maze_sarsa(Q, epsilon, eta, gamma, pi_0):
     """Sarsaで迷路を解く関数
     ~args~
     Q: 行動価値
@@ -255,7 +276,8 @@ def Sarsa(s, a, r, s_next, a_next, Q, eta, gamma):
     if s_next == 8: # ゴールした場合、行動価値関数=状態価値関数
         Q[s, a] = Q[s, a] + eta * (r - Q[s, a])
     else:
-        Q[s, a] = Q[s, a] = eta * (r + gamma * Q[s_next, a_next] - Q[s, a])
+        # 暫定的に決められた状態s_nextを元に行動価値観数を更新
+        Q[s, a] = eta * (r + gamma * Q[s_next, a_next] - Q[s, a])
 
     return Q
 
@@ -305,8 +327,10 @@ episode = 1
 while is_continue:
     print(f"episode {episode}")
 
+    # 行動価値観数の更新が、at+1を決める方策のパラメータεに依存する（方策オン型）。
+    # 学習を収束させるために、学習率を段階的に減らす
     epsilon = epsilon / 2
-    [history, Q] = goal_maze_Q(Q, epsilon, eta, gamma, pi_0)
+    [history, Q] = goal_maze_sarsa(Q, epsilon, eta, gamma, pi_0)
 
     new_v = np.nanmax(Q, axis=1)
     print(np.sum(np.abs(new_v - v))) # 状態価値の変化
@@ -314,7 +338,87 @@ while is_continue:
 
     episode += 1
     if episode > 100:
-        break
+        is_continue = False
+
+trajectory = [row[0] for row in history]
+anim = anim_traj(trajectory)
+HTML(anim.to_html5_video())
+
+
+##############################
+# Q学習
+##############################
+def Q_learning(s, a, r, s_next, Q, eta, gamma):
+    """Q学習による行動価値観数の更新
+    salsaの更新部分を少し書き換え
+    """
+    if s_next == 8: # ゴールした場合、行動価値関数=状態価値関数
+        Q[s, a] = Q[s, a] + eta * (r - Q[s, a])
+    else:
+        # 状態s_nextで最も大きい行動を使用
+        Q[s, a] = eta * (r + gamma * np.nanmax(Q[s_next, :]) - Q[s, a])
+        # Q[s, a] = eta * (r + gamma * Q[s_next, a_next] - Q[s, a])
+
+    return Q
+
+
+def goal_maze_Q(Q, epsilon, eta, gamma, pi_0):
+    """Q学習で迷路を解く関数
+    Sarsaとは、行動価値関数更新時の次行動の決定方法が異なる
+    Sarsa : ε-greddyで暫定的に決定
+    Q-learning : 行動価値関数が最大の行動を暫定的に選択
+    """
+    s = 0
+    history = [[0, np.nan]]
+
+    while(1):
+        # Q学習も、次の行動決定はε-greddyで行う（行動価値関数の際の次の行動決定には使わない）
+        [a, s_next] = get_next_state_greddy(s, Q, epsilon, pi_0)
+        history[-1][1] = a
+        history.append([s_next, np.nan])
+        print(s)
+        if s_next == 8:
+            # goalに到達したら、報酬を与える。次の行動は無し
+            r = 1
+            a_next = np.nan
+        else:
+            r = 0
+
+        # 行動価値関数を更新
+        Q = Q_learning(s, a, r, s_next, Q, eta, gamma)
+        if s_next == 8:
+            break
+        else:
+            s = s_next
+
+    return [history, Q]
+
+
+# Q学習で迷路探索
+Q = np.random.rand(theta_0.shape[0], theta_0.shape[1]) * theta_0 # 行動価値観数。初期値はランダムに決定しておく
+pi_0 = simple_convert_into_pi_from_theta(theta_0)
+eta = 0.1 # 学習率
+gamma = 0.9 # 時間割引率
+epsilon = 0.5
+v = np.nanmax(Q, axis=1) # 状態ごとに価値の最大値を求める
+is_continue = True
+episode = 1
+
+V = [] # エピソードごとに状態価値を格納
+V.append(v)
+
+while is_continue:
+    print(f"episode : {episode}")
+    epsilon = epsilon / 2
+    [history, Q] = goal_maze_Q(Q, epsilon, eta, gamma, pi_0)
+    new_v = np.nanmax(Q, axis = 1)
+    print(np.sum(np.abs(new_v - v)))
+    v = new_v
+    V.append(v)
+
+    episode +=1
+    if episode > 100:
+        is_continue = False
 
 trajectory = [row[0] for row in history]
 anim = anim_traj(trajectory)
