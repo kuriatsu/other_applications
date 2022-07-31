@@ -106,13 +106,13 @@ sns.set(context='paper', style='whitegrid')
 color = {'BASELINE':'#add8e6', 'CONTROL': '#7dbeb5', 'BUTTON': '#388fad', 'TOUCH': '#335290'}
 sns.set_palette(sns.color_palette(color.values()))
 
-# summary_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/summary_rm_wrong.csv')
-# nasa_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/nasa-tlx.csv')
-# rank_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/rank.csv')
-summary_df = pd.read_csv('/home/kuriatsu/Documents/experiment/carla_202102_result/summary_rm_wrong.csv')
+summary_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/summary_rm_wrong.csv')
+nasa_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/nasa-tlx.csv')
+rank_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/rank.csv')
 # summary_df = pd.read_csv('/home/kuriatsu/Documents/experiment/carla_202102_result/summary.csv')
-nasa_df = pd.read_csv('/home/kuriatsu/Documents/experiment/carla_202102_result/nasa-tlx.csv')
-rank_df = pd.read_csv('/home/kuriatsu/Documents/experiment/carla_202102_result/rank.csv')
+# summary_df = pd.read_csv('/home/kuriatsu/Documents/experiment/carla_202102_result/summary_rm_wrong.csv')
+# nasa_df = pd.read_csv('/home/kuriatsu/Documents/experiment/carla_202102_result/nasa-tlx.csv')
+# rank_df = pd.read_csv('/home/kuriatsu/Documents/experiment/carla_202102_result/rank.csv')
 
 subjects = summary_df.subject.drop_duplicates()
 experiments = ['BASELINE', 'CONTROL', 'BUTTON', 'TOUCH']
