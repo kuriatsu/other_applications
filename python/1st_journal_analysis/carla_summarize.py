@@ -110,7 +110,7 @@ def summarizeData(extracted_data, profile_data):
             last_intervene_time = arr_data[intervene_end_column_index, 0]
             last_intervene_distance = arr_data[intervene_end_column_index, 4]
             intervene_vel = arr_data[intervene_start_column_index, 1] * 3.6
-            intervene_duration = last_intervene_time-first_intervene_time
+            intervention_duration = last_intervene_time-first_intervene_time
 
         # evasion area driving evaluation
         evasion_start_index = np.where(arr_data[:, 4] <= 50.0)[0][0]

@@ -106,27 +106,30 @@ def saveCsv(data, filename):
 def show_mean_var(df, actor_action, col):
     print(f"target:{col}")
     target_df = df[df.actor_action == actor_action]
-    mean = [
+    mean_list = [
         target_df[(target_df.experiment_type == 'BASELINE')][col].dropna().mean(),
         target_df[(target_df.experiment_type == 'CONTROL')][col].dropna().mean(),
         target_df[(target_df.experiment_type == 'BUTTON')][col].dropna().mean(),
         target_df[(target_df.experiment_type == 'TOUCH')][col].dropna().mean(),
         ]
 
-    var = [
+    var_list = [
         target_df[(target_df.experiment_type == 'BASELINE')][col].dropna().std(),
         target_df[(target_df.experiment_type == 'CONTROL')][col].dropna().std(),
         target_df[(target_df.experiment_type == 'BUTTON')][col].dropna().std(),
         target_df[(target_df.experiment_type == 'TOUCH')][col].dropna().std(),
         ]
 
-    sem = [
+    sem_list = [
         target_df[(target_df.experiment_type == 'BASELINE')][col].dropna().sem(),
         target_df[(target_df.experiment_type == 'CONTROL')][col].dropna().sem(),
         target_df[(target_df.experiment_type == 'BUTTON')][col].dropna().sem(),
         target_df[(target_df.experiment_type == 'TOUCH')][col].dropna().sem(),
     ]
 
+    print ('----', 'BASELINE', 'CONTROL', 'BUTTON', 'TOUCH')
+    print("mean:", mean_list)
+    print("var:", var_list)
 
     _, norm_p = stats.shapiro(target_df[col].dropna())
     _, var_p = stats.levene(
@@ -135,21 +138,34 @@ def show_mean_var(df, actor_action, col):
         target_df[target_df.experiment_type == "BUTTON"][col].dropna(),
         target_df[target_df.experiment_type == "TOUCH"][col].dropna(),
         )
-    print ('----', 'BASELINE', 'CONTROL', 'BUTTON', 'TOUCH')
-    print(mean)
-    print(var)
+    print("norm equal var test", norm_p, var_p)
+
+    subject_mean_df = pd.DataFrame(columns=["subjects", "whn_var", "target"])
+    for subject in target_df.subject.drop_duplicates():
+        for experiment_type in target_df.experiment_type.drop_duplicates():
+            mean = target_df[(target_df.subject == subject) & (target_df.experiment_type == experiment_type)][col].mean()
+            buf = pd.DataFrame([[subject, experiment_type, mean]], columns=subject_mean_df.columns)
+            subject_mean_df = pd.concat((subject_mean_df, buf), ignore_index=True)
 
     if norm_p > 0.05 and var_p > 0.05:
-        melted_df = pd.melt(inttype_accuracy.reset_index(), id_vars="subject", var_name="experiment_type", value_name=col)
-        anova_result = stats_anova.AnovaRM(melted_df, col, "subject", ["experiment_type"])
-        print("reperted anova RM: ", anova_result.fit())
-    elif norm_p > 0.05 and var_p < 0.05:
-        _, anova_p = stats.friedmanchisquare(inttype_accuracy.BASELINE, inttype_accuracy.CONTROL, inttype_accuracy.BUTTON, inttype_accuracy.TOUCH)
-        print("freadmanchisquare anova: ", anova_p)
-    else:
-        {...}
+        anova = stats_anova.AnovaRM(subject_mean_df, "target", "subjects", ["whn_var"])
+        print("reperted anova: ", anova.fit())
+        multicomp_result = multicomp.MultiComparison(subject_mean_df.target, subject_mean_df.whn_var)
+        print(multicomp_result.tukeyhsd().summary())
 
-    return mean, sem
+    elif norm_p > 0.05 and var_p < 0.05:
+        print(gamesHowellTest(subject_mean_df, "target", "var"))
+
+    else:
+        anova_f, anova_p = stats.friedmanchisquare(subject_mean_df[subject_mean_df.whn_var == "BASELINE"].target,
+                                             subject_mean_df[subject_mean_df.whn_var == "CONTROL"].target,
+                                             subject_mean_df[subject_mean_df.whn_var == "BUTTON"].target,
+                                             subject_mean_df[subject_mean_df.whn_var == "TOUCH"].target)
+        print(f"friedman test (anova) p={anova_p}, f({len(subject_mean_df.whn_var.drop_duplicates())-1}, {len(subject_mean_df)-len(subject_mean_df.whn_var.drop_duplicates())})={anova_f}")
+        if anova_p < 0.05:
+            print("conover test", sp.posthoc_conover_friedman(subject_mean_df, y_col="target", group_col="whn_var", block_col="subjects", melted=True))
+
+    return mean_list, sem_list
 
 
 sns.set(context='paper', style='whitegrid')
@@ -192,21 +208,21 @@ int_speed_mean, int_speed_sem = show_mean_var(summary_df, "pose", "first_interve
 ################################################################
 print('intervention duration ')
 ################################################################
-int_dur_mean, int_dur_sem = show_mean_var(summary_df, "pose", "intervene_duration")
+int_dur_mean, int_dur_sem = show_mean_var(summary_df, "pose", "intervention_duration")
 
 fig, axes = plt.subplots()
 for i, experiment in enumerate(experiments):
-    axes.errorbar(int_speed_mean[i], int_dur_mean[i], xerr=int_dur_sem[i], yerr=ttc_sem[i], marker='o', capsize=5, label=experiment)
+    axes.errorbar(int_speed_mean[i], int_dur_mean[i], xerr=int_speed_sem[i], yerr=int_dur_sem[i], marker='o', capsize=5, label=experiment)
 
-axes.set_xlim(0, 1.0)
-axes.set_ylim(0, 6.0)
+axes.set_xlim(0, 8.0)
+axes.set_ylim(0, 9.0)
 axes.set_xlabel('Intervention speed [s]', fontsize=15)
 axes.set_ylabel('Intervention duration [s]', fontsize=15)
-axes.legend(loc='lower left', fontsize=12)
+axes.legend(loc='upper left', fontsize=12)
 axes.tick_params(axis='x', labelsize=12)
 axes.tick_params(axis='y', labelsize=12)
 # axes.figure.savefig('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/int_performance.svg', format="svg")
-plt.show()
+# plt.show()
 
 ################################################################
 print('mean_speed ')
@@ -222,8 +238,8 @@ fig, axes = plt.subplots()
 for i, experiment in enumerate(experiments):
     axes.errorbar(speed_mean[i], ttc_mean[i], xerr=speed_sem[i], yerr=ttc_sem[i], marker='o', capsize=5, label=experiment)
 
-axes.set_xlim(0, 1.0)
-axes.set_ylim(0, 6.0)
+axes.set_xlim(0, 35.0)
+axes.set_ylim(0, 4.0)
 axes.set_xlabel('Average speed [km/h]', fontsize=15)
 axes.set_ylabel('TTC to cross pedestrian [s]', fontsize=15)
 axes.legend(loc='lower left', fontsize=12)
@@ -252,9 +268,9 @@ for i, experiment_type in enumerate(["BASELINE", "CONTROL", "BUTTON", "TOUCH"]):
 count = 0
 lines = [0]*4
 for profile in profile_list:
-    count+=1
-    if count > 12:
-        break
+    # count+=1
+    # if count > 12:
+    #     break
 
     profile["y"] = profile["y"] * 3.6
     ax = plot_list[profile["experiment_type"]][plot_col_list[profile["actor_action"]]]
