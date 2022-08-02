@@ -102,6 +102,56 @@ def saveCsv(data, filename):
         writer = csv.writer(f)
         writer.writerows(data)
 
+
+def show_mean_var(df, actor_action, col):
+    print(f"target:{col}")
+    target_df = df[df.actor_action == actor_action]
+    mean = [
+        target_df[(target_df.experiment_type == 'BASELINE')][col].dropna().mean(),
+        target_df[(target_df.experiment_type == 'CONTROL')][col].dropna().mean(),
+        target_df[(target_df.experiment_type == 'BUTTON')][col].dropna().mean(),
+        target_df[(target_df.experiment_type == 'TOUCH')][col].dropna().mean(),
+        ]
+
+    var = [
+        target_df[(target_df.experiment_type == 'BASELINE')][col].dropna().std(),
+        target_df[(target_df.experiment_type == 'CONTROL')][col].dropna().std(),
+        target_df[(target_df.experiment_type == 'BUTTON')][col].dropna().std(),
+        target_df[(target_df.experiment_type == 'TOUCH')][col].dropna().std(),
+        ]
+
+    sem = [
+        target_df[(target_df.experiment_type == 'BASELINE')][col].dropna().sem(),
+        target_df[(target_df.experiment_type == 'CONTROL')][col].dropna().sem(),
+        target_df[(target_df.experiment_type == 'BUTTON')][col].dropna().sem(),
+        target_df[(target_df.experiment_type == 'TOUCH')][col].dropna().sem(),
+    ]
+
+
+    _, norm_p = stats.shapiro(target_df[col].dropna())
+    _, var_p = stats.levene(
+        target_df[target_df.experiment_type == "BASELINE"][col].dropna(),
+        target_df[target_df.experiment_type == "CONTROL"][col].dropna(),
+        target_df[target_df.experiment_type == "BUTTON"][col].dropna(),
+        target_df[target_df.experiment_type == "TOUCH"][col].dropna(),
+        )
+    print ('----', 'BASELINE', 'CONTROL', 'BUTTON', 'TOUCH')
+    print(mean)
+    print(var)
+
+    if norm_p > 0.05 and var_p > 0.05:
+        melted_df = pd.melt(inttype_accuracy.reset_index(), id_vars="subject", var_name="experiment_type", value_name=col)
+        anova_result = stats_anova.AnovaRM(melted_df, col, "subject", ["experiment_type"])
+        print("reperted anova RM: ", anova_result.fit())
+    elif norm_p > 0.05 and var_p < 0.05:
+        _, anova_p = stats.friedmanchisquare(inttype_accuracy.BASELINE, inttype_accuracy.CONTROL, inttype_accuracy.BUTTON, inttype_accuracy.TOUCH)
+        print("freadmanchisquare anova: ", anova_p)
+    else:
+        {...}
+
+    return mean, sem
+
+
 sns.set(context='paper', style='whitegrid')
 color = {'BASELINE':'#add8e6', 'CONTROL': '#7dbeb5', 'BUTTON': '#388fad', 'TOUCH': '#335290'}
 sns.set_palette(sns.color_palette(color.values()))
@@ -120,109 +170,67 @@ with open('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/profile
 subjects = summary_df.subject.drop_duplicates()
 experiments = ['BASELINE', 'CONTROL', 'BUTTON', 'TOUCH']
 
-################################################################
-print('mean_speed ')
-################################################################
-print ('----', 'BASELINE', 'CONTROL', 'BUTTON', 'TOUCH')
-print('mean',
-    summary_df[(summary_df.experiment_type == 'BASELINE') & (summary_df.actor_action == 'pose')].mean_vel.dropna().mean(),
-    summary_df[(summary_df.experiment_type == 'CONTROL') & (summary_df.actor_action == 'pose')].mean_vel.dropna().mean(),
-    summary_df[(summary_df.experiment_type == 'BUTTON') & (summary_df.actor_action == 'pose')].mean_vel.dropna().mean(),
-    summary_df[(summary_df.experiment_type == 'TOUCH') & (summary_df.actor_action == 'pose')].mean_vel.dropna().mean(),
-)
-print('var',
-    summary_df[(summary_df.experiment_type == 'BASELINE') & (summary_df.actor_action == 'pose')].mean_vel.dropna().std(),
-    summary_df[(summary_df.experiment_type == 'CONTROL') & (summary_df.actor_action == 'pose')].mean_vel.dropna().std(),
-    summary_df[(summary_df.experiment_type == 'BUTTON') & (summary_df.actor_action == 'pose')].mean_vel.dropna().std(),
-    summary_df[(summary_df.experiment_type == 'TOUCH') & (summary_df.actor_action == 'pose')].mean_vel.dropna().std(),
-    )
+
 
 ################################################################
 print('min_speed ')
 ################################################################
-print ('----', 'BASELINE', 'CONTROL', 'BUTTON', 'TOUCH')
-print('mean',
-    summary_df[(summary_df.experiment_type == 'BASELINE') & (summary_df.actor_action == 'pose')].min_vel.dropna().mean(),
-    summary_df[(summary_df.experiment_type == 'CONTROL') & (summary_df.actor_action == 'pose')].min_vel.dropna().mean(),
-    summary_df[(summary_df.experiment_type == 'BUTTON') & (summary_df.actor_action == 'pose')].min_vel.dropna().mean(),
-    summary_df[(summary_df.experiment_type == 'TOUCH') & (summary_df.actor_action == 'pose')].min_vel.dropna().mean(),
-)
-print('var',
-    summary_df[(summary_df.experiment_type == 'BASELINE') & (summary_df.actor_action == 'pose')].min_vel.dropna().std(),
-    summary_df[(summary_df.experiment_type == 'CONTROL') & (summary_df.actor_action == 'pose')].min_vel.dropna().std(),
-    summary_df[(summary_df.experiment_type == 'BUTTON') & (summary_df.actor_action == 'pose')].min_vel.dropna().std(),
-    summary_df[(summary_df.experiment_type == 'TOUCH') & (summary_df.actor_action == 'pose')].min_vel.dropna().std(),
-    )
+show_mean_var(summary_df, "pose", "min_vel")
 
 ################################################################
 print('std_speed ')
 ################################################################
-print ('----', 'BASELINE', 'CONTROL', 'BUTTON', 'TOUCH')
-print('mean',
-    summary_df[(summary_df.experiment_type == 'BASELINE') & (summary_df.actor_action == 'pose')].std_vel.dropna().mean(),
-    summary_df[(summary_df.experiment_type == 'CONTROL') & (summary_df.actor_action == 'pose')].std_vel.dropna().mean(),
-    summary_df[(summary_df.experiment_type == 'BUTTON') & (summary_df.actor_action == 'pose')].std_vel.dropna().mean(),
-    summary_df[(summary_df.experiment_type == 'TOUCH') & (summary_df.actor_action == 'pose')].std_vel.dropna().mean(),
-)
-print('var',
-    summary_df[(summary_df.experiment_type == 'BASELINE') & (summary_df.actor_action == 'pose')].std_vel.dropna().std(),
-    summary_df[(summary_df.experiment_type == 'CONTROL') & (summary_df.actor_action == 'pose')].std_vel.dropna().std(),
-    summary_df[(summary_df.experiment_type == 'BUTTON') & (summary_df.actor_action == 'pose')].std_vel.dropna().std(),
-    summary_df[(summary_df.experiment_type == 'TOUCH') & (summary_df.actor_action == 'pose')].std_vel.dropna().std(),
-    )
+show_mean_var(summary_df, "pose", "std_vel")
 
 
 ################################################################
 print('intervention speed ')
 ################################################################
-print ('----', 'BASELINE', 'CONTROL', 'BUTTON', 'TOUCH')
-print('mean',
-    summary_df[(summary_df.experiment_type == 'BASELINE') & (summary_df.actor_action == 'pose')].first_intervene_time.dropna().mean(),
-    summary_df[(summary_df.experiment_type == 'CONTROL') & (summary_df.actor_action == 'pose')].first_intervene_time.dropna().mean(),
-    summary_df[(summary_df.experiment_type == 'BUTTON') & (summary_df.actor_action == 'pose')].first_intervene_time.dropna().mean(),
-    summary_df[(summary_df.experiment_type == 'TOUCH') & (summary_df.actor_action == 'pose')].first_intervene_time.dropna().mean(),
-)
-print('var',
-    summary_df[(summary_df.experiment_type == 'BASELINE') & (summary_df.actor_action == 'pose')].first_intervene_time.dropna().std(),
-    summary_df[(summary_df.experiment_type == 'CONTROL') & (summary_df.actor_action == 'pose')].first_intervene_time.dropna().std(),
-    summary_df[(summary_df.experiment_type == 'BUTTON') & (summary_df.actor_action == 'pose')].first_intervene_time.dropna().std(),
-    summary_df[(summary_df.experiment_type == 'TOUCH') & (summary_df.actor_action == 'pose')].first_intervene_time.dropna().std(),
-    )
+int_speed_mean, int_speed_sem = show_mean_var(summary_df, "pose", "first_intervene_time")
 
 
 ################################################################
 print('intervention duration ')
 ################################################################
-print ('----', 'BASELINE', 'CONTROL', 'BUTTON', 'TOUCH')
-print('mean',
-    summary_df[(summary_df.experiment_type == 'BASELINE') & (summary_df.actor_action == 'pose')].intervention_duration.dropna().mean(),
-    summary_df[(summary_df.experiment_type == 'CONTROL') & (summary_df.actor_action == 'pose')].intervention_duration.dropna().mean(),
-    summary_df[(summary_df.experiment_type == 'BUTTON') & (summary_df.actor_action == 'pose')].intervention_duration.dropna().mean(),
-    summary_df[(summary_df.experiment_type == 'TOUCH') & (summary_df.actor_action == 'pose')].intervention_duration.dropna().mean(),
-)
-print('var',
-    summary_df[(summary_df.experiment_type == 'BASELINE') & (summary_df.actor_action == 'pose')].intervention_duration.dropna().std(),
-    summary_df[(summary_df.experiment_type == 'CONTROL') & (summary_df.actor_action == 'pose')].intervention_duration.dropna().std(),
-    summary_df[(summary_df.experiment_type == 'BUTTON') & (summary_df.actor_action == 'pose')].intervention_duration.dropna().std(),
-    summary_df[(summary_df.experiment_type == 'TOUCH') & (summary_df.actor_action == 'pose')].intervention_duration.dropna().std(),
-    )
+int_dur_mean, int_dur_sem = show_mean_var(summary_df, "pose", "intervene_duration")
+
+fig, axes = plt.subplots()
+for i, experiment in enumerate(experiments):
+    axes.errorbar(int_speed_mean[i], int_dur_mean[i], xerr=int_dur_sem[i], yerr=ttc_sem[i], marker='o', capsize=5, label=experiment)
+
+axes.set_xlim(0, 1.0)
+axes.set_ylim(0, 6.0)
+axes.set_xlabel('Intervention speed [s]', fontsize=15)
+axes.set_ylabel('Intervention duration [s]', fontsize=15)
+axes.legend(loc='lower left', fontsize=12)
+axes.tick_params(axis='x', labelsize=12)
+axes.tick_params(axis='y', labelsize=12)
+# axes.figure.savefig('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/int_performance.svg', format="svg")
+plt.show()
+
+################################################################
+print('mean_speed ')
+################################################################
+speed_mean, speed_sem = show_mean_var(summary_df, "pose", "mean_vel")
 
 ################################################################
 print('ttc ')
 ################################################################
-print ('----', 'BASELINE', 'CONTROL', 'BUTTON', 'TOUCH')
-print('mean',
-    summary_df[(summary_df.experiment_type == 'BASELINE') & (summary_df.actor_action == 'pose')].min_ttc.dropna().mean(),
-    summary_df[(summary_df.experiment_type == 'CONTROL') & (summary_df.actor_action == 'pose')].min_ttc.dropna().mean(),
-    summary_df[(summary_df.experiment_type == 'BUTTON') & (summary_df.actor_action == 'pose')].min_ttc.dropna().mean(),
-    summary_df[(summary_df.experiment_type == 'TOUCH') & (summary_df.actor_action == 'pose')].min_ttc.dropna().mean(),
-)
-print('var',
-    summary_df[(summary_df.experiment_type == 'BASELINE') & (summary_df.actor_action == 'pose')].min_ttc.dropna().std(),
-    summary_df[(summary_df.experiment_type == 'CONTROL') & (summary_df.actor_action == 'pose')].min_ttc.dropna().std(),
-    summary_df[(summary_df.experiment_type == 'BUTTON') & (summary_df.actor_action == 'pose')].min_ttc.dropna().std(),
-    summary_df[(summary_df.experiment_type == 'TOUCH') & (summary_df.actor_action == 'pose')].min_ttc.dropna().std(),
-    )
+ttc_mean, ttc_sem = show_mean_var(summary_df, "cross", "min_ttc")
+
+fig, axes = plt.subplots()
+for i, experiment in enumerate(experiments):
+    axes.errorbar(speed_mean[i], ttc_mean[i], xerr=speed_sem[i], yerr=ttc_sem[i], marker='o', capsize=5, label=experiment)
+
+axes.set_xlim(0, 1.0)
+axes.set_ylim(0, 6.0)
+axes.set_xlabel('Average speed [km/h]', fontsize=15)
+axes.set_ylabel('TTC to cross pedestrian [s]', fontsize=15)
+axes.legend(loc='lower left', fontsize=12)
+axes.tick_params(axis='x', labelsize=12)
+axes.tick_params(axis='y', labelsize=12)
+# axes.figure.savefig('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/int_performance.svg', format="svg")
+plt.show()
 
 
 ################################################################
