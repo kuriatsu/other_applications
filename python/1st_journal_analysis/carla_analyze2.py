@@ -237,34 +237,51 @@ for i, experiment_type in enumerate(["BASELINE", "CONTROL", "BUTTON", "TOUCH"]):
     for j in range(0, len(axes[i,:])):
         axes[i, j].set_xlim([50, -10])
         axes[i, j].set_ylim([0, 60])
-        axes[i, j].set_xlabel(f"Distance from pedestrian[m]\n{experiment_type}-{plot_col_list_inv[j]}")
-        axes[i, j].set_ylabel("Velocity[km/h]")
+        axes[i, j].set_xlabel(f"Distance from pedestrian[m]\n{experiment_type}-{plot_col_list_inv[j]}", fontsize=12)
+        axes[i, j].set_ylabel("Velocity[km/h]", fontsize=12)
 
 
 count = 0
+lines = [0]*4
 for profile in profile_list:
-    # count+=1
-    # if count > 12:
-    #     break
+    count+=1
+    if count > 12:
+        break
 
     profile["y"] = profile["y"] * 3.6
     ax = plot_list[profile["experiment_type"]][plot_col_list[profile["actor_action"]]]
+
     if profile["min_vel"] > 10.0:
         plot_start = profile["int_start"] if profile["int_start"] is not None else 0
         plot_end = profile["int_end"] if profile["int_end"] is not None else 0
-        sns.lineplot(x=profile["x"][0:plot_start+4], y=profile["y"][0:plot_start+4], ax=ax, color="teal", alpha=0.5, ci=2)
-        sns.lineplot(x=profile["x"][plot_start:plot_end+4], y=profile["y"][plot_start:plot_end+4], ax=ax, color="teal", alpha=0.5, linestyle=":", ci=2)
+        lines[0] = sns.lineplot(x=profile["x"][0:plot_start+4], y=profile["y"][0:plot_start+4], ax=ax, color="teal", alpha=0.5, ci=2, label="keep speed - automation")
+        lines[1] = sns.lineplot(x=profile["x"][plot_start:plot_end+4], y=profile["y"][plot_start:plot_end+4], ax=ax, color="teal", alpha=0.5, linestyle=":", ci=2, label="keep speed - intervention")
         sns.lineplot(x=profile["x"][plot_end:-1], y=profile["y"][plot_end:-1], ax=ax, color="teal", alpha=0.5, ci=2)
+        ax.get_legend().set_visible(False)
         # sns.lineplot(x=profile["x"], y=profile["y"], ax=ax, color="orangered", alpha=0.5)
         # sns.scatterplot(x=profile["x"][plot_start:plot_end], y=profile["y"][plot_start:plot_end], ax=ax, color="black", s=5, marker="x")
     else:
         plot_start = profile["int_start"] if profile["int_start"] is not None else 0
         plot_end = profile["int_end"] if profile["int_end"] is not None else 0
-        sns.lineplot(x=profile["x"][0:plot_start+4], y=profile["y"][0:plot_start+4], ax=ax, color="orangered", alpha=0.5, ci=2)
-        sns.lineplot(x=profile["x"][plot_start:plot_end+4], y=profile["y"][plot_start:plot_end+4], ax=ax, color="orangered", alpha=0.5, linestyle=":", ci=2)
+        lines[2] = sns.lineplot(x=profile["x"][0:plot_start+4], y=profile["y"][0:plot_start+4], ax=ax, color="orangered", alpha=0.5, ci=2, label="yield - automation")
+        lines[3] = sns.lineplot(x=profile["x"][plot_start:plot_end+4], y=profile["y"][plot_start:plot_end+4], ax=ax, color="orangered", alpha=0.5, linestyle=":", ci=2, label="yield - intervention")
         sns.lineplot(x=profile["x"][plot_end:-1], y=profile["y"][plot_end:-1], ax=ax, color="orangered", alpha=0.5, ci=2)
+        ax.get_legend().set_visible(False)
         # sns.lineplot(x=profile["x"], y=profile["y"], ax=ax, color="orangered", alpha=0.5)
         # sns.scatterplot(x=profile["x"][plot_start:plot_end], y=profile["y"][plot_start:plot_end], ax=ax, color="black", s=5, marker="x")
 
+# handler, label = plot_list["TOUCH"][0].get_legend_handles_labels()
+handler_list = []
+label_list = []
+for ax in fig.axes:
+    handlers, labels = ax.get_legend_handles_labels()
+    for handler, label in zip(handlers, labels):
+        if label not in label_list:
+            handler_list.append(handler)
+            label_list.append(label)
+
+
+plt.legend(handles=handler_list, labels=label_list, ncol=2, loc="upper right", bbox_to_anchor=(1, -0.4), fontsize=12)
+# plot_list["TOUCH"][1].legend(loc="lower center", bbox_to_anchor=(0.0, 1.0),fontsize=12)
 
 plt.show()
