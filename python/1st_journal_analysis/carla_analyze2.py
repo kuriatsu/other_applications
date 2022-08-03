@@ -162,8 +162,27 @@ def show_mean_var(df, actor_action, col):
                                              subject_mean_df[subject_mean_df.whn_var == "BUTTON"].target,
                                              subject_mean_df[subject_mean_df.whn_var == "TOUCH"].target)
         print(f"friedman test (anova) p={anova_p}, f({len(subject_mean_df.whn_var.drop_duplicates())-1}, {len(subject_mean_df)-len(subject_mean_df.whn_var.drop_duplicates())})={anova_f}")
-        if anova_p < 0.05:
-            print("conover test", sp.posthoc_conover_friedman(subject_mean_df, y_col="target", group_col="whn_var", block_col="subjects", melted=True))
+        print("conover test", sp.posthoc_conover_friedman(subject_mean_df, y_col="target", group_col="whn_var", block_col="subjects", melted=True))
+        # if anova_p < 0.05:
+
+    # if norm_p > 0.05 and var_p > 0.05:
+    #     anova = stats_anova.AnovaRM(target_df, "target", "subjects", ["whn_var"])
+    #     print("reperted anova: ", anova.fit())
+    #     multicomp_result = multicomp.MultiComparison(target_df[col], target_df.experiment_type)
+    #     print(multicomp_result.tukeyhsd().summary())
+    #
+    # elif norm_p > 0.05 and var_p < 0.05:
+    #     print(gamesHowellTest(target_df, "target", "var"))
+    #
+    # else:
+    #     print(target_df.isnull().all())
+    #     print("conover test", sp.posthoc_durbin(a=target_df.dropna(), y_col=col, group_col="experiment_type", block_col="subject", melted=True))
+    #     result = sp.test_durbin(a=target_df, y_col=col, group_col="experiment_type", block_col="subject", melted=True)
+    #     print(result)
+    #     # print(f"durbin posthoc test (anova) p={anova_p}, f({len(target_df.experiment_type.drop_duplicates())-1}, {len(target_df)-len(target_df.experiment_type.drop_duplicates())})={anova_f} freedom={freedom}")
+    #     if anova_p < 0.05:
+    #         print("conover test", sp.posthoc_durbin(target_df, y_col=col, group_col="experiment_type", block_col="subject", melted=True))
+
 
     return mean_list, sem_list
 
