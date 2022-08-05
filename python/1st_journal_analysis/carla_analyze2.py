@@ -212,6 +212,54 @@ print('min_speed ')
 ################################################################
 show_mean_var(summary_df, "pose", "min_vel")
 
+min_speed_summary_df = pd.DataFrame(columns=["subject", "experiment_type", "pose_yield", "pose_keep", "cross_yield", "cross_keep", "wrong_rate"])
+for experiment_type in summary_df.experiment_type.drop_duplicates():
+    for subject in summary_df.subject.drop_duplicates():
+        target_df = summary_df[(summary_df.experiment_type == experiment_type) & (summary_df.subject == subject)]
+        buf = pd.DataFrame([[subject, experiment_type,
+            len(target_df[(target_df.actor_action == "pose") & (target_df.min_vel < 10.0)]),
+            len(target_df[(target_df.actor_action == "pose") & (target_df.min_vel >= 10.0)]),
+            len(target_df[(target_df.actor_action == "cross") & (target_df.min_vel < 10.0)]),
+            len(target_df[(target_df.actor_action == "cross") & (target_df.min_vel >= 10.0)]),
+            len(target_df[((target_df.actor_action == "pose") & (target_df.min_vel < 10.0)) | ((target_df.actor_action == "cross") & (target_df.min_vel >= 10.0))])/len(target_df),
+            ]], columns=min_speed_summary_df.columns)
+        min_speed_summary_df = pd.concat((min_speed_summary_df, buf), ignore_index=True)
+
+for experiment_type in min_speed_summary_df.experiment_type.drop_duplicates():
+    print(experiment_type, "\n", "pose-yield", "pose-keep", "cross-yield", "cross-keep", "wrong_rate")
+    print(
+        min_speed_summary_df[min_speed_summary_df.experiment_type==experiment_type].pose_yield.sum(),
+        min_speed_summary_df[min_speed_summary_df.experiment_type==experiment_type].pose_keep.sum(),
+        min_speed_summary_df[min_speed_summary_df.experiment_type==experiment_type].cross_yield.sum(),
+        min_speed_summary_df[min_speed_summary_df.experiment_type==experiment_type].cross_keep.sum(),
+        min_speed_summary_df[min_speed_summary_df.experiment_type==experiment_type].wrong_rate.mean(),
+    )
+_, norm_p = stats.shapiro(min_speed_summary_df["wrong_rate"].dropna())
+_, var_p = stats.levene(
+    min_speed_summary_df[min_speed_summary_df.experiment_type == "BASELINE"]["wrong_rate"].dropna(),
+    min_speed_summary_df[min_speed_summary_df.experiment_type == "CONTROL"]["wrong_rate"].dropna(),
+    min_speed_summary_df[min_speed_summary_df.experiment_type == "BUTTON"]["wrong_rate"].dropna(),
+    min_speed_summary_df[min_speed_summary_df.experiment_type == "TOUCH"]["wrong_rate"].dropna(),
+    )
+print("norm equal var test", norm_p, var_p)
+
+
+if norm_p > 0.05 and var_p > 0.05:
+    anova = stats_anova.AnovaRM(min_speed_summary_df, "wrong_rate", "subject", ["experiment_type"])
+    print("reperted anova: ", anova.fit())
+    multicomp_result = multicomp.MultiComparison(min_speed_summary_df.wrong_rate, min_speed_summary_df.experiment_type)
+    print(multicomp_result.tukeyhsd().summary())
+
+elif norm_p > 0.05 and var_p < 0.05:
+    print(gamesHowellTest(min_speed_summary_df, "wrong_rate", "var"))
+
+else:
+    anova_f, anova_p = stats.friedmanchisquare(min_speed_summary_df[min_speed_summary_df.experiment_type == "BASELINE"].wrong_rate,
+                                         min_speed_summary_df[min_speed_summary_df.experiment_type == "CONTROL"].wrong_rate,
+                                         min_speed_summary_df[min_speed_summary_df.experiment_type == "BUTTON"].wrong_rate,
+                                         min_speed_summary_df[min_speed_summary_df.experiment_type == "TOUCH"].wrong_rate)
+    print(f"friedman test (anova) p={anova_p}, f({len(min_speed_summary_df.experiment_type.drop_duplicates())-1}, {len(min_speed_summary_df)-len(min_speed_summary_df.experiment_type.drop_duplicates())})={anova_f}")
+    print("conover test", sp.posthoc_conover_friedman(min_speed_summary_df, y_col="wrong_rate", group_col="experiment_type", block_col="subject", melted=True))
 ################################################################
 print('std_speed ')
 ################################################################
@@ -280,8 +328,8 @@ for i, experiment_type in enumerate(["BASELINE", "CONTROL", "BUTTON", "TOUCH"]):
     for j in range(0, len(axes[i,:])):
         axes[i, j].set_xlim([50, -10])
         axes[i, j].set_ylim([0, 60])
-        axes[i, j].set_xlabel(f"Distance from pedestrian[m]\n{experiment_type}-{plot_col_list_inv[j]}", fontsize=12)
-        axes[i, j].set_ylabel("Velocity[km/h]", fontsize=12)
+        axes[i, j].set_xlabel(f"Distance from target pedestrian[m]\n{experiment_type}-{plot_col_list_inv[j]}", fontsize=12)
+        axes[i, j].set_ylabel("Speed[km/h]", fontsize=12)
 
 
 count = 0
