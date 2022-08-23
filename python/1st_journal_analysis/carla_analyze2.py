@@ -241,7 +241,7 @@ _, var_p = stats.levene(
     min_speed_summary_df[min_speed_summary_df.experiment_type == "BUTTON"]["wrong_rate"].dropna(),
     min_speed_summary_df[min_speed_summary_df.experiment_type == "TOUCH"]["wrong_rate"].dropna(),
     )
-print("norm equal var test", norm_p, var_p)
+print("norm equal var test for wrong rate", norm_p, var_p)
 
 
 if norm_p > 0.05 and var_p > 0.05:
@@ -315,6 +315,38 @@ axes.tick_params(axis='y', labelsize=12)
 # axes.figure.savefig('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/int_performance.svg', format="svg")
 plt.show()
 
+################################################################
+print('nasa-tlx')
+################################################################
+#### nasa-tlx ####
+for item in ['mental', 'physical', 'temporal', 'performance', 'effort', 'frustration', 'entire']:
+    print(item)
+    _, norm_p = stats.shapiro(nasa_df[item])
+    _, var_p = stats.levene(
+        nasa_df[nasa_df.experiment_type == "BASELINE"][item],
+        nasa_df[nasa_df.experiment_type == "CONTROL"][item],
+        nasa_df[nasa_df.experiment_type == "BUTTON"][item],
+        nasa_df[nasa_df.experiment_type == "TOUCH"][item],
+        center='median'
+        )
+
+    melted_df = pd.melt(nasa_df, id_vars=["name", "experiment_type"],  var_name="type", value_name="rate")
+    if norm_p > 0.05 and var_p > 0.05:
+        aov = stats_anova.AnovaRM(melted_df[melted_df.type == item], "rate", "name", ["experiment_type"])
+        print("reperted anova: ", anova.fit())
+        multicomp_result = multicomp.MultiComparison(nasa_df[item], nasa_df.experiment_type)
+        print(multicomp_result.tukeyhsd().summary())
+
+    elif norm_p > 0.05 and var_p < 0.05:
+        print(gamesHowellTest(nasa_df, item, "experiment_type"))
+
+    else:
+        anova_f, anova_p = stats.friedmanchisquare(nasa_df[nasa_df.experiment_type == "BASELINE"][item],
+                                             nasa_df[nasa_df.experiment_type == "CONTROL"][item],
+                                             nasa_df[nasa_df.experiment_type == "BUTTON"][item],
+                                             nasa_df[nasa_df.experiment_type == "TOUCH"][item])
+        print(f"friedman test (anova) p={anova_p}, f({len(nasa_df.experiment_type.drop_duplicates())-1}, {len(nasa_df)-len(nasa_df.experiment_type.drop_duplicates())})={anova_f}")
+        print("conover test", sp.posthoc_conover_friedman(nasa_df, y_col=item, group_col="experiment_type", block_col="name", melted=True))
 
 ################################################################
 print('profile ')

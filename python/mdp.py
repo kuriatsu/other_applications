@@ -263,10 +263,10 @@ def Sarsa(s, a, r, s_next, a_next, Q, eta, gamma):
     → Q[s,a] = Q[s,a]+η*TD誤差 で更新(η:学習率)
     ~args~
     s:現状態
-    a:現状態に至るためにとった行動
+    a:現状態でとった行動
     r:即時報酬
-    s_next: 次状態
-    a_next: 次状態に至るためにとる行動
+    s_next: aの結果の次状態
+    a_next: 次状態でとる行動（試しに、暫定的に決定したもの）
     Q: 行動価値観数
     eta: 学習率
     gamma: 時間割引率
@@ -320,7 +320,7 @@ pi_0 = simple_convert_into_pi_from_theta(theta_0)
 eta = 0.1
 gamma = 0.9
 epsilon = 0.5
-v = np.nanmax(Q, axis=1) # 状態ごとの価値の最大
+v = np.nanmax(Q, axis=1) # 状態aの行動価値の中で最大値を状態aの価値とする
 is_continue = True
 episode = 1
 
