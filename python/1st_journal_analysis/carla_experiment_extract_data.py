@@ -176,7 +176,7 @@ def readRosbag(filename, waypoints, waypoint_interval, goal_confirm_waypoint, sc
                     msg.twist.twist.linear.x,
                     ego_mileage,
                     ((target_object_position.x - msg.pose.pose.position.x) ** 2 + (target_object_position.y - msg.pose.pose.position.y) ** 2) ** 0.5,
-                    ego_to_wall,
+                    ego_to_wall, # 障害物からどれだけ離れているか (offsetMileageで再計算)
                     intervene,
                     current_face_direction
                     ]

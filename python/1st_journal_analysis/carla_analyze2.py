@@ -1,0 +1,410 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+
+import csv
+import sys
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import math
+import numpy as np
+from scipy import stats
+# from scipy import stats
+import statsmodels.api as sm
+from statsmodels.formula.api import ols
+import statsmodels.stats.anova as stats_anova
+from statsmodels.sandbox.stats import multicomp
+from statsmodels.stats.multitest import multipletests
+from statsmodels.stats.contingency_tables import cochrans_q
+from scipy.stats import f_oneway
+import scikit_posthocs as sp
+import pickle
+
+# gamesHowellTest
+from statsmodels.stats.libqsturng import qsturng, psturng
+# from hypothetical.descriptive import var
+from itertools import combinations
+
+def gamesHowellTest(df, target, hue):
+    alpha = 0.05
+    k = len(np.unique(df[target]))
+
+    group_means = dict(df.groupby(hue)[target].mean())
+    group_obs = dict(df.groupby(hue)[target].size())
+    group_variance = dict(df.groupby(hue)[target].var())
+
+    combs = list(combinations(np.unique(df[hue]), 2))
+
+    group_comps = []
+    mean_differences = []
+    degrees_freedom = []
+    t_values = []
+    p_values = []
+    std_err = []
+    up_conf = []
+    low_conf = []
+
+    for comb in combs:
+        # Mean differences of each group combination
+        diff = group_means[comb[1]] - group_means[comb[0]]
+
+        # t-value of each group combination
+        t_val = np.abs(diff) / np.sqrt((group_variance[comb[0]] / group_obs[comb[0]]) +
+                                       (group_variance[comb[1]] / group_obs[comb[1]]))
+
+        # Numerator of the Welch-Satterthwaite equation
+        df_num = (group_variance[comb[0]] / group_obs[comb[0]] + group_variance[comb[1]] / group_obs[comb[1]]) ** 2
+
+        # Denominator of the Welch-Satterthwaite equation
+        df_denom = ((group_variance[comb[0]] / group_obs[comb[0]]) ** 2 / (group_obs[comb[0]] - 1) +
+                    (group_variance[comb[1]] / group_obs[comb[1]]) ** 2 / (group_obs[comb[1]] - 1))
+
+        # Degrees of freedom
+        df = df_num / df_denom
+
+        # p-value of the group comparison
+        p_val = psturng(t_val * np.sqrt(2), k, df)
+
+        # Standard error of each group combination
+        se = np.sqrt(0.5 * (group_variance[comb[0]] / group_obs[comb[0]] +
+                            group_variance[comb[1]] / group_obs[comb[1]]))
+
+        # Upper and lower confidence intervals
+        upper_conf = diff + qsturng(1 - alpha, k, df)
+        lower_conf = diff - qsturng(1 - alpha, k, df)
+
+        # Append the computed values to their respective lists.
+        mean_differences.append(diff)
+        degrees_freedom.append(df)
+        t_values.append(t_val)
+        p_values.append(p_val)
+        std_err.append(se)
+        up_conf.append(upper_conf)
+        low_conf.append(lower_conf)
+        group_comps.append(str(comb[0]) + ' : ' + str(comb[1]))
+
+    result_df = pd.DataFrame({'groups': group_comps,
+                          'mean_difference': mean_differences,
+                          'std_error': std_err,
+                          't_value': t_values,
+                          'p_value': p_values,
+                          'upper_limit': up_conf,
+                          'lower limit': low_conf})
+
+    return result_df
+
+def addAnotation(plt_obj, x1, x2, y, hight, h_offset, text, color):
+    plt_obj.plot([x1, x1, x2, x2], [y+h_offset, y+hight+h_offset, y+hight+h_offset, y+h_offset], lw=1.5, c=color)
+    plt_obj.text((x1+x2)*0.5, y+hight+h_offset, text, ha='center', va='bottom', color=color)
+
+def saveCsv(data, filename):
+    with open(filename, 'w') as f:
+        writer = csv.writer(f)
+        writer.writerows(data)
+
+
+def show_mean_var(df, actor_action, col):
+    print(f"target:{col}")
+    target_df = df[df.actor_action == actor_action]
+    mean_list = [
+        target_df[(target_df.experiment_type == 'BASELINE')][col].dropna().mean(),
+        target_df[(target_df.experiment_type == 'CONTROL')][col].dropna().mean(),
+        target_df[(target_df.experiment_type == 'BUTTON')][col].dropna().mean(),
+        target_df[(target_df.experiment_type == 'TOUCH')][col].dropna().mean(),
+        ]
+
+    var_list = [
+        target_df[(target_df.experiment_type == 'BASELINE')][col].dropna().std(),
+        target_df[(target_df.experiment_type == 'CONTROL')][col].dropna().std(),
+        target_df[(target_df.experiment_type == 'BUTTON')][col].dropna().std(),
+        target_df[(target_df.experiment_type == 'TOUCH')][col].dropna().std(),
+        ]
+
+    sem_list = [
+        target_df[(target_df.experiment_type == 'BASELINE')][col].dropna().sem(),
+        target_df[(target_df.experiment_type == 'CONTROL')][col].dropna().sem(),
+        target_df[(target_df.experiment_type == 'BUTTON')][col].dropna().sem(),
+        target_df[(target_df.experiment_type == 'TOUCH')][col].dropna().sem(),
+    ]
+
+    print ('----', 'BASELINE', 'CONTROL', 'BUTTON', 'TOUCH')
+    print("mean:", mean_list)
+    print("var:", var_list)
+
+    _, norm_p = stats.shapiro(target_df[col].dropna())
+    _, var_p = stats.levene(
+        target_df[target_df.experiment_type == "BASELINE"][col].dropna(),
+        target_df[target_df.experiment_type == "CONTROL"][col].dropna(),
+        target_df[target_df.experiment_type == "BUTTON"][col].dropna(),
+        target_df[target_df.experiment_type == "TOUCH"][col].dropna(),
+        )
+    print("norm equal var test", norm_p, var_p)
+
+    subject_mean_df = pd.DataFrame(columns=["subjects", "whn_var", "target"])
+    for subject in target_df.subject.drop_duplicates():
+        for experiment_type in target_df.experiment_type.drop_duplicates():
+            mean = target_df[(target_df.subject == subject) & (target_df.experiment_type == experiment_type)][col].mean()
+            buf = pd.DataFrame([[subject, experiment_type, mean]], columns=subject_mean_df.columns)
+            subject_mean_df = pd.concat((subject_mean_df, buf), ignore_index=True)
+
+    if norm_p > 0.05 and var_p > 0.05:
+        anova = stats_anova.AnovaRM(subject_mean_df, "target", "subjects", ["whn_var"])
+        print("reperted anova: ", anova.fit())
+        multicomp_result = multicomp.MultiComparison(subject_mean_df.target, subject_mean_df.whn_var)
+        print(multicomp_result.tukeyhsd().summary())
+
+    elif norm_p > 0.05 and var_p < 0.05:
+        print(gamesHowellTest(subject_mean_df, "target", "var"))
+
+    else:
+        anova_f, anova_p = stats.friedmanchisquare(subject_mean_df[subject_mean_df.whn_var == "BASELINE"].target,
+                                             subject_mean_df[subject_mean_df.whn_var == "CONTROL"].target,
+                                             subject_mean_df[subject_mean_df.whn_var == "BUTTON"].target,
+                                             subject_mean_df[subject_mean_df.whn_var == "TOUCH"].target)
+        print(f"friedman test (anova) p={anova_p}, f({len(subject_mean_df.whn_var.drop_duplicates())-1}, {len(subject_mean_df)-len(subject_mean_df.whn_var.drop_duplicates())})={anova_f}")
+        print("conover test", sp.posthoc_conover_friedman(subject_mean_df, y_col="target", group_col="whn_var", block_col="subjects", melted=True))
+        # if anova_p < 0.05:
+
+    # if norm_p > 0.05 and var_p > 0.05:
+    #     anova = stats_anova.AnovaRM(target_df, "target", "subjects", ["whn_var"])
+    #     print("reperted anova: ", anova.fit())
+    #     multicomp_result = multicomp.MultiComparison(target_df[col], target_df.experiment_type)
+    #     print(multicomp_result.tukeyhsd().summary())
+    #
+    # elif norm_p > 0.05 and var_p < 0.05:
+    #     print(gamesHowellTest(target_df, "target", "var"))
+    #
+    # else:
+    #     print(target_df.isnull().all())
+    #     print("conover test", sp.posthoc_durbin(a=target_df.dropna(), y_col=col, group_col="experiment_type", block_col="subject", melted=True))
+    #     result = sp.test_durbin(a=target_df, y_col=col, group_col="experiment_type", block_col="subject", melted=True)
+    #     print(result)
+    #     # print(f"durbin posthoc test (anova) p={anova_p}, f({len(target_df.experiment_type.drop_duplicates())-1}, {len(target_df)-len(target_df.experiment_type.drop_duplicates())})={anova_f} freedom={freedom}")
+    #     if anova_p < 0.05:
+    #         print("conover test", sp.posthoc_durbin(target_df, y_col=col, group_col="experiment_type", block_col="subject", melted=True))
+
+
+    return mean_list, sem_list
+
+
+sns.set(context='paper', style='whitegrid')
+color = {'BASELINE':'#add8e6', 'CONTROL': '#7dbeb5', 'BUTTON': '#388fad', 'TOUCH': '#335290'}
+sns.set_palette(sns.color_palette(color.values()))
+
+summary_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/summary_rm_wrong.csv')
+nasa_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/nasa-tlx.csv')
+rank_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/rank.csv')
+with open('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/profile.pickle', 'rb') as f:
+    profile_list = pickle.load(f)
+
+# summary_df = pd.read_csv('/home/kuriatsu/Documents/experiment/carla_202102_result/summary.csv')
+# summary_df = pd.read_csv('/home/kuriatsu/Documents/experiment/carla_202102_result/summary_rm_wrong.csv')
+# nasa_df = pd.read_csv('/home/kuriatsu/Documents/experiment/carla_202102_result/nasa-tlx.csv')
+# rank_df = pd.read_csv('/home/kuriatsu/Documents/experiment/carla_202102_result/rank.csv')
+
+subjects = summary_df.subject.drop_duplicates()
+experiments = ['BASELINE', 'CONTROL', 'BUTTON', 'TOUCH']
+
+
+
+################################################################
+print('min_speed ')
+################################################################
+show_mean_var(summary_df, "pose", "min_vel")
+
+min_speed_summary_df = pd.DataFrame(columns=["subject", "experiment_type", "pose_yield", "pose_keep", "cross_yield", "cross_keep", "wrong_rate"])
+for experiment_type in summary_df.experiment_type.drop_duplicates():
+    for subject in summary_df.subject.drop_duplicates():
+        target_df = summary_df[(summary_df.experiment_type == experiment_type) & (summary_df.subject == subject)]
+        buf = pd.DataFrame([[subject, experiment_type,
+            len(target_df[(target_df.actor_action == "pose") & (target_df.min_vel < 10.0)]),
+            len(target_df[(target_df.actor_action == "pose") & (target_df.min_vel >= 10.0)]),
+            len(target_df[(target_df.actor_action == "cross") & (target_df.min_vel < 10.0)]),
+            len(target_df[(target_df.actor_action == "cross") & (target_df.min_vel >= 10.0)]),
+            len(target_df[((target_df.actor_action == "pose") & (target_df.min_vel < 10.0)) | ((target_df.actor_action == "cross") & (target_df.min_vel >= 10.0))])/len(target_df),
+            ]], columns=min_speed_summary_df.columns)
+        min_speed_summary_df = pd.concat((min_speed_summary_df, buf), ignore_index=True)
+
+for experiment_type in min_speed_summary_df.experiment_type.drop_duplicates():
+    print(experiment_type, "\n", "pose-yield", "pose-keep", "cross-yield", "cross-keep", "wrong_rate")
+    print(
+        min_speed_summary_df[min_speed_summary_df.experiment_type==experiment_type].pose_yield.sum(),
+        min_speed_summary_df[min_speed_summary_df.experiment_type==experiment_type].pose_keep.sum(),
+        min_speed_summary_df[min_speed_summary_df.experiment_type==experiment_type].cross_yield.sum(),
+        min_speed_summary_df[min_speed_summary_df.experiment_type==experiment_type].cross_keep.sum(),
+        min_speed_summary_df[min_speed_summary_df.experiment_type==experiment_type].wrong_rate.mean(),
+    )
+_, norm_p = stats.shapiro(min_speed_summary_df["wrong_rate"].dropna())
+_, var_p = stats.levene(
+    min_speed_summary_df[min_speed_summary_df.experiment_type == "BASELINE"]["wrong_rate"].dropna(),
+    min_speed_summary_df[min_speed_summary_df.experiment_type == "CONTROL"]["wrong_rate"].dropna(),
+    min_speed_summary_df[min_speed_summary_df.experiment_type == "BUTTON"]["wrong_rate"].dropna(),
+    min_speed_summary_df[min_speed_summary_df.experiment_type == "TOUCH"]["wrong_rate"].dropna(),
+    )
+print("norm equal var test for wrong rate", norm_p, var_p)
+
+
+if norm_p > 0.05 and var_p > 0.05:
+    anova = stats_anova.AnovaRM(min_speed_summary_df, "wrong_rate", "subject", ["experiment_type"])
+    print("reperted anova: ", anova.fit())
+    multicomp_result = multicomp.MultiComparison(min_speed_summary_df.wrong_rate, min_speed_summary_df.experiment_type)
+    print(multicomp_result.tukeyhsd().summary())
+
+elif norm_p > 0.05 and var_p < 0.05:
+    print(gamesHowellTest(min_speed_summary_df, "wrong_rate", "var"))
+
+else:
+    anova_f, anova_p = stats.friedmanchisquare(min_speed_summary_df[min_speed_summary_df.experiment_type == "BASELINE"].wrong_rate,
+                                         min_speed_summary_df[min_speed_summary_df.experiment_type == "CONTROL"].wrong_rate,
+                                         min_speed_summary_df[min_speed_summary_df.experiment_type == "BUTTON"].wrong_rate,
+                                         min_speed_summary_df[min_speed_summary_df.experiment_type == "TOUCH"].wrong_rate)
+    print(f"friedman test (anova) p={anova_p}, f({len(min_speed_summary_df.experiment_type.drop_duplicates())-1}, {len(min_speed_summary_df)-len(min_speed_summary_df.experiment_type.drop_duplicates())})={anova_f}")
+    print("conover test", sp.posthoc_conover_friedman(min_speed_summary_df, y_col="wrong_rate", group_col="experiment_type", block_col="subject", melted=True))
+################################################################
+print('std_speed ')
+################################################################
+show_mean_var(summary_df, "pose", "std_vel")
+
+
+################################################################
+print('intervention speed ')
+################################################################
+int_speed_mean, int_speed_sem = show_mean_var(summary_df, "pose", "first_intervene_time")
+
+
+################################################################
+print('intervention duration ')
+################################################################
+int_dur_mean, int_dur_sem = show_mean_var(summary_df, "pose", "intervention_duration")
+
+fig, axes = plt.subplots()
+for i, experiment in enumerate(experiments):
+    axes.errorbar(int_speed_mean[i], int_dur_mean[i], xerr=int_speed_sem[i], yerr=int_dur_sem[i], marker='o', capsize=5, label=experiment)
+
+axes.set_xlim(0, 8.0)
+axes.set_ylim(0, 9.0)
+axes.set_xlabel('Intervention speed [s]', fontsize=15)
+axes.set_ylabel('Intervention duration [s]', fontsize=15)
+axes.legend(loc='upper left', fontsize=12)
+axes.tick_params(axis='x', labelsize=12)
+axes.tick_params(axis='y', labelsize=12)
+# axes.figure.savefig('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/int_performance.svg', format="svg")
+# plt.show()
+
+################################################################
+print('mean_speed ')
+################################################################
+speed_mean, speed_sem = show_mean_var(summary_df, "pose", "mean_vel")
+
+################################################################
+print('ttc ')
+################################################################
+ttc_mean, ttc_sem = show_mean_var(summary_df, "cross", "min_ttc")
+
+fig, axes = plt.subplots()
+for i, experiment in enumerate(experiments):
+    axes.errorbar(speed_mean[i], ttc_mean[i], xerr=speed_sem[i], yerr=ttc_sem[i], marker='o', capsize=5, label=experiment)
+
+axes.set_xlim(0, 35.0)
+axes.set_ylim(0, 4.0)
+axes.set_xlabel('Average speed [km/h]', fontsize=15)
+axes.set_ylabel('TTC to cross pedestrian [s]', fontsize=15)
+axes.legend(loc='lower left', fontsize=12)
+axes.tick_params(axis='x', labelsize=12)
+axes.tick_params(axis='y', labelsize=12)
+# axes.figure.savefig('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/int_performance.svg', format="svg")
+plt.show()
+
+################################################################
+print('nasa-tlx')
+################################################################
+#### nasa-tlx ####
+for item in ['mental', 'physical', 'temporal', 'performance', 'effort', 'frustration', 'entire']:
+    print(item)
+    _, norm_p = stats.shapiro(nasa_df[item])
+    _, var_p = stats.levene(
+        nasa_df[nasa_df.experiment_type == "BASELINE"][item],
+        nasa_df[nasa_df.experiment_type == "CONTROL"][item],
+        nasa_df[nasa_df.experiment_type == "BUTTON"][item],
+        nasa_df[nasa_df.experiment_type == "TOUCH"][item],
+        center='median'
+        )
+
+    melted_df = pd.melt(nasa_df, id_vars=["name", "experiment_type"],  var_name="type", value_name="rate")
+    if norm_p > 0.05 and var_p > 0.05:
+        aov = stats_anova.AnovaRM(melted_df[melted_df.type == item], "rate", "name", ["experiment_type"])
+        print("reperted anova: ", anova.fit())
+        multicomp_result = multicomp.MultiComparison(nasa_df[item], nasa_df.experiment_type)
+        print(multicomp_result.tukeyhsd().summary())
+
+    elif norm_p > 0.05 and var_p < 0.05:
+        print(gamesHowellTest(nasa_df, item, "experiment_type"))
+
+    else:
+        anova_f, anova_p = stats.friedmanchisquare(nasa_df[nasa_df.experiment_type == "BASELINE"][item],
+                                             nasa_df[nasa_df.experiment_type == "CONTROL"][item],
+                                             nasa_df[nasa_df.experiment_type == "BUTTON"][item],
+                                             nasa_df[nasa_df.experiment_type == "TOUCH"][item])
+        print(f"friedman test (anova) p={anova_p}, f({len(nasa_df.experiment_type.drop_duplicates())-1}, {len(nasa_df)-len(nasa_df.experiment_type.drop_duplicates())})={anova_f}")
+        print("conover test", sp.posthoc_conover_friedman(nasa_df, y_col=item, group_col="experiment_type", block_col="name", melted=True))
+
+################################################################
+print('profile ')
+################################################################
+plot_col_list = {"pose":0, "cross":1}
+plot_col_list_inv = {0:"STAND", 1:"CROSS"}
+plot_list = {}
+fig, axes = plt.subplots(4, 2)
+for i, experiment_type in enumerate(["BASELINE", "CONTROL", "BUTTON", "TOUCH"]):
+    plot_list[experiment_type] = axes[i, :]
+    for j in range(0, len(axes[i,:])):
+        axes[i, j].set_xlim([50, -10])
+        axes[i, j].set_ylim([0, 60])
+        axes[i, j].set_xlabel(f"Distance from target pedestrian[m]\n{experiment_type}-{plot_col_list_inv[j]}", fontsize=12)
+        axes[i, j].set_ylabel("Speed[km/h]", fontsize=12)
+
+
+count = 0
+lines = [0]*4
+for profile in profile_list:
+    # count+=1
+    # if count > 12:
+    #     break
+
+    profile["y"] = profile["y"] * 3.6
+    ax = plot_list[profile["experiment_type"]][plot_col_list[profile["actor_action"]]]
+
+    if profile["min_vel"] > 10.0:
+        plot_start = profile["int_start"] if profile["int_start"] is not None else 0
+        plot_end = profile["int_end"] if profile["int_end"] is not None else 0
+        lines[0] = sns.lineplot(x=profile["x"][0:plot_start+4], y=profile["y"][0:plot_start+4], ax=ax, color="teal", alpha=0.5, ci=2, label="keep speed - automation")
+        lines[1] = sns.lineplot(x=profile["x"][plot_start:plot_end+4], y=profile["y"][plot_start:plot_end+4], ax=ax, color="teal", alpha=0.5, linestyle=":", ci=2, label="keep speed - intervention")
+        sns.lineplot(x=profile["x"][plot_end:-1], y=profile["y"][plot_end:-1], ax=ax, color="teal", alpha=0.5, ci=2)
+        ax.get_legend().set_visible(False)
+        # sns.lineplot(x=profile["x"], y=profile["y"], ax=ax, color="orangered", alpha=0.5)
+        # sns.scatterplot(x=profile["x"][plot_start:plot_end], y=profile["y"][plot_start:plot_end], ax=ax, color="black", s=5, marker="x")
+    else:
+        plot_start = profile["int_start"] if profile["int_start"] is not None else 0
+        plot_end = profile["int_end"] if profile["int_end"] is not None else 0
+        lines[2] = sns.lineplot(x=profile["x"][0:plot_start+4], y=profile["y"][0:plot_start+4], ax=ax, color="orangered", alpha=0.5, ci=2, label="yield - automation")
+        lines[3] = sns.lineplot(x=profile["x"][plot_start:plot_end+4], y=profile["y"][plot_start:plot_end+4], ax=ax, color="orangered", alpha=0.5, linestyle=":", ci=2, label="yield - intervention")
+        sns.lineplot(x=profile["x"][plot_end:-1], y=profile["y"][plot_end:-1], ax=ax, color="orangered", alpha=0.5, ci=2)
+        ax.get_legend().set_visible(False)
+        # sns.lineplot(x=profile["x"], y=profile["y"], ax=ax, color="orangered", alpha=0.5)
+        # sns.scatterplot(x=profile["x"][plot_start:plot_end], y=profile["y"][plot_start:plot_end], ax=ax, color="black", s=5, marker="x")
+
+# handler, label = plot_list["TOUCH"][0].get_legend_handles_labels()
+handler_list = []
+label_list = []
+for ax in fig.axes:
+    handlers, labels = ax.get_legend_handles_labels()
+    for handler, label in zip(handlers, labels):
+        if label not in label_list:
+            handler_list.append(handler)
+            label_list.append(label)
+
+
+plt.legend(handles=handler_list, labels=label_list, ncol=2, loc="upper right", bbox_to_anchor=(1, -0.4), fontsize=12)
+# plot_list["TOUCH"][1].legend(loc="lower center", bbox_to_anchor=(0.0, 1.0),fontsize=12)
+
+plt.show()

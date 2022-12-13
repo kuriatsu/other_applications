@@ -4,6 +4,7 @@
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 import csv
 import sys
 
@@ -16,7 +17,9 @@ import sys
 
 # profile_data=[time, ego_vel, ego_mileage, target_ego_dist, wp_dist, intervene_type]
 
-def summarizeData(extracted_data):
+
+
+def summarizeData(extracted_data, profile_data):
 
     out_list = [[
         'subject',
@@ -27,6 +30,7 @@ def summarizeData(extracted_data):
         'last_intervene_time',
         'first_intervene_distance',
         'last_intervene_distance',
+        'intervention_duration',
         'initial_vel',
         'max_vel',
         'min_vel',
@@ -34,8 +38,12 @@ def summarizeData(extracted_data):
         'mean_vel',
         'max_acc',
         'min_acc',
+        'std_acc',
+        'mean_acc',
         'intervene_vel',
         'face_turn_count',
+        'travel_time',
+        'min_ttc',
         ]]
 
 
@@ -65,6 +73,7 @@ def summarizeData(extracted_data):
 
         first_intervene_time = None
         last_intervene_time = None
+        intervention_duration = None
         first_intervene_distance = None
         last_intervene_distance = None
         initial_vel = 50.0
@@ -76,6 +85,10 @@ def summarizeData(extracted_data):
         face_turn_count = None
         max_acc = None
         min_acc = None
+        mean_acc = None
+        std_acc = None
+        travel_time = None
+        min_ttc = None
 
         # intervention index
         intervene_index_list = np.where(arr_data[:, 5] != None)[0]
@@ -94,32 +107,46 @@ def summarizeData(extracted_data):
             first_intervene_time = arr_data[intervene_start_column_index, 0]
             first_intervene_distance = arr_data[intervene_start_column_index, 4]
 
-            last_intervene_time = arr_data[intervene_start_column_index, 0]
-            last_intervene_distance = arr_data[intervene_start_column_index, 4]
+            last_intervene_time = arr_data[intervene_end_column_index, 0]
+            last_intervene_distance = arr_data[intervene_end_column_index, 4]
             intervene_vel = arr_data[intervene_start_column_index, 1] * 3.6
+            intervention_duration = last_intervene_time-first_intervene_time
 
-            # acc
-            acc_start_index = intervene_start_column_index
-            acc_end_index = np.where(arr_data[:, 4] <= -20.0)[0][0]
-            max_acc = 0.0
-            min_acc = 0.0
-            for i in range(acc_start_index, acc_end_index):
-                if (arr_data[i, 0] - arr_data[i-1, 0]) == 0.0:
-                    continue
-                acc = (arr_data[i, 1] - arr_data[i-1, 1]) / (arr_data[i, 0] - arr_data[i-1, 0])
-                if acc > max_acc:
-                    max_acc = acc
-                if acc < min_acc:
-                    min_acc = acc
+        # evasion area driving evaluation
+        evasion_start_index = np.where(arr_data[:, 4] <= 50.0)[0][0]
+        evasion_end_index = np.where(arr_data[:, 4] <= -1.0)[0][0]
+        print("evasion start-end", arr_data[evasion_start_index, 4], arr_data[evasion_end_index, 4])
 
-            max_vel = np.amax(arr_data[np.where(arr_data[acc_start_index:acc_end_index, 2]>0.0)+acc_start_index, 1]) * 3.6
-            min_vel = np.amin(arr_data[np.where(arr_data[acc_start_index:acc_end_index, 2]>0.0)+acc_start_index, 1]) * 3.6
-            std_vel = np.std(arr_data[acc_start_index:acc_end_index, 1])
-            mean_vel = np.mean(arr_data[acc_start_index:acc_end_index, 1])
-            # print(world_id, acc_start_index, acc_end_index, arr_data[acc_start_index:acc_end_index, 1]*3.6, np.where(arr_data[acc_start_index:acc_end_index, 2]>0.0))
+        acc_list = []
+        for i in range(evasion_start_index, evasion_end_index):
+            if (arr_data[i, 0] - arr_data[i-1, 0]) == 0.0:
+                continue
+            acc_list.append((arr_data[i, 1] - arr_data[i-1, 1]) / (arr_data[i, 0] - arr_data[i-1, 0]))
 
-        else:
-            min_vel = np.amin(arr_data[:, 1]) * 3.6
+        max_acc = np.amax(acc_list)
+        min_acc = np.amin(acc_list)
+        std_acc = np.std(acc_list)
+        mean_acc = np.mean(acc_list)
+
+        max_vel = np.amax(arr_data[evasion_start_index:evasion_end_index, 1] * 3.6)
+        min_vel = np.amin(arr_data[evasion_start_index:evasion_end_index, 1] * 3.6)
+        # min_vel = np.amin(arr_data[np.where(arr_data[evasion_start_index:evasion_end_index, 2]>0.0)+evasion_start_index, 1]) * 3.6
+        std_vel = np.std(arr_data[evasion_start_index:evasion_end_index, 1] * 3.6)
+        mean_vel = np.mean(arr_data[evasion_start_index:evasion_end_index, 1] * 3.6)
+        travel_time = arr_data[evasion_end_index, 0] - arr_data[evasion_start_index, 0]
+
+        ttc_start_index = evasion_start_index
+        ttc_end_index = np.where((arr_data[:, 1] <= 1.0) | (arr_data[:, 4] <= 0.0))[0][0]
+        print("ttc start-end", ttc_start_index, ttc_end_index)
+        ttc_list = []
+        for data in arr_data[ttc_start_index:ttc_end_index]:
+            if data[1] != 0.0:
+                ttc = data[3] / data[1]
+                if ttc > 0.0:
+                    ttc_list.append(data[3] / data[1])
+        min_ttc = np.amin(ttc_list)
+            # print(world_id, acc_start_index, evasion_end_index, arr_data[acc_start_index:acc_end_index, 1]*3.6, np.where(arr_data[acc_start_index:acc_end_index, 2]>0.0))
+
 
         # face turn count
         last_face_direction = arr_data[0, 6]
@@ -144,6 +171,7 @@ def summarizeData(extracted_data):
             last_intervene_time,
             first_intervene_distance,
             last_intervene_distance,
+            intervention_duration,
             initial_vel,
             max_vel,
             min_vel,
@@ -151,9 +179,23 @@ def summarizeData(extracted_data):
             mean_vel,
             max_acc,
             min_acc,
+            std_acc,
+            mean_acc,
             intervene_vel,
             face_turn_count,
+            travel_time,
+            min_ttc,
             ])
+
+        profile_data.append({
+            "x":arr_data[:, 4],
+            "y":arr_data[:, 1],
+            "min_vel": min_vel,
+            "int_start":intervene_start_column_index,
+            "int_end":intervene_end_column_index,
+            "experiment_type":intervene_type[profile.get('experiment_type')],
+            "actor_action":profile.get('actor_action'),
+            })
 
     return out_list
 
@@ -167,14 +209,24 @@ def saveCsv(filename, data):
 def main():
 
     pickle_file = '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/' + sys.argv[1] + '/Town01.pickle'
+    profile_out_file = '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/profile.pickle'
     out_file = '/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/' + sys.argv[1] + '/summary_rm_wrong.csv'
 
     with open(pickle_file, 'rb') as f:
         extracted_data = pickle.load(f)
 
-    out_list = summarizeData(extracted_data)
+    try:
+        with open(profile_out_file, 'rb') as f:
+            profile_data = pickle.load(f)
+    except:
+        profile_data = []
+
+    out_list = summarizeData(extracted_data, profile_data)
+    plt.show()
     saveCsv(out_file, out_list)
 
+    with open(profile_out_file, 'wb') as f:
+        pickle.dump(profile_data, f)
 
 if __name__ == '__main__':
     main()
