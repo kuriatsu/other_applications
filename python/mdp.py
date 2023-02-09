@@ -82,6 +82,30 @@ def anim_value_func(V):
     anim = animation.FuncAnimation(fig, animate, init_func = init, frames=len(V), interval=200, repeat=False)
     return anim
 
+def get_next_state(pi, s):
+    """方策から次の方向を選択し、状態sを返す
+    pi : 方策パラメータ
+    s : 現在状態
+    ~return~
+    s_next : 次の状態
+    """
+    direction = ["up", "right", "down", "left"]
+    next_direction = np.random.choice(direction, p=pi[s, :]) # 方策の確率に従って、directionが選択される
+
+    if next_direction == "up":
+        action = 0
+        s_next = s-3
+    elif next_direction == "right":
+        action = 1
+        s_next = s+1
+    elif next_direction == "down":
+        action = 2
+        s_next = s+3
+    elif next_direction == "left":
+        action = 3
+        s_next = s-1
+
+    return [action, s_next]
 ##########################
 # シンプルにランダム探索
 ##########################
@@ -140,30 +164,7 @@ def softmax_convert_into_pi_from_theta(theta):
     return pi
 
 
-def get_next_state(pi, s):
-    """方策から次の方向を選択し、状態sを返す
-    pi : 方策パラメータ
-    s : 現在状態
-    ~return~
-    s_next : 次の状態
-    """
-    direction = ["up", "right", "down", "left"]
-    next_direction = np.random.choice(direction, p=pi[s, :]) # 方策の確率に従って、directionが選択される
 
-    if next_direction == "up":
-        action = 0
-        s_next = s-3
-    elif next_direction == "right":
-        action = 1
-        s_next = s+1
-    elif next_direction == "down":
-        action = 2
-        s_next = s+3
-    elif next_direction == "left":
-        action = 3
-        s_next = s-1
-
-    return [action, s_next]
 
 
 def update_theta(theta, pi, history):

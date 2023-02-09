@@ -188,17 +188,18 @@ def show_mean_var(df, actor_action, col):
 
 
 sns.set(context='paper', style='whitegrid')
-# color = {'BASELINE':'#add8e6', 'CONTROL': '#7dbeb5', 'BUTTON': '#388fad', 'TOUCH': '#335290'}
+# colors = {'BASELINE':'turquoise', 'CONTROL': 'turquoise', 'BUTTON': 'tomato', 'TOUCH': 'tomato'}
 # sns.set_palette(sns.color_palette(color.values()))
+# markers = {'BASELINE':'o', 'CONTROL': 's', 'BUTTON': 'v', 'TOUCH': '*'}
+# linestyles = {'BASELINE':'--', 'CONTROL': '-', 'BUTTON': '-', 'TOUCH': '--'}
 colors = ['turquoise', 'turquoise', 'tomato', 'tomato']
 markers = ['o', 's', 'v', '*']
-linestyles = [(2, 2), (1, 0), (2, 2), (1, 0)]
-patches = ["//", "-", "//", "-"]
+linestyles = ['--', '-', '-', '--']
 
-summary_df = pd.read_csv('/run/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/summary_rm_wrong.csv')
-nasa_df = pd.read_csv('/run/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/nasa-tlx.csv')
-rank_df = pd.read_csv('/run/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/rank.csv')
-with open('/run/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/profile.pickle', 'rb') as f:
+summary_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/summary_rm_wrong.csv')
+nasa_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/nasa-tlx.csv')
+rank_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/rank.csv')
+with open('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/profile.pickle', 'rb') as f:
     profile_list = pickle.load(f)
 
 # summary_df = pd.read_csv('/home/kuriatsu/Documents/experiment/carla_202102_result/summary.csv')
@@ -221,11 +222,11 @@ for experiment_type in summary_df.experiment_type.drop_duplicates():
     for subject in summary_df.subject.drop_duplicates():
         target_df = summary_df[(summary_df.experiment_type == experiment_type) & (summary_df.subject == subject)]
         buf = pd.DataFrame([[subject, experiment_type,
-            len(target_df[(target_df.actor_action == "pose") & (target_df.min_vel < 1.0)]),
-            len(target_df[(target_df.actor_action == "pose") & (target_df.min_vel >= 1.0)]),
-            len(target_df[(target_df.actor_action == "cross") & (target_df.min_vel < 1.0)]),
-            len(target_df[(target_df.actor_action == "cross") & (target_df.min_vel >= 1.0)]),
-            len(target_df[((target_df.actor_action == "pose") & (target_df.min_vel < 1.0)) | ((target_df.actor_action == "cross") & (target_df.min_vel >= 10.0))])/len(target_df),
+            len(target_df[(target_df.actor_action == "pose") & (target_df.min_vel < 10.0)]),
+            len(target_df[(target_df.actor_action == "pose") & (target_df.min_vel >= 10.0)]),
+            len(target_df[(target_df.actor_action == "cross") & (target_df.min_vel < 10.0)]),
+            len(target_df[(target_df.actor_action == "cross") & (target_df.min_vel >= 10.0)]),
+            len(target_df[((target_df.actor_action == "pose") & (target_df.min_vel < 10.0)) | ((target_df.actor_action == "cross") & (target_df.min_vel >= 10.0))])/len(target_df),
             ]], columns=min_speed_summary_df.columns)
         min_speed_summary_df = pd.concat((min_speed_summary_df, buf), ignore_index=True)
 
@@ -264,132 +265,6 @@ else:
                                          min_speed_summary_df[min_speed_summary_df.experiment_type == "TOUCH"].wrong_rate)
     print(f"friedman test (anova) p={anova_p}, f({len(min_speed_summary_df.experiment_type.drop_duplicates())-1}, {len(min_speed_summary_df)-len(min_speed_summary_df.experiment_type.drop_duplicates())})={anova_f}")
     print("conover test", sp.posthoc_conover_friedman(min_speed_summary_df, y_col="wrong_rate", group_col="experiment_type", block_col="subject", melted=True))
-
-
-################################################################
-print("min_Speed stacked graph in pose scenario")
-################################################################
-fig, axes = plt.subplots()
-min_vel_df_pose = pd.DataFrame(columns=["Rate", "Velocity", "experiment_type"])
-for i, type in enumerate(experiments):
-    for thresh in range(-1, 50):
-        target_df = summary_df[(summary_df.experiment_type == type) & (summary_df.actor_action == "pose")]
-        buf_df = pd.DataFrame(
-            [[
-                len(target_df[target_df.min_vel>thresh]) / len(target_df),
-                thresh,
-                type,
-            ]],
-            columns=min_vel_df_pose.columns
-        )
-        min_vel_df_pose = pd.concat([min_vel_df_pose, buf_df], ignore_index = True)
-
-print(markers, colors)
-axes = sns.lineplot(data=min_vel_df_pose, x='Velocity', y='Rate', hue="experiment_type", c=colors )
-axes.set_ylim(0, 1)
-axes.set_xlim([0,50])
-axes.set_xlabel('Threshold [km/h]', fontsize=15)
-axes.set_ylabel('Driving with Higher Velocity Than Threshold', fontsize=12)
-
-axes.legend(loc='lower left', fontsize=12)
-
-################################################################
-print("min_Speed stacked graph in cross scenario")
-################################################################
-fig, axes = plt.subplots()
-min_vel_df_cross = pd.DataFrame(columns=["Rate", "Threshold", "experiment_type"])
-for i, type in enumerate(experiments):
-    target_df = summary_df[(summary_df.experiment_type == type) & (summary_df.actor_action == "cross")]
-    buf_df = pd.DataFrame(
-        [[
-            len(target_df[target_df.min_vel>-1]) / len(target_df),
-            0,
-            type,
-        ]],
-        columns=min_vel_df_cross.columns
-    )
-    min_vel_df_cross = pd.concat([min_vel_df_cross, buf_df], ignore_index = True)
-    for thresh in range(1, 50):
-        buf_df = pd.DataFrame(
-            [[
-                len(target_df[target_df.min_vel>thresh]) / len(target_df),
-                thresh,
-                type,
-            ]],
-            columns=min_vel_df_cross.columns
-        )
-        min_vel_df_cross = pd.concat([min_vel_df_cross, buf_df], ignore_index = True)
-
-
-# min_vel_df_cross = min_vel_df_cross.drop(min_vel_df_cross.index[min_vel_df_cross.Threshold == 0])
-# min_vel_df_cross.loc[min_vel_df_cross.Threshold == -1, "Threshold"] = 0
-axes = sns.lineplot(data=min_vel_df_cross, x='Threshold', y='Rate', hue="experiment_type", marker='o')
-axes.set_ylim(0, 1)
-axes.set_xlim([0,50])
-axes.set_xlabel('Threshold [km/h]', fontsize=15)
-axes.set_ylabel('Driving with Higher Velocity Than Threshold', fontsize=12)
-
-axes.legend(loc='lower left', fontsize=12)
-
-
-################################################################
-print("stop_distance stacked graph in cross scenario")
-################################################################
-fig, axes = plt.subplots()
-min_vel_df_cross = pd.DataFrame(columns=["Rate", "Threshold", "experiment_type"])
-for i, type in enumerate(experiments):
-    for thresh in range(0, 30):
-        target_df = summary_df[(summary_df.experiment_type == type) & (summary_df.actor_action == "cross")]
-        buf_df = pd.DataFrame(
-            [[
-                len(target_df[target_df.stop_distance>thresh]) / len(target_df),
-                thresh,
-                type,
-            ]],
-            columns=min_vel_df_cross.columns
-        )
-        min_vel_df_cross = pd.concat([min_vel_df_cross, buf_df], ignore_index = True)
-
-
-# min_vel_df_cross = min_vel_df_cross.drop(min_vel_df_cross.index[min_vel_df_cross.Threshold == 0])
-# min_vel_df_cross.loc[min_vel_df_cross.Threshold == -1, "Threshold"] = 0
-axes = sns.lineplot(data=min_vel_df_cross, x='Threshold', y='Rate', hue="experiment_type", marker='o')
-axes.set_ylim(0, 1)
-axes.set_xlim([0,30])
-axes.set_xlabel('Threshold [m]', fontsize=15)
-axes.set_ylabel('Rate of Driving with \n(Stoped Distance > Threshold)', fontsize=12)
-
-axes.legend(loc='lower left', fontsize=12)
-
-
-################################################################
-print("ttc stacked graph")
-################################################################
-fig, axes = plt.subplots()
-min_vel_df = pd.DataFrame(columns=["Rate", "Velocity", "experiment_type"])
-for i, type in enumerate(experiments):
-    for thresh in range(0, 50):
-        target_df = summary_df[(summary_df.experiment_type == type) & (summary_df.actor_action == "cross")]
-        buf_df = pd.DataFrame(
-            [[
-                len(target_df[target_df.min_ttc>thresh/10]) / len(target_df),
-                thresh/10,
-                type,
-            ]],
-            columns=min_vel_df.columns
-        )
-        min_vel_df = pd.concat([min_vel_df, buf_df], ignore_index = True)
-
-axes = sns.lineplot(data=min_vel_df, x='Velocity', y='Rate', hue="experiment_type", marker='o')
-axes.set_ylim(0, 1)
-axes.set_xlim([0,5])
-axes.set_xlabel('Threshold [km/h]', fontsize=15)
-axes.set_ylabel('Rate of Driving with \nTTC > Threshold', fontsize=12)
-
-axes.legend(loc='lower left', fontsize=12)
-plt.show()
-
-
 ################################################################
 print('std_speed ')
 ################################################################
@@ -429,12 +304,11 @@ speed_mean, speed_sem = show_mean_var(summary_df, "pose", "mean_vel")
 ################################################################
 print('ttc ')
 ################################################################
-fig, axes = plt.subplots()
 ttc_mean, ttc_sem = show_mean_var(summary_df, "cross", "min_ttc")
 
 fig, axes = plt.subplots()
 for i, experiment in enumerate(experiments):
-    axes.errorbar(speed_mean[i], ttc_mean[i], xerr=speed_sem[i], yerr=ttc_sem[i], marker=markers[i], c=colors[i], capsize=5, label=experiment)
+    axes.errorbar(speed_mean[i], ttc_mean[i], xerr=speed_sem[i], yerr=ttc_sem[i], marker=markers[i], linestyle=linestyles[i], c=colors[i], capsize=5, label=experiment)
 
 axes.set_xlim(0, 35.0)
 axes.set_ylim(0, 4.0)
@@ -444,12 +318,12 @@ axes.legend(loc='lower left', fontsize=12)
 axes.tick_params(axis='x', labelsize=12)
 axes.tick_params(axis='y', labelsize=12)
 # axes.figure.savefig('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/int_performance.svg', format="svg")
+plt.show()
 
 ################################################################
 print('nasa-tlx')
 ################################################################
 #### nasa-tlx ####
-fig, axes = plt.subplots()
 for item in ['mental', 'physical', 'temporal', 'performance', 'effort', 'frustration', 'entire']:
     print(item)
     _, norm_p = stats.shapiro(nasa_df[item])
@@ -478,21 +352,6 @@ for item in ['mental', 'physical', 'temporal', 'performance', 'effort', 'frustra
                                              nasa_df[nasa_df.experiment_type == "TOUCH"][item])
         print(f"friedman test (anova) p={anova_p}, f({len(nasa_df.experiment_type.drop_duplicates())-1}, {len(nasa_df)-len(nasa_df.experiment_type.drop_duplicates())})={anova_f}")
         print("conover test", sp.posthoc_conover_friedman(nasa_df, y_col=item, group_col="experiment_type", block_col="name", melted=True))
-
-melted_df = pd.melt(nasa_df, id_vars=nasa_df.columns.values[:2], var_name="args", value_name="value")
-# plot = sns.boxplot(x='args', y="value", hue="experiment_type", data=melted_df,showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
-axes = sns.barplot(x='args', y="value", hue="experiment_type", data=melted_df)
-axes.set_ylim([0, 10])
-axes.set_ylabel('Workload Rating', fontsize=15)
-axes.set_xlabel('Scale', fontsize=15)
-axes.tick_params(axis='x', labelsize=12)
-axes.tick_params(axis='y', labelsize=12)
-axes.legend(bbox_to_anchor=(1.0, 1.0), loc='upper left')
-# axes.figure.savefig('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/nasa-tlx.svg', format="svg")
-for bar, patch in zip(axes.patchies, patches):
-    bar.set_hatch(patch)
-
-plt.show()
 
 ################################################################
 print('profile ')

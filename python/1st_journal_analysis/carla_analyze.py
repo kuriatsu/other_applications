@@ -103,8 +103,11 @@ def saveCsv(data, filename):
         writer.writerows(data)
 
 sns.set(context='paper', style='whitegrid')
-color = {'BASELINE':'#add8e6', 'CONTROL': '#7dbeb5', 'BUTTON': '#388fad', 'TOUCH': '#335290'}
-sns.set_palette(sns.color_palette(color.values()))
+# color = {'BASELINE':'#add8e6', 'CONTROL': '#7dbeb5', 'BUTTON': '#388fad', 'TOUCH': '#335290'}
+# sns.set_palette(sns.color_palette(color.values()))
+colors = ['turquoise', 'turquoise', 'tomato', 'tomato']
+markers = ['o', 's', 'v', '*']
+linestyles = ['--', '-', '-', '--']
 
 summary_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/summary_rm_wrong.csv')
 nasa_df = pd.read_csv('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/nasa-tlx.csv')

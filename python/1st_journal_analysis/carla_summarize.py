@@ -44,6 +44,7 @@ def summarizeData(extracted_data, profile_data):
         'face_turn_count',
         'travel_time',
         'min_ttc',
+        'stop_distance',
         ]]
 
 
@@ -135,6 +136,11 @@ def summarizeData(extracted_data, profile_data):
         mean_vel = np.mean(arr_data[evasion_start_index:evasion_end_index, 1] * 3.6)
         travel_time = arr_data[evasion_end_index, 0] - arr_data[evasion_start_index, 0]
 
+        stop_distance = 0
+        stop_distance_index_list = np.where(arr_data[evasion_start_index:evasion_end_index, 1] < 5.0)[0]
+        if len(stop_distance_index_list) > 0:
+            stop_distance = arr_data[evasion_start_index+stop_distance_index_list[0], 4]
+
         ttc_start_index = evasion_start_index
         ttc_end_index = np.where((arr_data[:, 1] <= 1.0) | (arr_data[:, 4] <= 0.0))[0][0]
         print("ttc start-end", ttc_start_index, ttc_end_index)
@@ -185,6 +191,7 @@ def summarizeData(extracted_data, profile_data):
             face_turn_count,
             travel_time,
             min_ttc,
+            stop_distance,
             ])
 
         profile_data.append({
