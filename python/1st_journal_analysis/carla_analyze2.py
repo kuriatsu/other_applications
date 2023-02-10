@@ -188,12 +188,10 @@ def show_mean_var(df, actor_action, col):
 
 
 sns.set(context='paper', style='whitegrid')
-# color = {'BASELINE':'#add8e6', 'CONTROL': '#7dbeb5', 'BUTTON': '#388fad', 'TOUCH': '#335290'}
-# sns.set_palette(sns.color_palette(color.values()))
-colors = ['turquoise', 'turquoise', 'tomato', 'tomato']
-markers = ['o', 's', 'v', '*']
+# colors = ['teal', 'lightsalmon']
+# sns.set_palette(sns.color_palette(colors))
+sns.set_palette("Set1")
 linestyles = [(2, 2), (1, 0), (2, 2), (1, 0)]
-patches = ["//", "-", "//", "-"]
 
 summary_df = pd.read_csv('/run/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/summary_rm_wrong.csv')
 nasa_df = pd.read_csv('/run/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/nasa-tlx.csv')
@@ -270,7 +268,7 @@ else:
 print("min_Speed stacked graph in pose scenario")
 ################################################################
 fig, axes = plt.subplots()
-min_vel_df_pose = pd.DataFrame(columns=["Rate", "Velocity", "experiment_type"])
+min_vel_df_pose = pd.DataFrame(columns=["Rate", "Velocity", "experiment_type", "style", "color"])
 for i, type in enumerate(experiments):
     for thresh in range(-1, 50):
         target_df = summary_df[(summary_df.experiment_type == type) & (summary_df.actor_action == "pose")]
@@ -279,13 +277,15 @@ for i, type in enumerate(experiments):
                 len(target_df[target_df.min_vel>thresh]) / len(target_df),
                 thresh,
                 type,
+                "control_intervention" if type in ["BASELINE", "CONTROL"] else "recognition_intervention",
+                "0" if type in ["BASELINE", "BUTTON"] else "1",
             ]],
             columns=min_vel_df_pose.columns
         )
         min_vel_df_pose = pd.concat([min_vel_df_pose, buf_df], ignore_index = True)
 
-print(markers, colors)
-axes = sns.lineplot(data=min_vel_df_pose, x='Velocity', y='Rate', hue="experiment_type", c=colors )
+# axes = sns.lineplot(data=min_vel_df_pose, x='Velocity', y='Rate', hue="style", style="color", markers=True, dashes=True)
+axes = sns.lineplot(data=min_vel_df_pose, x='Velocity', y='Rate', hue="experiment_type", style="experiment_type", markers=True, dashes=False)
 axes.set_ylim(0, 1)
 axes.set_xlim([0,50])
 axes.set_xlabel('Threshold [km/h]', fontsize=15)
@@ -366,7 +366,7 @@ axes.legend(loc='lower left', fontsize=12)
 print("ttc stacked graph")
 ################################################################
 fig, axes = plt.subplots()
-min_vel_df = pd.DataFrame(columns=["Rate", "Velocity", "experiment_type"])
+min_vel_df = pd.DataFrame(columns=["Rate", "Velocity", "experiment_type", "color", "style"])
 for i, type in enumerate(experiments):
     for thresh in range(0, 50):
         target_df = summary_df[(summary_df.experiment_type == type) & (summary_df.actor_action == "cross")]
@@ -375,12 +375,15 @@ for i, type in enumerate(experiments):
                 len(target_df[target_df.min_ttc>thresh/10]) / len(target_df),
                 thresh/10,
                 type,
+                "control_intervention" if type in ["BASELINE", "CONTROL"] else "recognition_intervention",
+                "0" if type in ["BASELINE", "BUTTON"] else "1",
             ]],
             columns=min_vel_df.columns
         )
         min_vel_df = pd.concat([min_vel_df, buf_df], ignore_index = True)
 
-axes = sns.lineplot(data=min_vel_df, x='Velocity', y='Rate', hue="experiment_type", marker='o')
+# axes = sns.lineplot(data=min_vel_df, x='Velocity', y='Rate', hue="style", markers=True, style="color")
+axes = sns.lineplot(data=min_vel_df, x='Velocity', y='Rate', hue="experiment_type", style="experiment_type", markers=True, dashes=False)
 axes.set_ylim(0, 1)
 axes.set_xlim([0,5])
 axes.set_xlabel('Threshold [km/h]', fontsize=15)
@@ -407,9 +410,11 @@ print('intervention duration ')
 ################################################################
 int_dur_mean, int_dur_sem = show_mean_var(summary_df, "pose", "intervention_duration")
 
+colors = {'BASELINE':'teal', 'CONTROL': 'teal', 'BUTTON': 'lightsalmon', 'TOUCH': 'lightsalmon'}
+markers = {'BASELINE':'o', 'CONTROL': 'x', 'BUTTON': 's', 'TOUCH': 'D'}
 fig, axes = plt.subplots()
 for i, experiment in enumerate(experiments):
-    axes.errorbar(int_speed_mean[i], int_dur_mean[i], xerr=int_speed_sem[i], yerr=int_dur_sem[i], marker=markers[i], c=colors[i], capsize=5, label=experiment)
+    axes.errorbar(int_speed_mean[i], int_dur_mean[i], xerr=int_speed_sem[i], yerr=int_dur_sem[i], marker=markers[experiment], c=f"C{i}", capsize=5, label=experiment)
 
 axes.set_xlim(0, 8.0)
 axes.set_ylim(0, 9.0)
@@ -419,7 +424,7 @@ axes.legend(loc='upper left', fontsize=12)
 axes.tick_params(axis='x', labelsize=12)
 axes.tick_params(axis='y', labelsize=12)
 # axes.figure.savefig('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/int_performance.svg', format="svg")
-# plt.show()
+plt.show()
 
 ################################################################
 print('mean_speed ')
@@ -433,8 +438,8 @@ fig, axes = plt.subplots()
 ttc_mean, ttc_sem = show_mean_var(summary_df, "cross", "min_ttc")
 
 fig, axes = plt.subplots()
-for i, experiment in enumerate(experiments):
-    axes.errorbar(speed_mean[i], ttc_mean[i], xerr=speed_sem[i], yerr=ttc_sem[i], marker=markers[i], c=colors[i], capsize=5, label=experiment)
+# for i, experiment in enumerate(experiments):
+#     axes.errorbar(speed_mean[i], ttc_mean[i], xerr=speed_sem[i], yerr=ttc_sem[i], marker=markers[i], c=colors[i], capsize=5, label=experiment)
 
 axes.set_xlim(0, 35.0)
 axes.set_ylim(0, 4.0)
@@ -449,6 +454,7 @@ axes.tick_params(axis='y', labelsize=12)
 print('nasa-tlx')
 ################################################################
 #### nasa-tlx ####
+patches = ["//", "-", "//", "-"]
 fig, axes = plt.subplots()
 for item in ['mental', 'physical', 'temporal', 'performance', 'effort', 'frustration', 'entire']:
     print(item)
@@ -480,7 +486,13 @@ for item in ['mental', 'physical', 'temporal', 'performance', 'effort', 'frustra
         print("conover test", sp.posthoc_conover_friedman(nasa_df, y_col=item, group_col="experiment_type", block_col="name", melted=True))
 
 melted_df = pd.melt(nasa_df, id_vars=nasa_df.columns.values[:2], var_name="args", value_name="value")
+melted_df["color"] = 0
+print(melted_df)
+melted_df["experiment_type"].isin(["BUTTON", "TOUCH"]).color = 1
+melted_df["style"] = 0
+melted_df["experiment_type"].isin(["CONTROL", "TOUCH"]).style = 1
 # plot = sns.boxplot(x='args', y="value", hue="experiment_type", data=melted_df,showmeans=True, meanline=True, meanprops={"linestyle":"--", "color":"Red"})
+# axes = sns.barplot(x='args', y="value", hue="experiment_type", data=melted_df, palette=["teal", "teal", "lightsalmon", "lightsalmon"])
 axes = sns.barplot(x='args', y="value", hue="experiment_type", data=melted_df)
 axes.set_ylim([0, 10])
 axes.set_ylabel('Workload Rating', fontsize=15)
@@ -489,8 +501,9 @@ axes.tick_params(axis='x', labelsize=12)
 axes.tick_params(axis='y', labelsize=12)
 axes.legend(bbox_to_anchor=(1.0, 1.0), loc='upper left')
 # axes.figure.savefig('/media/kuriatsu/SamsungKURI/master_study_bag/202102experiment/result/nasa-tlx.svg', format="svg")
-for bar, patch in zip(axes.patchies, patches):
-    bar.set_hatch(patch)
+for patch, bars in zip(patches, axes.containers):
+    for i, bar in enumerate(bars):
+        bar.set_hatch(patch)
 
 plt.show()
 
