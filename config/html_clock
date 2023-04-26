@@ -1,0 +1,9 @@
+<center>
+<span style="font-family: Sagar; font-size:18px; font-weight:Normal; color: #FF006C;">{hh}</span>
+<span style="font-family: Sagar; font-size:18px; font-weight:Normal; color: #{flip:00:FF}FF006C;">:</span>
+<span style="font-family: Sagar; font-size:18px; font-weight:Normal; color: #ffffff;">{ii}</span>
+<span style="font-family: Sagar; font-size:18px; font-weight:Normal; color: #ffffff;">&nbsp; {m}</span>
+<span style="font-family: Sagar; font-size:18px; font-weight:Normal; color: #FF006C;">/</span>
+<span style="font-family: Sagar; font-size:18px; font-weight:Normal; color: #ffffff;">{dd} </span>
+<span style="font-family: Mukti Narrow; font-size:15px; font-weight:Normal; color: #ffffff;"> {DD} </span>
+</center>
