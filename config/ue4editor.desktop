@@ -1,11 +1,14 @@
+#!/usr/bin/env xdg-open
+
 [Desktop Entry]
-Type=Application
 Version=1.0
-Name=UE4Editor
-Comment=Unreal Engine4 Editor
+Type=Application
+#Exec=/home/kuriatsu/Source/UnrealEngine/Engine/Binaries/Linux/UnrealVersionSelector-Linux-Shipping -projectfiles %f
+Exec=/home/kuriatsu/Source/UnrealEngine/Engine/Binaries/Linux/UE4Editor
 Path=/home/kuriatsu/Source/UnrealEngine/Engine/Binaries/Linux
-Exec=bash -c "/home/kuriatsu/Source/UnrealEngine/Engine/Binaries/Linux/UE4Editor"
+Name=Unreal Engine Generate Project Files
 Icon=ubinary
 Terminal=true
-Categories=Education;X-game
-
+StartupWMClass=UE4Editor
+MimeType=application/uproject
+Comment=Created By Unreal Engine
