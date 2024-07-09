@@ -16,3 +16,7 @@ export MOCWORD_DATA=~/.cache/mocword.sqlite
 curl -fsSL https://deno.land/x/install/install.sh | sh
 mv ~/.deno/bin/deno /usr/local/bin
 ```
+## install pynvim
+```sh
+pip3 install pynvim
+```
