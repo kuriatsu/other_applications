@@ -71,12 +71,18 @@ call dein#add('mattn/vim-lsp-settings')
 call dein#add('shun/ddc-vim-lsp')
 
 " syntax
+call dein#add('nvim-treesitter/nvim-treesitter')
+
+" file tree
+call dein#add('nvim-tree/nvim-tree.lua')
+lua require'nvim-tree'.setup {}
 
 " Finish dein initialization (equired)
 call dein#end()
 
 " Attempt to determine the type of a file based on its name and possibly its
-" contents. Use this to allow intelligent auto-indenting for each filetype,
+" contents. Use this to allow intelligent auto-indenting for each
+" filetype,filetype
 " and for plugins that are filetype specific.
 filetype indent plugin on
 
