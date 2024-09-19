@@ -55,6 +55,9 @@ let g:deoplete#enable_at_startup = 1
 call dein#add('Shougo/neosnippet.vim')
 call dein#add('Shougo/neosnippet-snippets')
 
+" syntax
+call dein#add('nvim-treesitter/nvim-treesitter')
+
 " ddc
 call dein#add('vim-denops/denops.vim')
 call dein#add('Shougo/ddc.vim')
@@ -69,13 +72,12 @@ call dein#add('Shougo/pum.vim')
 call dein#add('prabirshrestha/vim-lsp')
 call dein#add('mattn/vim-lsp-settings')
 call dein#add('shun/ddc-vim-lsp')
-
-" syntax
-call dein#add('nvim-treesitter/nvim-treesitter')
+let g:lsp_diagnostics_enabled = 0
 
 " file tree
-call dein#add('nvim-tree/nvim-tree.lua')
-lua require'nvim-tree'.setup {}
+" call dein#add('nvim-tree/nvim-tree.lua')
+" lua require'nvim-tree'.setup {}
+" NvimTreeToggle
 
 " Finish dein initialization (equired)
 call dein#end()
@@ -90,19 +92,18 @@ filetype indent plugin on
 if has('syntax')
   syntax on
 endif
+lua require'nvim-treesitter.configs'.setup{highlight={enable=true}, ensure_installed={"vimdoc", "luadoc", "vim", "lua", "markdown"}}
+
 
 """""""""""""""""""
 " ddc setup
 """""""""""""""""""
-call ddc#custom#patch_global('sources', ['around', 'mocword', 'vim-lsp'])
+" call ddc#custom#patch_global('sources', ['around', 'mocword', 'vim-lsp'])
+call ddc#custom#patch_global('sources', ['around', 'mocword'])
 call ddc#custom#patch_global('sourceOptions', {
       \ 'around': {
       \     'mark': 'A',
       \     'minAutoCompleteLength': 3, 
-      \ },
-      \ 'vim-lsp': #{
-      \     matchers: ['matcher_head'],
-      \     mark: 'lsp',
       \ },
       \ 'mocword': #{
       \     mark: 'mocword',
@@ -113,6 +114,10 @@ call ddc#custom#patch_global('sourceOptions', {
       \   'matchers': ['matcher_head'],
       \   'sorters': ['sorter_rank']},
       \ })
+"      \ 'vim-lsp': #{
+"      \     matchers: ['matcher_head'],
+"      \     mark: 'lsp',
+"      \ },
 call ddc#custom#patch_global(#{
             \   ui: 'pum',
             \   autoCompleteEvents: [
@@ -121,9 +126,9 @@ call ddc#custom#patch_global(#{
             \ })
 call ddc#enable()
 
-" disable linter by lsp
-call lsp#disable_diagnostics_for_buffer()
-
+" disable linter by lsp. If below doesn't work, check
+" ~/.config/nvim/pack/nvim/start/nvim-lspconfig and make true to false
+" vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(vim.lsp.diagnostic.on_publish_diagnostics, {underline = true, virtual_text = false, signs = true, update_in_insert = false})
 
 " Uncomment if you want to install not-installed plugins on startup.
 "if dein#check_install()
