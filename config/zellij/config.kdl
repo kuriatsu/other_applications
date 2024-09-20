@@ -1,0 +1,180 @@
+default_shell "zsh"
+theme "retro-wave"
+
+// If you'd like to override the default keybindings completely, be sure to change "keybinds" to "keybinds clear-defaults=true"
+keybinds {
+    normal{
+        // uncomment this and adjust key if using copy_on_select=false
+        // bind "Alt c" { Copy; }
+        unbind "Ctrl g" // lock
+        unbind "Ctrl t" // tab
+        unbind "Ctrl n" // resize
+        unbind "Ctrl p" // pane
+        unbind "Ctrl h" // move
+        unbind "Ctrl s" // search
+        unbind "Ctrl o" // session
+        unbind "Ctrl q" // quit
+        // unbind "Shift PageUp"
+        bind "Alt p" {SwitchToMode "Pane"; }
+        bind "Alt m" {SwitchToMode "Move"; }
+        bind "Alt s" {SwitchToMode "Scroll"; }
+    }
+    pane {
+        unbind "Ctrl g"
+        unbind "Ctrl p"
+        unbind "Ctrl t"
+        unbind "Ctrl n"
+        unbind "Ctrl h"
+        unbind "Ctrl s"
+        unbind "Ctrl o"
+        unbind "Ctrl q"
+        bind "Ctrl p" { SwitchToMode "Normal"; }
+        bind "h" "Left" { MoveFocus "Left"; }
+        bind "l" "Right" { MoveFocus "Right"; }
+        bind "j" "Down" { MoveFocus "Down"; }
+        bind "k" "Up" { MoveFocus "Up"; }
+        bind "p" { SwitchFocus; }
+        bind "n" { NewPane; SwitchToMode "Normal"; }
+        bind "d" { NewPane "Down"; SwitchToMode "Normal"; }
+        bind "r" { NewPane "Right"; SwitchToMode "Normal"; }
+        bind "x" { CloseFocus; SwitchToMode "Normal"; }
+        bind "f" { ToggleFocusFullscreen; SwitchToMode "Normal"; }
+        bind "z" { TogglePaneFrames; SwitchToMode "Normal"; }
+        bind "w" { ToggleFloatingPanes; SwitchToMode "Normal"; }
+        bind "e" { TogglePaneEmbedOrFloating; SwitchToMode "Normal"; }
+        bind "c" { SwitchToMode "RenamePane"; PaneNameInput 0;}
+    }
+    move {
+        unbind "Ctrl g"
+        unbind "Ctrl p"
+        unbind "Ctrl t"
+        unbind "Ctrl n"
+        unbind "Ctrl h"
+        unbind "Ctrl s"
+        unbind "Ctrl o"
+        unbind "Ctrl q"
+        bind "n" "Tab" { MovePane; }
+        bind "p" { MovePaneBackwards; }
+        bind "h" "Left" { MovePane "Left"; }
+        bind "j" "Down" { MovePane "Down"; }
+        bind "k" "Up" { MovePane "Up"; }
+        bind "l" "Right" { MovePane "Right"; }
+    }
+    scroll clear-default=true {
+        unbind "Ctrl g"
+        unbind "Ctrl p"
+        unbind "Ctrl t"
+        unbind "Ctrl n"
+        unbind "Ctrl h"
+        unbind "Ctrl s"
+        unbind "Ctrl o"
+        unbind "Ctrl q"
+        bind "s" { SwitchToMode "EnterSearch"; SearchInput 0; }
+        bind "G" { ScrollToBottom; }
+        bind "g" { ScrollToTop; }
+        bind "j" { ScrollDown; }
+        bind "k" { ScrollUp; }
+        bind "d" "PageDown" { PageScrollDown; }
+        bind "u" "PageUp" { PageScrollUp; }
+        // uncomment this and adjust key if using copy_on_select=false
+        // bind "Alt c" { Copy; }
+    }
+}
+
+
+// Define color themes for Zellij
+// For more examples, see: https://github.com/zellij-org/zellij/tree/main/example/themes
+// Once these themes are defined, one of them should to be selected in the "theme" section of this file
+//
+themes {
+   dracula {
+        fg 248 248 242
+        bg 40 42 54
+        red 255 85 85
+        green 80 250 123
+        yellow 241 250 140
+        blue 98 114 164
+        magenta 255 121 198
+        orange 255 184 108
+        cyan 139 233 253
+        black 0 0 0
+        white 255 255 255
+    }   
+    catppuccin-macchiato {
+        bg "#5b6078" // Surface2
+        fg "#cad3f5"
+        red "#ed8796"
+        green "#a6da95"
+        blue "#8aadf4"
+        yellow "#eed49f"
+        magenta "#f5bde6" // Pink
+        orange "#f5a97f" // Peach
+        cyan "#91d7e3" // Sky
+        black "#1e2030" // Mantle
+        white "#cad3f5"
+    } 
+    retro-wave {
+        bg "#1a1a1a" // Dark Gray
+        fg "#ff9900" // Retro Orange
+        red "#ff355e" // Neon Pink
+        green "#00ff00" // Neon Green
+        blue "#00d9e3" // Electric Blue
+        yellow "#ffe600" // Neon Yellow
+        magenta "#ff00ff" // Neon Purple
+        orange "#ff6611" // Retro Red
+        cyan "#00e5e5" // Cyan
+        black "#000000" // Black
+        white "#ffffff" // White
+    }
+    everforest-dark {
+        bg "#2b3339"
+        fg "#d3c6aa"
+        black "#4b565c"
+        red "#e67e80"
+        green "#a7c080"
+        yellow "#dbbc7f"
+        blue "#7fbbb3"
+        magenta "#d699b6"
+        cyan "#83c092"
+        white "#d3c6aa"
+        orange "#FF9E64"
+    }
+    tokyo-night {
+        fg 169 177 214
+        bg 26 27 38
+        black 56 62 90
+        red 249 51 87
+        green 158 206 106
+        yellow 224 175 104
+        blue 122 162 247
+        magenta 187 154 247
+        cyan 42 195 222
+        white 192 202 245
+        orange 255 158 100
+    }
+    blade-runner {
+        bg "#1a1a1a" // Dark Gray
+        fg "#2bbff4" // Neon Blue
+        red "#ff355e" // Neon Pink
+        green "#00ff00" // Neon Green
+        blue "#00d9e3" // Electric Blue
+        yellow "#ffe600" // Neon Yellow
+        magenta "#ff00ff" // Neon Purple
+        orange "#ff8c0d" // Cyber Orange
+        cyan "#00e5e5" // Cyan
+        black "#000000" // Black
+        white "#ffffff" // White
+    }
+ }
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
