@@ -7,6 +7,10 @@ copy_command "wl-copy"                    // wayland
 
 scroll_buffer_size 5000
 
+// copy_command "xclip -selection clipboard" // x11
+copy_command "wl-copy"                    // wayland -> sudo apt install wl-clipboard
+// copy_command "pbcopy"                     // osx
+
 // If you'd like to override the default keybindings completely, be sure to change "keybinds" to "keybinds clear-defaults=true"
 keybinds {
     normal{
