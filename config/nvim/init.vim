@@ -46,32 +46,35 @@ call dein#load_toml(s:toml, {'lazy':0})
 " Your plugins go here:
 """""""""""""""""""""""
 " snippet
-call dein#add('Shougo/deoplete.nvim')
-if !has('nvim')
-  call dein#add('roxma/nvim-yarp')
-  call dein#add('roxma/vim-hug-neovim-rpc')
-endif
-let g:deoplete#enable_at_startup = 1
-call dein#add('Shougo/neosnippet.vim')
-call dein#add('Shougo/neosnippet-snippets')
+" call dein#add('Shougo/deoplete.nvim')
+" if !has('nvim')
+"  call dein#add('roxma/nvim-yarp')
+"  call dein#add('roxma/vim-hug-neovim-rpc')
+"endif
+"let g:deoplete#enable_at_startup = 1
+"call dein#add('Shougo/neosnippet.vim')
+"call dein#add('Shougo/neosnippet-snippets')
 
 " syntax
 call dein#add('nvim-treesitter/nvim-treesitter')
 
 " ddc
-call dein#add('vim-denops/denops.vim')
-call dein#add('Shougo/ddc.vim')
-call dein#add('Shougo/ddc-around')
-call dein#add('Shougo/ddc-mocword')
-call dein#add('Shougo/ddc-matcher_head')
-call dein#add('Shougo/ddc-sorter_rank')
-call dein#add('Shougo/ddc-ui-pum')
-call dein#add('Shougo/pum.vim')
+"call dein#add('vim-denops/denops.vim')
+"call dein#add('Shougo/ddc.vim')
+"call dein#add('Shougo/ddc-around')
+"call dein#add('Shougo/ddc-mocword')
+"call dein#add('Shougo/ddc-matcher_head')
+"call dein#add('Shougo/ddc-sorter_rank')
+"call dein#add('Shougo/ddc-ui-pum')
+"call dein#add('Shougo/ddc-ui-native')
+"call dein#add('shun/ddc-vim-lsp')
+"call dein#add('Shougo/pum.vim')
+"" nvim-cmp
+
 
 " lsp
-call dein#add('prabirshrestha/vim-lsp')
-call dein#add('mattn/vim-lsp-settings')
-call dein#add('shun/ddc-vim-lsp')
+"call dein#add('prabirshrestha/vim-lsp')
+"call dein#add('mattn/vim-lsp-settings')
 let g:lsp_diagnostics_enabled = 0
 
 " file tree
@@ -99,32 +102,33 @@ lua require'nvim-treesitter.configs'.setup{highlight={enable=true}, ensure_insta
 " ddc setup
 """""""""""""""""""
 " call ddc#custom#patch_global('sources', ['around', 'mocword', 'vim-lsp'])
-call ddc#custom#patch_global('sources', ['around', 'mocword'])
-call ddc#custom#patch_global('sourceOptions', {
-      \ 'around': {
-      \     'mark': 'A',
-      \     'minAutoCompleteLength': 3, 
-      \ },
-      \ 'mocword': #{
-      \     mark: 'mocword',
-      \     minAutoCompleteLength: 3, 
-      \     isVolatile: v:true,
-      \  },
-      \ '_': {
-      \   'matchers': ['matcher_head'],
-      \   'sorters': ['sorter_rank']},
-      \ })
-"      \ 'vim-lsp': #{
-"      \     matchers: ['matcher_head'],
-"      \     mark: 'lsp',
+" call ddc#custom#patch_global('sourceOptions', {
+"       \ 'vim-lsp': #{
+"       \     matchers: ['matcher_head'],
+"       \     mark: 'lsp',
 "      \ },
-call ddc#custom#patch_global(#{
-            \   ui: 'pum',
-            \   autoCompleteEvents: [
-            \     'InsertEnter', 'TextChangedI', 'TextChangedP',
-            \   ],
-            \ })
-call ddc#enable()
+"      \ 'around': #{
+"      \     mark: 'A',
+"      \     minAutoCompleteLength: 3, 
+"      \ },
+"      \ '_': #{
+"      \   matchers: ['matcher_head'],
+"      \   sorters: ['sorter_rank'],
+"      \ },
+"      \ })
+""      \ 'mocword': #{
+""      \     mark: 'mocword',
+""      \     minAutoCompleteLength: 3, 
+""      \     isVolatile: v:true,
+""      \  },
+"
+"call ddc#custom#patch_global(#{
+"            \   ui: 'pum',
+"            \   autoCompleteEvents: [
+"            \     'InsertEnter', 'TextChangedI', 'TextChangedP',
+"            \   ],
+"            \ })
+"call ddc#enable()
 
 " disable linter by lsp. If below doesn't work, check
 " ~/.config/nvim/pack/nvim/start/nvim-lspconfig and make true to false
