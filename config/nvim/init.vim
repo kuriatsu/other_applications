@@ -56,7 +56,7 @@ call dein#load_toml(s:toml, {'lazy':0})
 "call dein#add('Shougo/neosnippet-snippets')
 
 " syntax
-call dein#add('nvim-treesitter/nvim-treesitter')
+" call dein#add('nvim-treesitter/nvim-treesitter')
 
 " ddc
 "call dein#add('vim-denops/denops.vim')
@@ -93,9 +93,11 @@ filetype indent plugin on
 
 " Enable syntax highlighting
 if has('syntax')
-  syntax on
+  syntax enable
+  autocmd ColorScheme * highlight Normal ctermbg=none guibg=none
+  colorscheme molokai
 endif
-lua require'nvim-treesitter.configs'.setup{highlight={enable=true}, ensure_installed={"vimdoc", "luadoc", "vim", "lua", "markdown"}}
+"lua require'nvim-treesitter.configs'.setup{highlight={enable=true}, ensure_installed={"vimdoc", "luadoc", "vim", "lua", "markdown"}}
 
 
 """""""""""""""""""
