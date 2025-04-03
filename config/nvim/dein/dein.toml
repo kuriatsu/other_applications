@@ -39,6 +39,11 @@ require('telescope').setup{
         ["<C-q>"] = require('telescope.actions').send_selected_to_qflist + require('telescope.actions').open_qflist
       }
     }
+  },
+  pickers = {
+    find_files = {
+      hidden = true
+    }
   }
 }
 EOF
