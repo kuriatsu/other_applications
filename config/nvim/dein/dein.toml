@@ -71,6 +71,13 @@ repo = 'nvim-telescope/telescope-frecency.nvim'
 [[plugins]]
 repo = 'hrsh7th/cmp-nvim-lsp'
 
+
+[[plugins]]
+repo = 'neovim/nvim-lspconfig'
+
+[[plugins]]
+repo = 'hrsh7th/vim-vsnip'
+
 [[plugins]]
 repo = 'hrsh7th/cmp-buffer'
 
@@ -81,7 +88,25 @@ repo = 'hrsh7th/cmp-path'
 repo = 'hrsh7th/cmp-cmdline'
 
 [[plugins]]
-repo = 'neovim/nvim-lspconfig'
+hook_add = '''
+lua <<EOF
+require("copilot").setup({
+  panel = {enabled = false},
+  suggestion = {enabled = false},
+  copilot_node_command = "node"
+})
+EOF
+'''
+repo = 'zbirenbaum/copilot.lua'
+
+[[plugins]]
+hook_add = '''
+lua <<EOF
+require("copilot_cmp").setup()
+EOF
+'''
+repo = 'zbirenbaum/copilot-cmp'
+
 [[plugins]]
 hook_add = '''
 lua <<EOF
@@ -106,12 +131,9 @@ require('cmp').setup{
       -- { name = 'luasnip' }, -- For luasnip users.
       -- { name = 'ultisnips' }, -- For ultisnips users.
       -- { name = 'snippy' }, -- For snippy users.
-    -- }, {
-      { name = 'buffer',
-        option = {
-        keyword_pattern = [[\k\+]],
-        },
-      }
+      { name = 'buffer'},
+      { name = 'path'},
+      { name = 'copilot'},
     }
   }
   -- To use git you need to install the plugin petertriho/cmp-git and uncomment lines below
@@ -155,10 +177,6 @@ EOF
 '''
 repo = 'hrsh7th/nvim-cmp'
 
-[[plugins]]
-repo = 'hrsh7th/cmp-vsnip'
-[[plugins]]
-repo = 'hrsh7th/vim-vsnip'
 
 [[plugins]]
 hook_add = '''
@@ -215,3 +233,13 @@ require'nvim-treesitter.configs'.setup {
 EOF
 '''
 repo = 'nvim-treesitter/nvim-treesitter'
+
+[[plugins]]
+hook_add = '''
+lua <<EOF
+require("CopilotChat").setup({
+})
+EOF
+'''
+repo = 'CopilotC-Nvim/CopilotChat.nvim'
+
