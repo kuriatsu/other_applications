@@ -243,3 +243,32 @@ EOF
 '''
 repo = 'CopilotC-Nvim/CopilotChat.nvim'
 
+[[plugins]]
+hook_add = '''
+lua <<EOF
+require("render-markdown").setup({
+    -- Whether to use the `markdown` filetype for all markdown files.
+    -- If false, the plugin will use `render_markdown` filetype.
+    use_markdown_filetype = true,
+
+    -- Whether to automatically render the markdown after opening a markdown file.
+    auto_render = true,
+
+    -- Whether to disable the conceal feature of markdown.
+    disable_conceal = false,
+
+    -- Whether to wrap the lines of the rendered markdown buffer.
+    wrap = true,
+
+    -- Keymaps for the rendered markdown buffer.
+    keymaps = {
+        -- Toggle between the markdown and rendered buffer.
+        -- toggle = "<leader>m",
+
+        -- Close the rendered buffer.
+        -- close = "q",
+    },
+})
+EOF
+'''
+repo = 'MeanderingProgrammer/render-markdown.nvim'
