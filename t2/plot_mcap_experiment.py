@@ -64,11 +64,11 @@ def process_debug_prediction(msg):
         "header": {
             "frame_id": msg.header.frame_id,
             "measurement_timestamp": msg.header.measurement_timestamp,
-            "creation_timestamp": msg.header.creation_timestamp,
         },
+        "objects": [
+        "object_id": traj.id,
         "predicted_trajectories": [
             {
-                "object_id": traj.object_id,
                 "trajectory_points": [
                     {
                         "position": {
@@ -84,49 +84,17 @@ def process_debug_prediction(msg):
                 ],
                 "probability": traj.probability,
             }
-            for traj in msg.predicted_trajectories
+            for traj in obj.predicted_trajectories
         ],
+        for obj in msg.objects
     }
 
 def process_ego_lane_info(msg):
     return {
         "header": {
-            "frame_id": msg.header.frame_id,
-            "measurement_timestamp": msg.header.measurement_timestamp,
-            "creation_timestamp": msg.header.creation_timestamp,
+            "measurement_timestamp" : msg.header.measurement_timestamp,
         },
-        "lane_segments": [
-            {
-                "lane_id": segment.lane_id,
-                "left_neighbor_lane_id": segment.left_neighbor_lane_id,
-                "right_neighbor_lane_id": segment.right_neighbor_lane_id,
-                "priority": segment.priority,
-                "length": segment.length,
-                "width": segment.width,
-                "speed_limit": segment.speed_limit,
-                "lane_type": segment.lane_type,
-                "turn_type": segment.turn_type,
-                "junction_id": segment.junction_id,
-                "road_markings": [
-                    {
-                        "type": marking.type,
-                        "color": marking.color,
-                        "width": marking.width,
-                        "material": marking.material,
-                    }
-                    for marking in segment.road_markings
-                ],
-                "geometry_points": [
-                    {
-                        "x": point.x,
-                        "y": point.y,
-                        "z": point.z,
-                    }
-                    for point in segment.geometry_points
-                ],
-            }
-            for segment in msg.lane_segments
-        ],
+        "ego_lane_id": msg.ego_lane_id,
     }
 
 def process_augmented_objects(msg):
